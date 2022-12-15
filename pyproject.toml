@@ -35,7 +35,7 @@ classifiers = [  #! Update me
 python = "^3.10"
 loguru = "^0.6.0"
 
-typer = {extras = ["all"], version = "^0.6.1"}
+typer = {extras = ["all"], version = "^0.7.0"}
 rich = "^12.6.0"
 colorama = "^0.4.5"
 argparse = "^1.4.0"
