@@ -1,5 +1,6 @@
-import datetime
 from typing import Union
+
+import datetime
 
 from action_logs.action_log import ActionLog
 from common import constants
@@ -14,9 +15,9 @@ class DownloadLog(ActionLog):
         open_key_name = self._get_open_key_name()
         data = {
             open_key_name: {
-                'timestamp': datetime.datetime.now(),
-                'profile_name': profile_name,
-                'media_data': media_data,
+                "timestamp": datetime.datetime.now(),
+                "profile_name": profile_name,
+                "media_data": media_data,
             }
         }
         if self.append_data_to_log(data=data):
@@ -34,8 +35,11 @@ class DownloadLog(ActionLog):
         for profile_name, actions in open_actions_by_profile.items():
             text_lines.append(f"{profile_name}:")
             for media_type in BotGlobals.MEDIA_TYPES:
-                media_type_actions = \
-                    [data for key, data in actions.items() if data['media_data']['media_type'] == media_type]
+                media_type_actions = [
+                    data
+                    for key, data in actions.items()
+                    if data["media_data"]["media_type"] == media_type
+                ]
                 len_media_type_actions = len(media_type_actions)
                 if len_media_type_actions > 0:
                     text_lines.append(f"\t\t\t\t{media_type}: {len_media_type_actions}")
@@ -43,4 +47,4 @@ class DownloadLog(ActionLog):
             text_lines.append(f"\t\t\t\t /dl_{profile_name}")
             text_lines.append(f"\t\t\t\t /dlall_{profile_name}")
 
-        return '\n'.join(text_lines)
+        return "\n".join(text_lines)

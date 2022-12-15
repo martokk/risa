@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from typing import Any, Dict, List, Optional, Union
+
 import re
 import subprocess
 from abc import ABC, abstractmethod
-from typing import Optional, List, Any, Dict, Union
 
-import requests
 import bs4
+import requests
 
 
 class Scraper(ABC):
@@ -25,7 +26,9 @@ class Scraper(ABC):
     def _get_page_html(self, url: str) -> Union[bytes, str]:
         if self._use_wget:
             cmd = f'wget -S -O - --user-agent="" {url}'
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
+            process = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True
+            )
             html, std_err = process.communicate()
             print(std_err)
         else:
@@ -33,7 +36,7 @@ class Scraper(ABC):
         return html
 
     def as_dict(self) -> Dict:
-        return {'base_url': self.base_url}
+        return {"base_url": self.base_url}
 
     def scrape_url(self, url: str) -> Dict:
         self._url = url
@@ -58,12 +61,12 @@ class ScraperCheckpoint(ABC):
 
     @abstractmethod
     def _get_checkpoint(self) -> str:
-        """ Returns a checkpoint id for later use. Returns as a string."""
+        """Returns a checkpoint id for later use. Returns as a string."""
         return ""
 
     @abstractmethod
     def get_new_since_checkpoint(self, checkpoint: str) -> List[Any]:
-        """ Returns list of dew Objects since the checkpoint. """
+        """Returns list of dew Objects since the checkpoint."""
         return []
 
 

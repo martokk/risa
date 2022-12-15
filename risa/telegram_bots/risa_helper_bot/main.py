@@ -1,5 +1,6 @@
 from typing import List
 
+from config.config import RISA_HELPER_BOT_TOKEN
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.ext.commandhandler import CommandHandler
 from telegram.ext.filters import Filters
@@ -11,8 +12,6 @@ from telegram_bots.risa_helper_bot.plugins.feed_manager import FeedManager
 from telegram_bots.risa_helper_bot.plugins.profile_manager import ProfileManager
 from telegram_bots.risa_helper_bot.plugins.stats import StatsManager
 from telegram_bots.risa_helper_bot.plugins.username_search import UsernameSearch
-
-from config.config import RISA_HELPER_BOT_TOKEN
 
 
 def main() -> None:

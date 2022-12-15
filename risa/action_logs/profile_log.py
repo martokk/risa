@@ -1,4 +1,5 @@
 import datetime
+
 from action_logs.action_log import ActionLog
 from common import constants
 
@@ -10,11 +11,11 @@ class ProfileLog(ActionLog):
     def open_action(self, profile_name: str, service: str, command: str, value: str) -> bool:
         data = {
             self._get_open_key_name(profile_name=profile_name): {
-                'timestamp': datetime.datetime.now(),
-                'profile_name': profile_name,
-                'service': service,
-                'command': command,
-                'value': value,
+                "timestamp": datetime.datetime.now(),
+                "profile_name": profile_name,
+                "service": service,
+                "command": command,
+                "value": value,
             }
         }
         return self.append_data_to_log(data=data)
@@ -30,14 +31,15 @@ class ProfileLog(ActionLog):
         for profile_name, profile_actions in open_actions_by_profile.items():
             text_lines.append(f"{profile_name}:")
             for key, value in profile_actions.items():
-                service = value['service']
-                value = value['value']
+                service = value["service"]
+                value = value["value"]
                 text_lines.append(f"\t\t\t\t{service}: {value}")
                 text_lines.append(f"\t\t\t\t\t\t> /{key.replace('open_', 'close_')}")
 
-        return '\n'.join(text_lines)
+        return "\n".join(text_lines)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     action_log = ProfileLog()
     by_profile = action_log.by_profile_name()
     print(by_profile)

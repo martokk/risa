@@ -4,14 +4,13 @@ from action_logs.profile_log import ProfileLog
 from common.profiles import ProfilesFromCache
 from common.telegram_bot import Bot
 from common.utils import Utils
+from config.config import RISA_HELPER_BOT
 from telegram import ParseMode, ReplyKeyboardMarkup
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 from telegram.ext.callbackcontext import CallbackContext
 from telegram.update import Update
 from telegram_bots.risa_helper_bot.main import BotGlobals
 from telegram_bots.risa_helper_bot.plugins.download_manager import DownloadManager
-
-from config.config import RISA_HELPER_BOT
 
 
 class EditProfile(BotGlobals):

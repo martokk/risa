@@ -1,9 +1,8 @@
 from common.telegram_bot import Bot
+from config.config import RISA_HELPER_BOT
 from stats.stats import Stats, StatsTelegram
 from telegram import ParseMode, Update
 from telegram.ext import CallbackContext, CommandHandler, Filters, MessageHandler, Updater
-
-from config.config import RISA_HELPER_BOT
 
 
 class StatsManager(Bot):

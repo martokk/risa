@@ -1,5 +1,6 @@
-from abc import ABC, abstractmethod
 from typing import Any, Dict, Union
+
+from abc import ABC, abstractmethod
 
 
 class Stat(ABC):
@@ -18,17 +19,17 @@ class Stat(ABC):
     @abstractmethod
     def get_summary_from_data(data: Any) -> Dict[str, Union[str, float, int]]:
         return {
-            'stat': 'stat',
-            'value': "value",
+            "stat": "stat",
+            "value": "value",
         }
 
     @property
     def stat(self) -> str:
-        return self._summary['stat']
+        return self._summary["stat"]
 
     @property
     def value(self) -> str:
-        return self._summary['value']
+        return self._summary["value"]
 
     @property
     def view_details_text(self) -> str:
@@ -45,14 +46,14 @@ class Stat(ABC):
     @staticmethod
     @abstractmethod
     def get_view_details_text(stat_name: str, data: Any) -> str:
-        """ Display full details as text """
+        """Display full details as text"""
         text = "\n".join(list(data))
         return f"{stat_name}\n\n{text}"
 
     def get_view_details_text_for_cli(self, stat_name: str, data: Any) -> str:
-        """ Display full details as text (formatted for CLI) """
+        """Display full details as text (formatted for CLI)"""
         return self.view_details_text
 
     def get_view_details_text_for_telegram(self, stat_name: str, data: Any) -> str:
-        """ Display full details as text (formatted for Telegram) """
+        """Display full details as text (formatted for Telegram)"""
         return self.view_details_text

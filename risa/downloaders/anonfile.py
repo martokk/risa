@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
+
 # from anonfile import AnonFile
+
 
 class AnonFileGetDownload:
     # @staticmethod
@@ -25,6 +27,6 @@ class AnonFileGetDownload:
     def get_direct_url_from_url(url: str):
         page = requests.get(url)
         soup = BeautifulSoup(page.content, "html.parser")
-        url = soup.find("a", id='download-url')['href']
+        url = soup.find("a", id="download-url")["href"]
         url.replace(" ", "%20")
         return url

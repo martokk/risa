@@ -126,7 +126,7 @@ class Risa:
         self.view.print_profiles(profiles=self.profiles)
         self.view.print_horizontal_line()
 
-    def pull_service(self, attribute: str) -> Dict:
+    def pull_service(self, attribute: str) -> dict:
         return self.profiles.get_by_attribute(attribute=attribute)
 
     def print_service(self, attribute: str) -> None:
