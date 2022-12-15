@@ -1,0 +1,15 @@
+risa_boards_bot:
+  anonibalga:
+    chat_ids:
+      - 1111111111
+    checkpoint: "14471"
+    url: http://www.anonib.al/ga
+    url_key: anonibalga
+
+risa_feeds_bot:
+  anonibalgares10584html:
+    chat_ids:
+      - 1111111111
+    checkpoint: "14345"
+    url: http://www.anonib.al/ga/res/10584.html
+    url_key: anonibalgares10584html

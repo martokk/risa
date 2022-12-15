@@ -1,0 +1,18 @@
+RISA_PROFILES = "/__SHARED__/__INBOX__/__RISA__/"
+RISA_FOLDERS = [
+    # 'celebs',
+    # 'creators',
+    # 'known',
+    # 'leaks'
+]
+TELEGRAM_CHAT_ID = ********
+RISA_HELPER_BOT = "risa_helper_bot"
+RISA_HELPER_BOT_TOKEN = "**********************"
+
+RISA_BOARDS_BOT = "risa_boards_bot"
+RISA_BOARDS_BOT_TOKEN = "********************"
+RISA_BOARDS_BOT_REPEATING_INTERVAL = 60 * 10  # seconds
+
+RISA_FEEDS_BOT = "risa_feeds_bot"
+RISA_FEEDS_BOT_TOKEN = "***************"
+RISA_FEEDS_BOT_REPEATING_INTERVAL = 60 * 10  # seconds
