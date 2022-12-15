@@ -79,24 +79,29 @@ class SubscriptionWatcher:
         # f"<i>{post['board']['board_name']}</i>\n" \
         # f"<i>{post['thread']['thread_name']}</i>\n"
 
+        # Define Inline Buttons
+        button_board_name = InlineKeyboardButton(
+            text=post["board"]["board_name"],
+            callback_data=f"open_link {post['board']['board_url']}",
+        )
+
+        button_thread_name = InlineKeyboardButton(
+            text=post["thread"]["thread_name"],
+            callback_data=f"open_link {post['post_url']}",
+        )
+
+        button_subscribe_to_thread = InlineKeyboardButton(
+            text="subscribe to thread",
+            callback_data=f"subscribe_to_thread {post['thread']['thread_url']}",
+        )
+
         for chat_id in chat_ids:
             buttons = [
                 [
-                    InlineKeyboardButton(
-                        text=post["board"]["board_name"],
-                        callback_data=f"open_link {post['board']['board_url']}",
-                    ),
-                    InlineKeyboardButton(
-                        text=post["thread"]["thread_name"],
-                        callback_data=f"open_link {post['post_url']}",
-                    ),
+                    button_board_name,
+                    button_thread_name,
                 ],
-                [
-                    InlineKeyboardButton(
-                        text="subscribe to thread",
-                        callback_data=f"subscribe_to_thread {post['thread']['thread_url']}",
-                    )
-                ],
+                [button_subscribe_to_thread] if self.name == "RisaBoardsBot" else [],
             ]
 
             divider_text = "█████████████████"
