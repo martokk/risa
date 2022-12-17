@@ -161,7 +161,7 @@ class SubscriptionWatcher:
                     # Check filesize below 5MB (telegram limit for photo)
                     response = urlopen(_upload["url"])
                     meta = response.info()
-                    size_bytes = meta.getheaders("Content-Length")[0]
+                    size_bytes = meta.get("Content-Length")[0]
 
                     # Prepare photo/document as Message
                     caption = ""
