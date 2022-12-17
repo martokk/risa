@@ -13,7 +13,9 @@ STAT_PATH = STATS_PATH / "stat"
 # DATA STRUCTURE
 DATA_PATH = RISA_PATH / "data"
 CACHE_PATH = DATA_PATH / "cache"
+LOGS_PATH = DATA_PATH / "logs"
 
+LOG_FILE = LOGS_PATH / "log.log"
 CACHE_PROFILES_FILE = CACHE_PATH / "profiles.yaml"
 PROFILE_LOG_FILE = DATA_PATH / "profile_log.yaml"
 DOWNLOAD_LOG_FILE = DATA_PATH / "download_log.yaml"

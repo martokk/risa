@@ -5,12 +5,17 @@ import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from loguru import logger
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
 
+from risa.common.constants import LOG_FILE
 from risa.common.subscriptions import Subscriptions
 from risa.scrapers.router import ScraperRouter
+
+# Configure Loguru Logger
+logger.add(LOG_FILE, level="TRACE", rotation="50 MB")
 
 
 class SubscriptionWatcher:
@@ -121,8 +126,17 @@ class SubscriptionWatcher:
                     reply_markup=reply_markup,
                 )
             except BadRequest as e:
-                print(
-                    f"{datetime.datetime.now()} - {self.name} - BadRequestError: {e.message} \n\t{chat_id=} {text=} {parse_mode=} {reply_markup=}"
+                error_message = (
+                    f"{datetime.datetime.now()} - {self.name} - BadRequestError: {e.message} \n"
+                    f"\t{chat_id=} {text=} {parse_mode=} {reply_markup=}"
+                )
+
+                logger.error(error_message)
+                message = context.bot.send_message(
+                    chat_id=chat_id,
+                    text=error_message,
+                    parse_mode=parse_mode,
+                    reply_markup=reply_markup,
                 )
 
             if post["files"]:
@@ -162,6 +176,17 @@ class SubscriptionWatcher:
                             parse_mode=parse_mode,
                         )
                     except BadRequest as e:
-                        print(
-                            f"{datetime.datetime.now()} - {self.name} - BadRequestError: {e.message} \n\t{chat_id=} {photo=} {caption=} {caption.__len__()=} {reply_to_message_id=} {parse_mode=}"
+                        error_message = (
+                            f"{datetime.datetime.now()} - {self.name} - "
+                            f"BadRequestError: {e.message} \n"
+                            f"\t{chat_id=} {photo=} {caption=} {len(caption)=} "
+                            f"{reply_to_message_id=} {parse_mode=}"
+                        )
+
+                        logger.error(error_message)
+                        message = context.bot.send_message(
+                            chat_id=chat_id,
+                            text=error_message,
+                            parse_mode=parse_mode,
+                            reply_markup=reply_markup,
                         )
