@@ -146,9 +146,9 @@ class SubscriptionWatcher:
                     # Check if image url is broken (404), replace with default if it is
                     try:
                         request = Request(_upload["url"])
-                        f = urlopen(request)
-                        status_code = f.code
-                        f.close()
+                        response = urlopen(request)
+                        status_code = response.code
+                        response.close()
                     except (HTTPError, URLError):
                         status_code = 404
 
@@ -158,7 +158,12 @@ class SubscriptionWatcher:
                         print(f"Image url is not found ({status_code=}): {_upload['url']}")
                         photo = "https://anonib.al/.static/logo.png"
 
-                    # Send Photo as Message
+                    # Check filesize below 5MB (telegram limit for photo)
+                    response = urlopen(_upload["url"])
+                    meta = response.info()
+                    size_bytes = meta.getheaders("Content-Length")[0]
+
+                    # Prepare photo/document as Message
                     caption = ""
                     caption += f"<i>{post['subject']}</i>\n"
                     caption += f"<i>{post['thread']['thread_url']}</i>\n"
@@ -168,13 +173,22 @@ class SubscriptionWatcher:
                     reply_to_message_id = message.message_id
 
                     try:
-                        context.bot.send_photo(
-                            chat_id=chat_id,
-                            photo=photo,
-                            caption=caption,
-                            reply_to_message_id=reply_to_message_id,
-                            parse_mode=parse_mode,
-                        )
+                        if size_bytes > 5000000:
+                            context.bot.send_document(
+                                chat_id=chat_id,
+                                document=photo,
+                                caption=caption,
+                                reply_to_message_id=reply_to_message_id,
+                                parse_mode=parse_mode,
+                            )
+                        else:
+                            context.bot.send_photo(
+                                chat_id=chat_id,
+                                photo=photo,
+                                caption=caption,
+                                reply_to_message_id=reply_to_message_id,
+                                parse_mode=parse_mode,
+                            )
                     except BadRequest as e:
                         error_message = (
                             f"{datetime.datetime.now()} - {self.name} - "
