@@ -200,7 +200,7 @@ class SubscriptionWatcher:
                         logger.error(error_message)
                         message = context.bot.send_message(
                             chat_id=chat_id,
-                            text=error_message,
+                            text=f"{photo=}\n\n{error_message}",
                             parse_mode=parse_mode,
                             reply_markup=reply_markup,
                         )
