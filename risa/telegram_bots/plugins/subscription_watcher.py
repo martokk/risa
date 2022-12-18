@@ -194,7 +194,7 @@ class SubscriptionWatcher:
                             f"{datetime.datetime.now()} - {self.name} - "
                             f"BadRequestError: {e.message} \n"
                             f"\t{chat_id=} {photo=} {caption=} {len(caption)=} "
-                            f"{reply_to_message_id=} {parse_mode=}"
+                            f"{reply_to_message_id=} {parse_mode=} {size_bytes=}"
                         )
 
                         logger.error(error_message)
