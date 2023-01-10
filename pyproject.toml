@@ -29,7 +29,7 @@ classifiers = [  #! Update me
 
 [tool.poetry.scripts]
 # Entry points for the package https://python-poetry.org/docs/pyproject/#scripts
-"risa" = "risa.__main__:app"
+"risa" = "risa.__main__"
 
 [tool.poetry.dependencies]
 python = "^3.10"

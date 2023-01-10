@@ -6,7 +6,9 @@ from risa.config.config import (
     RISA_FEEDS_BOT,
     RISA_FEEDS_BOT_REPEATING_INTERVAL,
     RISA_FEEDS_BOT_TOKEN,
+    TELEGRAM_CHAT_ID
 )
+from risa.common.constants import 
 from risa.telegram_bots.plugins.subscription_manager import SubscriptionManager
 from risa.telegram_bots.plugins.subscription_watcher import SubscriptionWatcher
 
@@ -59,7 +61,7 @@ class RisaFeedsBot(TelegramBot, SubscriptionManager, SubscriptionWatcher):
         if not (args := self.get_args(update=update, context=context)):
             return
         sub = self.add_subscription(
-            app=RISA_FEEDS_BOT, url=args[0], chat_ids=[update.message.chat_id]
+            app=RISA_FEEDS_BOT, url=args[0], chat_ids=[TELEGRAM_CHAT_ID]
         )
         update.message.reply_text(
             text=f"Sucessfuly added new subscription. Will get 3 latest posts... \n{args=}"

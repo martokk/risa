@@ -8,6 +8,8 @@ class Expander:
             "twitter": "https://www.twitter.com/{data}",
             "chaturbate": "https://www.chaturbate.com/{data}",
             "manyvids": "https://{data}.manyvids.com/",
+            "reddit": "https://www.reddit.com/u/{data}",
+            "telegram": "https://t.me/{data}",
         }
 
     def expand(self, obj: Union[str, List]) -> Union[str, List]:
@@ -19,3 +21,4 @@ class Expander:
                 ]
             else:
                 return obj.lower() if "http" in obj else service_mask.replace("{data}", obj.lower())
+        return obj
