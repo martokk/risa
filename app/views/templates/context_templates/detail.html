@@ -1,0 +1,70 @@
+{% extends "base/base.html" %}
+
+{% block title %}Context Template Details{% endblock %}
+
+{% block content_header %}
+<a href="/context-templates" class="btn btn-link mb-2">&larr; Back to Context Templates</a>
+<h1 class="mb-4">Context Template Details</h1>
+{% endblock %}
+
+{% block content %}
+	<div class="container">
+	{% if template %}
+
+		<!-- Header -->
+		<div class="card mb-5 context-template-outline context-template-background-dark">
+			<div class="d-flex justify-content-between align-items-center mb-1">
+
+				<!-- Title -->
+				<div class="card-body">
+					<h2 class="card-title">{{ template.name }}</h2>
+					<p class="card-text">{{ template.description }}</p>
+				</div>
+
+				<!-- Actions -->
+				<div class="me-3">
+					<button class="btn btn-sm btn-outline-secondary me-2 edit-template-btn" data-id="{{ template.id }}">Edit</button>
+					<button class="btn btn-sm btn-outline-danger delete-template-btn" data-id="{{ template.id }}">Delete</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Sections -->
+		<div class="mb-4">
+		
+			<!-- Title -->
+			<div class="d-flex justify-content-between align-items-center mb-2">
+				<h1 class="mb-0">Sections</h1>
+		
+				<!-- Add Section Button -->
+				<button class="btn btn-primary" id="addSectionBtn">
+					<i class="fas fa-plus"></i> Add Section
+				</button>
+			</div>
+		
+			<!-- Section List -->
+			<div id="sectionList">
+		
+				<!-- Section list will be rendered here by JS -->
+			</div>
+		</div>
+
+		<!-- Edit Template Modal -->
+		{% include "context_templates/_modal_context_template.html" %}
+
+		<!-- Add Section Modal (shared partial) -->
+		{% include "context_section/_modal_context_section.html" %}
+
+		{% else %}
+
+			<!-- Alert -->
+			<div class="alert alert-danger">Template not found.</div>
+		
+		{% endif %}
+	</div>
+{% endblock %}
+
+{% block js_scripts %}
+	<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+	<script type="module" src="/static/js/components/context_templates.js"></script>
+{% endblock %} 

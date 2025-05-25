@@ -1,0 +1,52 @@
+{% extends "base/base.html" %}
+
+{% block title %}Edit Account{% endblock %}
+
+{% block content_header %}Edit Account{% endblock %}
+
+{% block content %}
+<div class="col-xl-8 col-lg-11 col-md-12 mx-auto">
+    <form method="POST">
+
+        <div class="form-group">
+            <label for="idInput">Id:</label>
+            <input type="text" class="form-control" id="idInput" name="id" value="{{ db_user.id }}" disabled>
+        </div>
+        <div class="form-group">
+            <label for="usernameInput">Username:</label>
+            <input type="text" class="form-control" id="usernameInput" name="username" value="{{ db_user.username }}"
+                disabled>
+        </div>
+        <div class="form-group mt-3">
+            <label for="fullNameInput">Full Name:</label>
+            <input type="text" class="form-control" id="fullName" name="full_name" value="{{ db_user.full_name }}">
+        </div>
+        <div class="form-group mt-3">
+            <label for="emailInput">Email:</label>
+            <input type="text" class="form-control" id="emailInput" name="email" value="{{ db_user.email }}">
+        </div>
+
+        {% if current_user.is_superuser %}
+        <div class="form-group mt-3">
+            <label for="is_active">User is Active:</label>
+            <input type="checkbox" name="is_active" id="is_active" {{ "checked" if db_user.is_active else "unchecked"
+                }}>
+        </div>
+        <div class="form-group mt-3">
+            <label for="is_superuser">User is Superuser:</label>
+            <input type="checkbox" name="is_superuser" id="is_superuser" {{ "checked" if db_user.is_superuser
+                else "unchecked" }}>
+        </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-end mt-3">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+
+
+    </form>
+
+</div>
+
+
+{% endblock content %}

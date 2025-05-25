@@ -1,0 +1,51 @@
+<div class="modal fade" id="addSectionModal" tabindex="-1" aria-labelledby="addSectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSectionModalLabel">Add Section to Context Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 border-end">
+                        <h6>Create Section</h6>
+                        <form id="createSectionForm">
+                            <div class="mb-3">
+                                <label for="newSectionName" class="form-label">Section Name</label>
+                                <input type="text" class="form-control" id="newSectionName" name="name" required
+                                    maxlength="100">
+                            </div>
+                            <div class="mb-3">
+                                <label for="newSectionDescription" class="form-label">Section Description</label>
+                                <textarea class="form-control" id="newSectionDescription" name="description" rows="2"
+                                    maxlength="300"></textarea>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-secondary me-2"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Create & Add</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Select Existing Section</h6>
+                        <form id="selectSectionForm">
+                            <div class="mb-3">
+                                <label for="existingSectionSelect" class="form-label">Choose Section</label>
+                                <select class="form-select" id="existingSectionSelect" name="section_id" required>
+                                    <option value="">-- Select Section --</option>
+                                    <!-- Options will be populated by JS -->
+                                </select>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-secondary me-2"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Add</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,154 @@
+---
+description: USE direct imports from the app package for core modules to ENSURE consistent import patterns across the codebase
+globs: **/*.py
+alwaysApply: false
+---
+
+# Standardized Import Patterns
+
+## Context
+
+- When importing modules and packages in the application
+- When accessing models, CRUD modules, or core utilities
+- When maintaining consistency across multiple files
+- When refactoring or reorganizing code
+
+## Requirements
+
+- Always use direct imports from the `app` package for core modules
+- Use aggregated imports from `app.models` and `app.crud` rather than deep imports
+- Maintain consistent import patterns across the entire codebase
+- Avoid importing specific components directly from deeper modules
+- Follow the centralized import pattern established in the application
+
+## Examples
+
+<example>
+# Good: Proper imports from app package
+
+from app import crud
+from app import models
+from app import logger
+from app import settings
+from app import paths
+
+# Good: Using models and crud with proper namespace
+
+@router.get("/examples", response_model=list[models.ExampleRead])
+async def get_examples(
+    db: Annotated[Session, Depends(get_db)],
+) -> list[models.Example]:
+    """Get all examples."""
+    return await crud.example.get_multi(db=db)
+
+@router.post("/examples", response_model=models.ExampleRead)
+async def create_example(
+    example_in: models.ExampleCreate,
+    db: Annotated[Session, Depends(get_db)],
+) -> models.Example:
+    """Create a new example."""
+    return await crud.example.create(db=db, obj_in=example_in)
+
+# Good: Using logger with proper import
+
+logger.info("Operation completed successfully")
+
+# Good: Using settings and paths with proper import
+
+static_dir = paths.STATIC_DIR
+debug_mode = settings.DEBUG
+</example>
+
+<example type="invalid">
+# Bad: Direct imports from deeper modules
+
+from app.models.user import User
+from app.models.example import Example, ExampleCreate, ExampleUpdate
+from app.crud.user import user
+from app.crud.example import example
+from app.settings import Settings
+from app.paths import STATIC_PATH
+from app.logger import logger
+
+# Bad: Using directly imported components
+
+@router.get("/users")
+async def get_users(
+    db: Annotated[Session, Depends(get_db)],
+) -> list[User]:  # Direct reference to User instead of models.User
+    return await user.get_multi(db=db)  # Direct reference to user instead of crud.user
+
+# Bad: Inconsistent import patterns within the same file
+
+from app import models  # Good import
+from app.crud.example import example  # Bad import in the same file
+
+@router.get("/examples")
+async def get_examples(
+    db: Annotated[Session, Depends(get_db)],
+) -> list[models.Example]:
+    return await example.get_multi(db=db)  # Inconsistent with using crud.example
+</example>
+
+## Core App Modules
+
+The following core modules should always be imported directly from the `app` package:
+
+| Module | Description | Correct Import | Incorrect Import |
+|--------|-------------|----------------|-----------------|
+| `models` | Database models | `from app import models` | `from app.models.user import User` |
+| `crud` | CRUD operations | `from app import crud` | `from app.crud.user import user` |
+| `logger` | Logging functions | `from app import logger` | `from app.logger import logger` |
+| `settings` | Application settings | `from app import settings` | `from app.settings import Settings` |
+| `paths` | Path constants | `from app import paths` | `from app.paths import STATIC_PATH` |
+
+## Usage Patterns
+
+### Models Usage
+
+```python
+from app import models
+
+# Accessing model classes
+user = models.User(username="example")
+tag = models.Tag(name="example-tag")
+
+# Using in type hints
+def get_user(user_id: int) -> models.User:
+    # ...
+```
+
+### CRUD Usage
+
+```python
+from app import crud
+
+# Performing CRUD operations
+user = await crud.user.get(db=db, id=user_id)
+tags = await crud.tag.get_multi(db=db)
+```
+
+### Other Core Modules
+
+```python
+from app import logger, settings, paths
+
+# Using logger
+logger.info("Process started")
+
+# Using settings
+debug_mode = settings.DEBUG
+
+# Using paths
+templates_dir = paths.TEMPLATES_DIR
+```
+
+## Critical Rules
+
+- Always import core modules directly from the app package (`from app import models`)
+- Never import specific models or CRUD operations directly from their modules
+- Maintain consistent import patterns throughout the codebase
+- All database models must be accessed through the `models` namespace
+- All CRUD operations must be accessed through the `crud` namespace
+- When new core modules are added to the app, update the centralized imports accordingly
+- Import core modules before other imports following the standard import order

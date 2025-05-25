@@ -1,0 +1,41 @@
+---
+description: NEVER suggest restarting server or running the server to test changes
+globs: **/*.py
+alwaysApply: false
+---
+
+# No Server Restart Suggestions
+
+## Context
+
+- When implementing code changes
+- When fixing bugs or adding features
+- After any code modification
+
+## Requirements
+
+- Never suggest restarting the server to test changes
+- Never suggest running the application to verify functionality
+- Never suggest running the server and test our changes
+- Don't offer commands like "python -m app.main" or similar to test changes
+- Assume the user will handle testing and server restarts on their own
+
+## Examples
+
+<example>
+After making these changes, the feature should be implemented correctly.
+</example>
+
+<example type="invalid">
+Now let's restart the server to apply our changes:
+```
+python -m app.main
+```
+</example>
+
+## Critical Rules
+
+- NEVER suggest restarting the server to test changes
+- NEVER offer commands to run the application
+- Don't use phrases like "let's test this by running the app"
+- Assume the user will handle testing on their own

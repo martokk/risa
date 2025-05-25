@@ -1,0 +1,56 @@
+{% extends "base/base.html" %}
+
+{% block title %}Contexts{% endblock %}
+
+{% block content_header %}
+<h1 class="mb-4">Contexts</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4">All Contexts</h2>
+        <button class="btn btn-primary" id="createContextBtn">
+            <i class="fas fa-plus"></i> Create Context
+        </button>
+    </div>
+    {% if contexts %}
+    <div class="row">
+        {% for context in contexts %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 context-outline context-background-dark">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="/contexts/{{ context.id }}">{{ context.name|default('Unnamed Context') }}</a>
+                    </h5>
+                    <p class="card-text">
+                        {% if context.template_id %}
+                            <span class="badge context-template-outline context-template-background-dark">
+                                <a href="/context-templates/{{ context.template_id }}" class="text-white text-decoration-none">
+                                    {{ context.template.name }}
+                                </a>
+                            </span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="card-footer text-end">
+                    <button class="btn btn-sm btn-outline-secondary me-2 edit-context-btn" data-id="{{ context.id }}">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger delete-context-btn" data-id="{{ context.id }}">Delete</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">No contexts found.</div>
+    {% endif %}
+</div>
+
+<!-- Create/Edit Context Modal -->
+{% include "/contexts/_modal_context.html" %}
+
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module" src="/static/js/components/contexts.js"></script>
+{% endblock %} 

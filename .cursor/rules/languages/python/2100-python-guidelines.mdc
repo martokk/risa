@@ -1,0 +1,155 @@
+---
+description: USE functional programming, type hints, and consistent naming when WRITING Python code to ENSURE clean, maintainable codebase
+globs: **/*.py
+alwaysApply: false
+---
+
+# Python Coding Guidelines
+
+## Context
+
+- When writing or modifying Python code in this codebase
+- When implementing new features or refactoring existing ones
+- When reviewing Python code contributions
+
+## Requirements
+
+- Use functional, declarative programming; avoid classes where possible
+- Reuse existing code/functions to avoid duplication
+- Use descriptive variable names with auxiliary verbs (e.g., is_active, has_permission)
+- Use lowercase with underscores for directories and files (e.g., routers/user_routes.py)
+- Use type hints for all function signatures
+- Prefer Pydantic models over raw dictionaries for input validation
+- Use concise, one-line syntax for simple conditional statements
+- Use list/dict/set comprehensions instead of loops for transforming or filtering collections
+
+## Examples
+
+<example>
+
+# Good: Functional approach with type hints, descriptive names, and reuse
+
+from typing import List, Optional
+from pydantic import BaseModel
+
+class UserData(BaseModel):
+    username: str
+    is_active: bool
+    permissions: List[str]
+
+def has_permission(user: UserData, required_permission: str) -> bool:
+    """Check if user has the required permission."""
+    return required_permission in user.permissions
+
+def filter_active_users_with_permission(
+    users: List[UserData],
+    required_permission: str
+) -> List[UserData]:
+    """Filter a list of users to only those who are active and have permission."""
+    return [
+        user for user in users
+        if user.is_active and has_permission(user, required_permission)
+    ]
+
+# Effective use of comprehensions
+
+def extract_usernames(users: List[UserData]) -> List[str]:
+    """Extract usernames from a list of users."""
+    return [user.username for user in users]
+
+def group_users_by_permission(users: List[UserData]) -> dict[str, List[UserData]]:
+    """Group users by their permissions."""
+    all_permissions = {p for user in users for p in user.permissions}
+    return {
+        permission: [user for user in users if permission in user.permissions]
+        for permission in all_permissions
+    }
+</example>
+
+<example type="invalid">
+# Bad: Class-heavy approach without type hints, unclear names, and duplication
+
+class UserManager:
+    def __init__(self):
+        self.users = []
+
+    def add(self, u):
+        self.users.append(u)
+    
+    def check(self, u, p):
+        return p in u["permissions"]
+    
+    def filter(self, p):
+        result = []
+        for u in self.users:
+            if u["active"] == True:
+                if p in u["permissions"]:
+                    result.append(u)
+        return result
+    
+    # Avoiding comprehensions, using inefficient loops instead
+    def get_names(self):
+        names = []
+        for u in self.users:
+            names.append(u["username"])
+        return names
+        
+    def group_by_perm(self):
+        perms = set()
+        for u in self.users:
+            for p in u["permissions"]:
+                perms.add(p)
+                
+        result = {}
+        for p in perms:
+            result[p] = []
+            for u in self.users:
+                if p in u["permissions"]:
+                    result[p].append(u)
+        return result
+</example>
+
+<example>
+
+# Good: Concise conditional statements and file naming
+
+# File: services/user_validation.py
+
+def validate_credentials(username: str, password: str) -> bool:
+    """Validate user credentials against the database."""
+    if not username or not password:
+        return False
+
+    user = get_user_by_username(username)
+    if not user:
+        return False
+        
+    return verify_password(password, user.password_hash)
+</example>
+
+<example type="invalid">
+# Bad: Overly verbose conditionals and poor file naming
+
+# File: Services/UserVal.py
+
+def check_user_credentials(username, password):
+    """Check if user credentials are valid."""
+    valid = False
+    if username is not None and password is not None:
+        if len(username) > 0 and len(password) > 0:
+            user = get_user_by_username(username)
+            if user is not None:
+                if verify_password(password, user.password_hash):
+                    valid = True
+    return valid
+</example>
+
+## Critical Rules
+
+- Always use type hints for all function parameters and return values
+- Prefer functional composition over inheritance when possible
+- Name variables and functions clearly using auxiliary verbs where appropriate
+- Follow the snake_case naming convention for all Python identifiers
+- Use list/dictionary comprehensions for simple transformations
+- Avoid classes unless they provide clear benefits (state management, encapsulation)
+- Use Pydantic models for data validation instead of manual validation

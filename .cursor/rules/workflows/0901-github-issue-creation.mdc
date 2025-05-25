@@ -1,0 +1,138 @@
+# GitHub Issue Creation Guidelines
+
+## Context
+
+- When planning new features or enhancements
+- When documenting bugs or technical debt
+- When creating tasks that require clear requirements
+- When breaking down larger projects into manageable issues
+
+## Requirements
+
+- Follow a two-phase approach: requirements gathering and issue creation
+- Ask comprehensive questions before drafting issue content
+- Document technical implementation details and success criteria
+- Use consistent issue templates and formatting
+- Include relevant labels and project assignments
+- Just provide the text of the issue. Do not create or edit any files.
+
+## Phase 1: Requirements Gathering
+
+### Core Questions
+
+1. What is the primary goal or problem to solve?
+2. Who are the stakeholders or users affected?
+3. What are the expected inputs and outputs?
+4. Are there any dependencies or prerequisites?
+
+### Technical Questions
+
+1. Which components or services are involved?
+2. What are the performance requirements?
+3. Are there security implications?
+4. What testing will be required?
+
+### Implementation Questions
+
+1. Are there alternative approaches to consider?
+2. What are the potential risks or edge cases?
+3. How will this affect existing functionality?
+4. What metrics will indicate success?
+
+## Phase 2: Issue Creation
+
+### Required Sections
+
+1. Overview
+   - Clear problem statement
+   - Business value or impact
+   - Scope boundaries
+
+2. Technical Details
+   - Implementation approach
+   - Architecture changes
+   - Dependencies
+   - Security considerations
+
+3. Acceptance Criteria
+   - Functional requirements
+   - Performance requirements
+   - Testing requirements
+   - Documentation needs
+
+4. Additional Information
+   - Related issues/PRs
+   - References
+   - Screenshots/diagrams if applicable
+
+## Examples
+
+<example>
+# Feature: Calendar Integration for Grant Dates
+
+## Overview
+Add calendar integration for grant dates that can be subscribed to via email clients.
+This will help users track important grant deadlines and automatically receive updates.
+
+## Technical Details
+- Implement iCal feed endpoint for grant dates
+- Support automatic calendar updates
+- Include specific grant cycle dates
+- Configure reminder settings
+- Handle status-based filtering
+
+## Acceptance Criteria
+- [ ] Calendar feed accessible via unique URL
+- [ ] Updates reflect within 1 hour of changes
+- [ ] Proper date formatting with timezones
+- [ ] Configurable reminder settings
+- [ ] Status-based filtering works correctly
+- [ ] Documentation for subscription process
+
+## Creating the issue
+You can use the command `gh issue create --title "" --body $"" --label ""` to create an issue.
+IMPORANT: Make sure to add the "$" before the body quotes so new lines are properly sent. 
+
+<example type=valid>
+gh issue create \
+  --title "My issue" \
+  --body $'First line\nSecond line\n\n— Markdown works too!\n* bullet\n* list'
+</example>
+
+<example type=invalid>
+gh issue create \
+  --title "My issue" \
+  --body 'First line\nSecond line\n\n— Markdown works too!\n* bullet\n* list'
+</example>
+
+## Additional Information
+- Related to #123 Grant Cycle Management
+- Reference: RFC 5545 (iCalendar)
+</example>
+
+<example type="invalid">
+# Add Calendar Feature
+
+Need to add calendar integration. Users want to see grant dates in their calendar.
+
+TODO:
+- Add calendar stuff
+- Make it work with email
+- Show grant dates
+- Add some filters maybe
+
+Please implement this ASAP.
+</example>
+
+## Critical Rules
+
+- NEVER proceed to issue creation without thorough requirements gathering
+- ALWAYS include clear acceptance criteria
+- ALWAYS specify technical implementation details
+- ALWAYS consider security and performance implications
+- NEVER skip documenting dependencies or prerequisites
+- ALWAYS use consistent formatting and structure
+- NEVER create vague or ambiguous task descriptions
+- ALWAYS include measurable success criteria 
+- NEVER create any files. You are just providing the text.
+- NEVER edit any code, just provide the text.

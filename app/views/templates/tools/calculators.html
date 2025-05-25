@@ -1,0 +1,75 @@
+{% extends "tools/tool_base.html" %}
+
+
+<!-- Tool Name -->
+{% block title %}Calculators{% endblock %}
+{% block tool_name %}Calculators{% endblock %}
+
+<!-- Tool Description -->
+{% block tool_description %}
+{% endblock %}
+
+<!-- Tool Input Form -->
+{% block tool_input_form %}
+    <div class="card col-3 border-info">
+        <div class="card-header bg-info text-black">
+            <h5 class="card-title mb-0">Average Award Amount</h5>
+        </div>
+        <div class="card-body bg-info-subtle">
+            <form id="AvgAwardAmountCalculatorForm">
+                <!-- Total Funds Disbursed -->
+                <div class="mb-3">
+                    <label for="totalFundsDisbursed" class="form-label">Total Funds Disbursed</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="totalFundsDisbursed" placeholder="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/(\..*)\..*/g, '$1'); formatNumber(this)">
+                        <span class="input-group-text">USD</span>
+                    </div>
+                </div>
+            
+                <!-- Total Recipients -->
+                <div class="mb-3">
+                    <label for="totalRecipients" class="form-label">Total Recipients</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="totalRecipients" placeholder="0" oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/(\..*)\..*/g, '$1'); formatNumber(this)">
+                        <span class="input-group-text">Recipients</span>
+                    </div>
+                </div>
+            
+                <!-- Average Award Amount -->
+                <div class="mb-3">
+                    <label for="averageAwardAmount" class="form-label">Average Award Amount</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="averageAwardAmount" placeholder="0" readonly>
+                        <span class="input-group-text">USD per Recipient</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+{% endblock %}
+
+
+<!-- JavaScript Scripts -->
+{% block js_scripts %}
+<script>
+    function formatNumber(input) {
+        const value = input.value.replace(/,/g, '');
+        if (value) {
+            input.value = Number(value).toLocaleString('en-US');
+        }
+    }
+</script>
+
+<script type="module">
+    import { AvgAwardAmountCalculator } from '/static/js/calculators/avg_award_amount_calculator.js';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            new AvgAwardAmountCalculator({
+                totalFundsDisbursed: 'totalFundsDisbursed',
+                totalRecipients: 'totalRecipients',
+                averageAwardAmount: 'averageAwardAmount'
+            });
+        });
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "errors/base_error.html" %}
+
+{% block title %}Unauthorized{% endblock %}
+
+{% block error_code %}401{% endblock %}
+
+{% block error_title %}Unauthorized{% endblock %}
+
+{% block error_message %}
+You need to be logged in to access this page. Please log in and try again.
+{% endblock %}

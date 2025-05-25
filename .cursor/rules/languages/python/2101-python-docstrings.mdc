@@ -1,0 +1,99 @@
+---
+description: FOLLOW when WRITING Python functions to ensure consistent Google Style docstrings
+globs: **/*.py
+alwaysApply: false
+---
+
+# Python Docstring Standard
+
+## Context
+
+- When writing any Python function or method in the codebase
+- When reviewing existing code and updating documentation
+- When implementing new modules or files with Python functions
+
+## Requirements
+
+- Every function must have a docstring, regardless of complexity
+- Docstrings must follow Google Style format
+- First line must be a concise summary of what the function does
+- Include detailed description after the summary if function logic is complex
+- Document all parameters and return values with appropriate types
+- Document exceptions the function may raise
+- Limit line length to 100 characters
+
+## Docstring Structure
+
+```python
+def function_name(param1: type1, param2: type2 = default) -> return_type:
+    """One-line summary of what the function does.
+
+    More detailed explanation if needed. Keep this section
+    brief but informative, focused on what the function does
+    rather than how it does it.
+
+    Args:
+        param1: Description of first parameter
+        param2: Description of second parameter, mention default value if relevant
+
+    Returns:
+        Description of return value and its significance
+
+    Raises:
+        ExceptionType: Conditions under which exception is raised
+    """
+```
+
+## Optional Sections
+
+Include these sections when relevant:
+
+- `Notes:` - Important implementation details or constraints
+- `Examples:` - Brief code examples showing usage
+
+## Examples
+
+<example>
+def get_temporal_context(context_id: str, filter_year: int = None) -> dict[str, Any]:
+    """Retrieves a temporal context based on provided ID and optional year filter.
+
+    Searches the vector database for the specified context and applies
+    temporal filtering if a year parameter is provided. Only returns
+    contexts active during the specified year.
+
+    Args:
+        context_id: Unique identifier for the context to retrieve
+        filter_year: Optional year to filter temporal contexts by
+
+    Returns:
+        Dictionary containing context data and metadata if found
+
+    Raises:
+        ContextNotFoundError: If no context with given ID exists
+        InvalidYearError: If filter_year is outside the valid range
+    """
+    # Function implementation here
+</example>
+
+<example type="invalid">
+def get_temporal_context(context_id, filter_year=None):
+    """Gets a context.
+
+    context_id - the ID
+    filter_year - year to filter by
+    
+    Returns context data
+    """
+    # Function implementation here
+</example>
+
+## Critical Rules
+
+- ALWAYS include a one-line summary as the first line of the docstring
+- ALWAYS document all parameters using the Args section
+- ALWAYS document return values using the Returns section
+- ALWAYS document exceptions using the Raises section when applicable
+- NEVER exceed 100 characters per line in docstrings
+- NEVER skip documenting a function, even simple ones
+- ALWAYS match parameter names exactly as they appear in the function signature
+- ALWAYS include type information in the function signature using type hints

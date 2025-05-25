@@ -1,0 +1,80 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ db_user.username }}'s Account{% endblock %}
+
+{% block content_header %}{{ db_user.username }}'s Account{% endblock %}
+
+{% block content %}
+<div class="container text-left">
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-4 text-right font-weight-bold">
+                    Id
+                </div>
+                <div class="col-8">
+                    {{ db_user.id }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4 text-right font-weight-bold">
+                    Username:
+                </div>
+                <div class="col-8">
+                    {{ db_user.username }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4 text-right font-weight-bold">
+                    email:
+                </div>
+                <div class="col-8">
+                    {{ db_user.email }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4 text-right font-weight-bold">
+                    full_name:
+                </div>
+                <div class="col-8">
+                    {{ db_user.full_name }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.is_superuser %}
+    <div class="card my-1">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-4 text-right font-weight-bold">
+                    User is Active:
+                </div>
+                <div class="col-8">
+                    {% if db_user.is_active %}
+                    <span class="text-success">True</span>
+                    {% else %}
+                    <span class="text-danger">False</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4 text-right font-weight-bold">
+                    User is Superuser:
+                </div>
+                <div class="col-8">
+                    {% if db_user.is_superuser %}
+                    <span class="text-success">True</span>
+                    {% else %}
+                    <span class="text-danger">False</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+
+{% endblock content %}

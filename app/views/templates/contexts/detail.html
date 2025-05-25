@@ -1,0 +1,90 @@
+{% extends "base/base.html" %}
+
+{% block title %}Context Details{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <link rel="stylesheet" href="/static/css/easymde-theme.css">
+{% endblock %}%}
+
+{% block content_header %}
+<a href="/contexts" class="btn btn-link mb-2">&larr; Back to Contexts</a>
+<h1 class="mb-4">Context Details</h1>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        {% if context %}
+            <input type="hidden" id="contextId" value="{{ context.id }}">
+
+            <!-- Header -->
+            <div class="card mb-5 context-outline context-background-dark">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+
+                    <!-- Title -->
+                    <div class="card-body">
+                        <h1 class="mb-0">{{ context.name }}</h1>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="me-3">
+                        <button class="btn btn-sm btn-outline-secondary me-2 edit-context-btn" data-id="{{ context.id }}">Edit</button>
+                        <button class="btn btn-sm btn-outline-danger delete-context-btn" data-id="{{ context.id }}">Delete</button>
+                    </div>
+                </div>
+
+                <!-- Context Template -->
+                <div class="mb-1 card-body">
+                    <strong>Context Template:</strong>
+                    {% if context.template_id %}
+                        <span class="badge context-template-outline context-template-background-dark">
+                            <a href="/context-templates/{{ context.template_id }}" class="text-white text-decoration-none">
+                                {{ context.template.name }}
+                            </a>
+                        </span>
+                    {% else %}
+                        <span class="text-muted">None</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Sections -->
+            <div class="mb-4">
+
+                <!-- Title -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h1 class="mb-0">Sections</h1>
+
+                    <!-- Add Section Button -->
+                    <button class="btn btn-primary" id="addSectionBtn">
+                        <i class="fas fa-plus"></i> Add Section
+                    </button>
+                </div>
+
+                <!-- Section List -->
+                <div id="sectionList">
+
+                    <!-- Section list will be rendered here by JS -->
+                </div>
+            </div>
+
+            <!-- Create/Edit Context Modal -->
+            {% include "/contexts/_modal_context.html" %}
+
+            <!-- Add Section Modal -->
+            {% include "/context_section/_modal_context_section.html" %}
+
+        {% else %}
+            <div class="alert alert-danger">Template not found.</div>
+        {% endif %}
+
+    </div>
+{% endblock %}
+
+{% block js_scripts %}
+    <script type="module" src="/static/js/components/contexts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!-- Add marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+{% endblock %}

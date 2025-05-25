@@ -1,0 +1,47 @@
+{% extends "base/base.html" %}
+
+{% block title %}Context Templates{% endblock %}
+
+{% block content_header %}
+<h1 class="mb-4">Context Templates</h1>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h4">All Context Templates</h2>
+        <button class="btn btn-primary" id="createTemplateBtn">
+            <i class="fas fa-plus"></i> Create Context Template
+        </button>
+    </div>
+    {% if templates %}
+    <div class="row">
+        {% for template in templates %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 context-template-outline context-template-background-dark">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="/context-templates/{{ template.id }}">{{ template.name }}</a>
+                    </h5>
+                    <p class="card-text">{{ template.description }}</p>
+                </div>
+                <div class="card-footer text-end">
+                    <button class="btn btn-sm btn-outline-secondary me-2 edit-template-btn" data-id="{{ template.id }}">Edit</button>
+                    <button class="btn btn-sm btn-outline-danger delete-template-btn" data-id="{{ template.id }}">Delete</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">No context templates found.</div>
+    {% endif %}
+</div>
+
+<!-- Create/Edit Template Modal -->
+{% include "context_templates/_modal_context_template.html" %}
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module" src="/static/js/components/context_templates.js"></script>
+{% endblock %} 

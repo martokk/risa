@@ -1,0 +1,299 @@
+---
+description: USE reusable JavaScript patterns with Bootstrap JS first, followed by utility functions and component functions to ENSURE maintainable frontend code
+globs: **/*.js, **/*.html
+alwaysApply: false
+---
+
+# JavaScript Guidelines
+
+## Context
+
+- When writing or modifying JavaScript code in this codebase
+- When implementing new UI components or client-side features
+- When working with forms, API requests, or UI interactions
+- When deciding on how to structure frontend functionality
+
+## Requirements
+
+- Follow the priority order for code reuse: Bootstrap JS → Utility Functions → Component Functions → Custom JS
+- Use existing Bootstrap JS functionality for common UI patterns whenever available
+- Leverage shared utility functions for common operations like API requests
+- Create reusable component functions for repeating patterns
+- Use modern JavaScript patterns: async/await, event delegation, modules
+- Apply consistent error handling across the application
+- Structure code for maintainability and reuse
+
+## Examples
+
+<example>
+// Good: Using Bootstrap JS functionality first
+const modal = new bootstrap.Modal(document.getElementById('myModal'));
+modal.show();
+
+// Good: Using shared utility functions for common operations
+// In utils/api.js
+async function apiRequest(endpoint, options = {}) {
+    const response = await fetch(endpoint, {
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        ...options
+    });
+
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+    }
+    
+    return response.json();
+}
+
+// Usage
+try {
+    const data = await apiRequest('/api/users');
+    renderUserList(data);
+} catch (error) {
+    showAlert('danger', error.message);
+}
+
+// Good: Using reusable component functions
+// In components/forms.js
+function initializeForm(formId, options = {}) {
+    const form = document.getElementById(formId);
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        try {
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            const response = await apiRequest(options.endpoint || form.action, {
+                method: options.method || 'POST',
+                body: JSON.stringify(data)
+            });
+            
+            if (options.onSuccess) {
+                options.onSuccess(response);
+            }
+        } catch (error) {
+            if (options.onError) {
+                options.onError(error);
+            } else {
+                showAlert('danger', error.message);
+            }
+        }
+    });
+    
+    return form;
+}
+
+// Usage
+initializeForm('userForm', {
+    endpoint: '/api/users',
+    onSuccess: (data) => updateUI(data)
+});
+</example>
+
+<example type="invalid">
+// Bad: Ignoring Bootstrap JS for standard components
+// Reinventing modal functionality
+function openModal(id) {
+    const modal = document.getElementById(id);
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+
+    const closeButtons = modal.querySelectorAll('.close-btn');
+    closeButtons.forEach(button => {
+        button.onclick = () => {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+    });
+}
+
+// Bad: Not reusing common code patterns
+// Each form has its own implementation
+document.getElementById('userForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert('User created!');
+        window.location.reload();
+    })
+    .catch(error => {
+        alert('Error: ' + error.message);
+    });
+});
+
+// Bad: Using different patterns for the same operations
+// Another form using different patterns
+document.getElementById('productForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Different pattern for getting form data
+    const formData = new FormData(this);
+    const name = formData.get('name');
+    const price = formData.get('price');
+    
+    // Different fetch pattern
+    fetch('/api/products', {
+        method: 'POST',
+        body: JSON.stringify({ name, price }),
+        headers: { 'Content-Type': 'application/json' }
+    }).then(function(response) {
+        return response.json();
+    }).then(function(data) {
+        console.log('Success:', data);
+        document.getElementById('message').textContent = 'Product created!';
+    }).catch(function(error) {
+        console.error('Error:', error);
+        document.getElementById('message').textContent = 'Error creating product';
+    });
+});
+</example>
+
+## Best Practices
+
+### 1. Event Delegation
+
+```javascript
+// Add a single event listener to a parent element
+document.querySelector('.table-container').addEventListener('click', (e) => {
+    // Check if the clicked element matches the selector
+    if (e.target.matches('.delete-btn')) {
+        // Handle the event with the specific element's data
+        handleDelete(e.target.dataset.id);
+    } else if (e.target.matches('.edit-btn')) {
+        handleEdit(e.target.dataset.id);
+    }
+});
+```
+
+### 2. Async/Await Pattern
+
+```javascript
+async function handleSubmit(e) {
+    try {
+        // Show loading indicator
+        showLoading(true);
+        
+        // Process the form asynchronously
+        const data = await submitForm(e.target);
+        
+        // Handle success
+        showAlert('success', 'Changes saved');
+        updateUI(data);
+    } catch (error) {
+        // Handle errors
+        showAlert('danger', error.message);
+    } finally {
+        // Always hide loading indicator
+        showLoading(false);
+    }
+}
+```
+
+### 3. Data Attributes
+
+```javascript
+// HTML
+<button data-action="delete" data-id="123" data-confirm="Are you sure?">Delete</button>
+
+// JavaScript
+document.querySelectorAll('[data-action="delete"]').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const { id, confirm } = e.target.dataset;
+        
+        if (window.confirm(confirm)) {
+            deleteItem(id);
+        }
+    });
+});
+```
+
+### 4. Module Pattern
+
+```javascript
+// components/datatable.js
+export const DataTable = {
+    initialize(tableId, options = {}) {
+        this.table = document.getElementById(tableId);
+        this.options = {
+            pageSize: 10,
+            ...options
+        };
+        
+        this._setupEventListeners();
+        this.refresh();
+    },
+    
+    refresh() {
+        // Refresh logic
+    },
+    
+    _setupEventListeners() {
+        // Private method for internal use
+    }
+};
+
+// Usage
+import { DataTable } from './components/datatable.js';
+DataTable.initialize('userTable', {
+    pageSize: 20,
+    onRowClick: handleRowClick
+});
+```
+
+### 5. API Utils Integration
+
+```javascript
+// Use the shared API utilities
+import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+// Initialize API with tokens
+initializeApi({
+    access_token: "{{ tokens.access_token }}",
+    refresh_token: "{{ tokens.refresh_token }}"
+});
+
+// CRUD operations using shared utilities
+async function initializeEntityManagement(entityType) {
+    // Read all entities
+    const entities = await apiCrud.getAll(entityType);
+    renderEntities(entities);
+    
+    // Set up create form
+    uiHelpers.initializeForm('createForm', {
+        onSubmit: async (data) => {
+            try {
+                await apiCrud.create(entityType, data);
+                uiHelpers.refreshPage();
+            } catch (error) {
+                uiHelpers.showError(error);
+            }
+        }
+    });
+}
+```
+
+## Critical Rules
+
+- Always use Bootstrap JS components over custom implementations
+- Use shared utility functions for common operations (API calls, form handling)
+- Apply consistent error handling with try/catch blocks for async operations
+- Use event delegation for handling multiple similar elements
+- Prefer async/await over promise chains for better readability
+- Use data attributes for element configuration instead of IDs or classes
+- Organize related functionality using the module pattern
+- Use the API utils library for all CRUD operations
+- Initialize forms with reusable patterns instead of writing form handlers from scratch

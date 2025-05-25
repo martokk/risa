@@ -1,0 +1,17 @@
+@import url('default.css');
+@import url('variables.css');
+@import url('context.css');
+
+.wrap {
+    /* top: 0; */
+    padding-right: 20px;
+    padding-bottom: 10px;
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.wrap::-webkit-scrollbar {
+    display: none;
+}

@@ -1,0 +1,83 @@
+{% if alerts %}
+
+{% if alerts.primary %}
+<div class="col-xl-8 col-lg-11 col-md-12 mx-auto">
+    {% for primary in alerts.primary %}
+    <div class="alert alert-primary" role="alert">
+        {{ primary }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if alerts.secondary %}
+<div class="col-xl-8 col-lg-11 col-md-12 mx-auto">
+    {% for secondary in alerts.secondary %}
+    <div class="alert alert-secondary" role="alert">
+        {{ secondary }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if alerts.success %}
+<div class="col-xl-8 col-lg-11 col-md-12 mx-auto">
+    {% for success in alerts.success %}
+    <div class="alert alert-success" role="alert">
+        {{ success }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if alerts.danger %}
+<div class="col-xl-8 col-lg-11 col-md-12 mx-auto">
+    {% for danger in alerts.danger %}
+    <div class="alert alert-danger" role="alert">
+        {{ danger }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if alerts.warning %}
+<div class="col-xl-8 col-lg-11 col-md-12 mx-auto">
+    {% for warning in alerts.warning %}
+    <div class="alert alert-warning" role="alert">
+        {{ warning }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if alerts.info %}
+<div class="col-xl-8 col-lg-11 col-md-12 mx-auto">
+    {% for info in alerts.info %}
+    <div class="alert alert-primary" role="alert">
+        {{ info }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if alerts.light %}
+<div class="col-xl-8 col-lg-11 col-md-12 mx-auto">
+    {% for light in alerts.light %}
+    <div class="alert alert-light" role="alert">
+        {{ light }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if alerts.dark %}
+<div class="col-xl-8 col-lg-11 col-md-12 mx-auto">
+    {% for dark in alerts.dark %}
+    <div class="alert alert-dark" role="alert">
+        {{ dark }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% endif %}

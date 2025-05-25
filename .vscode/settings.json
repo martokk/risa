@@ -1,0 +1,211 @@
+{
+	"workbench.colorCustomizations": {
+		"activityBar.activeBackground": "#6d880e",
+		"activityBar.background": "#6d880e",
+		"activityBar.foreground": "#e7e7e7",
+		"activityBar.inactiveForeground": "#e7e7e799",
+		"activityBarBadge.background": "#52cbed",
+		"activityBarBadge.foreground": "#15202b",
+		"commandCenter.border": "#e7e7e799",
+		"editorGroup.border": "#6d880e",
+		"panel.border": "#6d880e",
+		"sash.hoverBorder": "#6d880e",
+		"sideBar.border": "#6d880e",
+		"statusBar.background": "#485a09",
+		"statusBar.border": "#485a09",
+		"statusBar.debuggingBackground": "#1b095a",
+		"statusBar.debuggingBorder": "#1b095a",
+		"statusBar.debuggingForeground": "#e7e7e7",
+		"statusBar.foreground": "#e7e7e7",
+		"statusBarItem.hoverBackground": "#6d880e",
+		"statusBarItem.remoteBackground": "#485a09",
+		"statusBarItem.remoteForeground": "#e7e7e7",
+		"tab.activeBorder": "#6d880e",
+		"titleBar.activeBackground": "#485a09",
+		"titleBar.activeForeground": "#e7e7e7",
+		"titleBar.border": "#485a09",
+		"titleBar.inactiveBackground": "#485a0999",
+		"titleBar.inactiveForeground": "#e7e7e799"
+	},
+	"peacock.color": "#485a09",
+	"cSpell.ignorePaths": [
+		"node_modules", // this will ignore anything the node_modules directory
+		"**/node_modules", // the same for this one
+		"**/node_modules/**", // the same for this one
+		"node_modules/**", // Doesn't currently work due to how the current working directory is determined.
+		"vscode-extension", //
+		".git", // Ignore the .git directory
+		"*.dll", // Ignore all .dll files.
+		"**/*.dll", // Ignore all .dll files
+		"**/migrations/**", // Ignore all migrations
+		"htmlcov", // Ignore html coverage
+		".vscode", // Ignore vscode settings
+		"**/.vscode/**", // Ignore vscode settings
+		".venv", // Ignore virtual environment
+		"typings", // Ignore typings
+		"thunder-tests", // Ignore thunder tests
+		".mypy_cache", // Ignore mypy cache
+		"requirements.txt", // Ignore mypy cache
+		"poetry.lock", // Ignore mypy cache
+	],
+	"cSpell.words": [
+		"addopts",
+		"aiohttp",
+		"anyio",
+		"ASGI",
+		"asyncpg",
+		"autoflush",
+		"awsapps",
+		"basecrud",
+		"beautifulsoup",
+		"buildx",
+		"conftest",
+		"cookiecutter",
+		"cssselect",
+		"darglint",
+		"dateafter",
+		"dateutil",
+		"dbadmin",
+		"dbapi",
+		"DOCKERHUB",
+		"docstrings",
+		"dotenv",
+		"fakeuser",
+		"FAQCRUD",
+		"fastapi",
+		"feedgen",
+		"gracekenosha",
+		"Groq",
+		"gtag",
+		"HSTS",
+		"htmlcov",
+		"httpx",
+		"ipython",
+		"jsonable",
+		"laravel",
+		"LNGSXX",
+		"logsdger",
+		"loguru",
+		"lxml",
+		"magento",
+		"martokk",
+		"mjml",
+		"mkdocs",
+		"Mlfdx",
+		"mutablecopy",
+		"netcat",
+		"nocover",
+		"onupdate",
+		"opperating",
+		"optionflags",
+		"passlib",
+		"phpinfo",
+		"phpmyadmin",
+		"pktc",
+		"playlistend",
+		"playlistreverse",
+		"poolclass",
+		"prestashop",
+		"pydantic",
+		"pyjwt",
+		"pyqt",
+		"pyright",
+		"pysqlite's",
+		"python_fastapi_stack",
+		"pyup",
+		"pyupgrade",
+		"referer",
+		"sessionmaker",
+		"setuptools",
+		"shortuuid",
+		"sometext",
+		"sourcery",
+		"sqladmin",
+		"sqlalchemy",
+		"sqlmodel",
+		"starlette",
+		"Styxhexenhammer",
+		"symfony",
+		"tabmix",
+		"templating",
+		"typehints",
+		"typer",
+		"tzutc",
+		"userdb",
+		"uvicorn",
+		"uvloop",
+		"WMAR",
+		"wrongpassword",
+		"ytdlp"
+	],
+	"cSpell.ignoreWords": [
+		"BLCKBX",
+		"CDYM",
+		"Cdthu",
+		"DVNR",
+		"FIRSTPARTY",
+		"Fiund",
+		"JXWT",
+		"LOCALFOLDER",
+		"Parens",
+		"Pwpc",
+		"STDLIB",
+		"THIRDPARTY",
+		"TJMs",
+		"Vjoa",
+		"Ycso",
+		"amumr",
+		"buildx",
+		"dmte",
+		"eqxl",
+		"essrt",
+		"hyhcvz",
+		"lofi",
+		"naar",
+		"norecursedirs",
+		"plushuang",
+		"vslb",
+		"vunh",
+		"waarheid",
+		"zoek"
+	],
+	"[python]": {
+		"editor.defaultFormatter": "charliermarsh.ruff",
+		"editor.formatOnType": true
+	},
+	"python.venvFolders": [
+		".venv"
+	],
+	"python.testing.pytestArgs": [
+		"tests",
+		"-v",
+		"--cov=app",
+		"--color=yes",
+		"--tb=short"
+	],
+	"flake8.interpreter": [
+		"python3"
+	],
+	"python.testing.unittestEnabled": false,
+	"python.testing.pytestEnabled": true,
+	"thunder-client.saveToWorkspace": true,
+	"thunder-client.customLocation": "",
+	"thunder-client.workspaceRelativePath": "",
+	"files.associations": {
+		"*.html": "jinja-html",
+		"*.yml": "yaml"
+	},
+	"cSpell.spellCheckOnlyWorkspaceFiles": true,
+	"cSpell.showAutocompleteSuggestions": true,
+	"cSpell.suggestionMenuType": "quickFix",
+	"cSpell.enableFiletypes": [
+		"toml"
+	],
+	"files.insertFinalNewline": true,
+	"flake8.args": [
+		"--config=pyproject.toml"
+	],
+	"workbench.editorAssociations": {
+		"*.mdc": "default"
+	},
+}

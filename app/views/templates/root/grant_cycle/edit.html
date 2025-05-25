@@ -1,0 +1,283 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ "Edit" if grant_cycle else "New" }} Grant Cycle{% endblock %}
+
+{% block content %}
+<div class="container py-2">
+    <form method="POST" action="{{ '/grant-cycles/' + grant_cycle.id|string + '/edit' if grant_cycle else '/grant-cycles/new' }}">
+        <!-- Details Card -->
+        <div class="card mb-5">
+            <div class="card-header py-2">
+                <h5 class="card-title mb-0">
+                    {% if grant_cycle %}
+                        Grant Cycle: {{ grant_cycle.name }}
+                    {% else %}
+                        New Grant Cycle for {{ selected_program.name }}
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body py-2">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label for="grant_program_id" class="form-label">Grant Program</label>
+                        <select class="form-select" id="grant_program_id" name="grant_program_id" required>
+                            <option value="">Select Program</option>
+                            {% for program in grant_programs %}
+                            <option value="{{ program.id }}" 
+                                {{ 'selected' if (grant_cycle and grant_cycle.grant_program_id == program.id) or 
+                                    (not grant_cycle and selected_program_id == program.id) else '' }}>
+                                {{ program.organization.name }} - {{ program.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                            value="{{ grant_cycle.name if grant_cycle else '' }}" placeholder="YYYY-MM, or YYYY-YYYY, or 2025-Q1, etc." required>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Enrollment Card -->
+        <div class="card mb-5">
+            <div class="card-header py-2">
+                <h5 class="card-title mb-0">Enrollment</h5>
+            </div>
+            <div class="card-body py-2">
+
+                <!-- LOI Row -->
+                {% if (selected_program and selected_program.requires_loi) or (grant_cycle and grant_cycle.grant_program.requires_loi) %}
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-5 pe-5">
+                            <label class="form-label">LOI Open</label>
+                            <div class="row g-2 mb-3">
+                                <div class="col-8">
+                                    <input type="date" class="form-control" id="loi_open_date" name="loi_open_date" 
+                                        value="{{ grant_cycle.loi_open_date|format_date if grant_cycle and grant_cycle.loi_open_date else '' }}">
+                                </div>
+                                <div class="col-4">
+                                    <select class="form-select" id="loi_open_date_verification" name="loi_open_date_verification">
+                                        {% for verification in date_verifications %}
+                                        <option value="{{ verification }}"
+                                            {{ 'selected' if grant_cycle and grant_cycle.loi_open_date_verification == verification else '' }}>
+                                            {{ verification }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5 pe-5">
+                            <label class="form-label">LOI Due</label>
+                            <div class="row g-2">
+                                <div class="col-8">
+                                    <input type="date" class="form-control" id="loi_due_date" name="loi_due_date"
+                                        value="{{ grant_cycle.loi_due_date|format_date if grant_cycle and grant_cycle.loi_due_date else '' }}">
+                                </div>
+                                <div class="col-4">
+                                    <select class="form-select" id="loi_due_date_verification" name="loi_due_date_verification">
+                                        {% for verification in date_verifications %}
+                                        <option value="{{ verification }}"
+                                            {{ 'selected' if grant_cycle and grant_cycle.loi_due_date_verification == verification else '' }}>
+                                            {{ verification }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">LOI Submitted</label>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <input type="date" class="form-control" id="loi_submitted_date" name="loi_submitted_date"
+                                        value="{{ grant_cycle.loi_submitted_date|format_date if grant_cycle and grant_cycle.loi_submitted_date else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+      
+                <!-- Application Row -->
+                <div class="row g-2">
+                    <div class="col-md-5 pe-5">
+                        <label class="form-label">Application Open</label>
+                        <div class="row g-2">
+                            <div class="col-8">
+                                <input type="date" class="form-control" id="application_open_date" name="application_open_date" 
+                                    value="{{ grant_cycle.application_open_date|format_date if grant_cycle and grant_cycle.application_open_date else '' }}">
+                            </div>
+                            <div class="col-4">
+                                <select class="form-select" id="application_open_date_verification" name="application_open_date_verification">
+                                    {% for verification in date_verifications %}
+                                    <option value="{{ verification }}"
+                                        {{ 'selected' if grant_cycle and grant_cycle.application_open_date_verification == verification else '' }}>
+                                        {{ verification }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5 pe-5">
+                        <label class="form-label">Application Due</label>
+                        <div class="row g-2">
+                            <div class="col-8">
+                                <input type="date" class="form-control" id="application_due_date" name="application_due_date" 
+                                    value="{{ grant_cycle.application_due_date|format_date if grant_cycle and grant_cycle.application_due_date else '' }}">
+                            </div>
+                            <div class="col-4">
+                                <select class="form-select" id="application_due_date_verification" name="application_due_date_verification">
+                                    {% for verification in date_verifications %}
+                                    <option value="{{ verification }}"
+                                        {{ 'selected' if grant_cycle and grant_cycle.application_due_date_verification == verification else '' }}>
+                                        {{ verification }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Application Submitted</label>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <input type="date" class="form-control" id="application_submitted_date" name="application_submitted_date"
+                                    value="{{ grant_cycle.application_submitted_date|format_date if grant_cycle and grant_cycle.application_submitted_date else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Grant Review/Award Card -->
+        <div class="card mb-5">
+            <div class="card-header py-2">
+                <h5 class="card-title mb-0">Grant Review & Award</h5>
+            </div>
+            <div class="card-body py-2">
+
+                <!-- Decision Row -->
+                <div class="row g-2">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Decision</label>
+                        <div class="row g-2">
+
+                            <div class="col-8">
+                                <input type="date" class="form-control" id="decision_date" name="decision_date" 
+                                    value="{{ grant_cycle.decision_date|format_date if grant_cycle and grant_cycle.decision_date else '' }}">
+                            </div>
+
+                            <div class="col-4">
+                                <select class="form-select" id="decision_date_verification" name="decision_date_verification">
+                                    {% for verification in date_verifications %}
+                                    <option value="{{ verification }}"
+                                        {{ 'selected' if grant_cycle and grant_cycle.decision_date_verification == verification else '' }}>
+                                        {{ verification }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Payout</label>
+                        <div class="row g-2">
+                            <div class="col-8">
+                                <input type="date" class="form-control" id="payout_date" name="payout_date" 
+                                    value="{{ grant_cycle.payout_date|format_date if grant_cycle and grant_cycle.payout_date else '' }}">
+                            </div>
+                            <div class="col-4">
+                                <select class="form-select" id="payout_date_verification" name="payout_date_verification">
+                                    {% for verification in date_verifications %}
+                                    <option value="{{ verification }}"
+                                        {{ 'selected' if grant_cycle and grant_cycle.payout_date_verification == verification else '' }}>
+                                        {{ verification }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Grant Disbursement Row -->
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Total Funding Disbursed</label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="total_funding_disbursed" name="total_funding_disbursed" 
+                            value="{{ grant_cycle.total_funding_disbursed if grant_cycle and grant_cycle.total_funding_disbursed else 0 }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Total Recipients</label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="total_recipients" name="total_recipients" 
+                            value="{{ grant_cycle.total_recipients if grant_cycle and grant_cycle.total_recipients else 0 }}">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Funding Card -->
+        <div class="card mb-5">
+            <div class="card-header py-2">
+                <h5 class="card-title mb-0">Funding</h5>
+            </div>
+            <div class="card-body py-2">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Received</label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="amount_awarded_received" name="amount_awarded_received" 
+                            value="{{ grant_cycle.amount_awarded_received if grant_cycle and grant_cycle.amount_awarded_received else 0 }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Awaiting</label>
+                        <input type="number" step="0.01" min="0" class="form-control" id="amount_awarded_awaiting" name="amount_awarded_awaiting" 
+                            value="{{ grant_cycle.amount_awarded_awaiting if grant_cycle and grant_cycle.amount_awarded_awaiting else 0 }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="card mb-5">
+            <div class="card-header py-2">
+                <h5 class="card-title mb-0">Status</h5>
+            </div>
+            <div class="card-body py-2">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            {% for status in cycle_statuses %}
+                            <option value="{{ status }}" {{ 'selected' if grant_cycle and grant_cycle.status==status else '' }}>
+                                {{ status }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex justify-content-between">
+            <a href="{{ '/grant-cycles/' + grant_cycle.id|string if grant_cycle else '/grant-cycles' }}" 
+                class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </form>
+</div>
+{% endblock %} 

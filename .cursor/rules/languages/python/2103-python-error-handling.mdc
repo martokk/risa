@@ -1,0 +1,128 @@
+---
+description: USE guard clauses and early returns when HANDLING errors in Python to ENSURE robust and readable code
+globs: **/*.py
+alwaysApply: false
+---
+
+# Python Error Handling Guidelines
+
+<version>1.0.0</version>
+
+## Context
+
+- When implementing functions that require input validation
+- When dealing with external systems or API calls that may fail
+- When writing code that could encounter edge cases or unexpected inputs
+- When refactoring complex conditional logic
+
+## Requirements
+
+- Handle errors and edge cases at the beginning of functions
+- Use early returns for error conditions to avoid deeply nested if statements
+- Place the happy path last in the function for improved readability
+- Avoid unnecessary else statements; use the if-return pattern instead
+- Use guard clauses to handle preconditions and invalid states early
+- Implement proper error logging and user-friendly error messages
+- Use custom error types or error factories for consistent error handling
+
+## Examples
+
+<example>
+# Good: Early returns and guard clauses for error handling
+
+def process_user_data(user_id: str, data: dict) -> dict:
+    """Process user data with proper error handling."""
+    # Validate inputs first
+    if not user_id:
+        logger.error("Missing user_id parameter")
+        raise ValueError("User ID is required")
+
+    if not data:
+        logger.error(f"No data provided for user {user_id}")
+        return {"success": False, "error": "No data provided"}
+    
+    if not isinstance(data, dict):
+        logger.error(f"Invalid data format for user {user_id}")
+        return {"success": False, "error": "Data must be a dictionary"}
+    
+    # Validate required fields
+    required_fields = ["name", "email"]
+    for field in required_fields:
+        if field not in data:
+            logger.error(f"Missing required field '{field}' for user {user_id}")
+            return {"success": False, "error": f"Missing required field: {field}"}
+    
+    # Happy path (last, without nesting)
+    processed_data = transform_data(data)
+    save_to_database(user_id, processed_data)
+    return {"success": True, "user_id": user_id, "data": processed_data}
+</example>
+
+<example type="invalid">
+# Bad: Deeply nested conditionals without early returns
+
+def process_user_data(user_id, data):
+    """Process user data with poor error handling."""
+    result = {"success": False}
+
+    if user_id:
+        if data:
+            if isinstance(data, dict):
+                if "name" in data and "email" in data:
+                    # Happy path buried in nested conditionals
+                    processed_data = transform_data(data)
+                    save_to_database(user_id, processed_data)
+                    result = {"success": True, "user_id": user_id, "data": processed_data}
+                else:
+                    result["error"] = "Missing required fields"
+            else:
+                result["error"] = "Data must be a dictionary"
+        else:
+            result["error"] = "No data provided"
+    else:
+        result["error"] = "User ID is required"
+        
+    return result
+</example>
+
+<example>
+# Good: Custom error types for consistent handling
+
+class ValidationError(Exception):
+    """Error raised when input validation fails."""
+    def __init__(self, field: str, message: str):
+        self.field = field
+        self.message = message
+        super().__init__(f"{field}: {message}")
+
+def validate_user(user_data: dict) -> None:
+    """Validate user data using custom error types."""
+    if not user_data.get("email"):
+        raise ValidationError("email", "Email is required")
+
+    if not is_valid_email(user_data.get("email")):
+        raise ValidationError("email", "Invalid email format")
+        
+    if len(user_data.get("password", "")) < 8:
+        raise ValidationError("password", "Password must be at least 8 characters")
+
+# Usage with try/except
+
+try:
+    validate_user(user_data)
+    # Process valid user data
+except ValidationError as e:
+    # Handle validation errors consistently
+    logger.warning(f"Validation failed: {e.field} - {e.message}")
+    return {"field": e.field, "error": e.message}
+</example>
+
+## Critical Rules
+
+- Always validate inputs at the beginning of functions
+- Use early returns to handle error cases and avoid nested conditions
+- Place preconditions and guard clauses before the main function logic
+- Provide clear, actionable error messages with proper context
+- Log errors with appropriate severity levels
+- Use custom exception types for domain-specific errors
+- Prioritize code readability by keeping the happy path clear and unnested

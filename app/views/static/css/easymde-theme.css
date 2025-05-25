@@ -1,0 +1,198 @@
+/* Bootstrap-aligned dark theme for EasyMDE */
+.editor-toolbar a {
+    color: var(--bs-secondary-color, #6c757d) !important;
+}
+
+.editor-toolbar a.active,
+.editor-toolbar a:hover {
+    background: var(--bs-tertiary-bg, #343a40) !important;
+    border-color: var(--bs-border-color, #495057) !important;
+}
+
+.editor-toolbar button.active,
+.editor-toolbar button:hover {
+    background: var(--bs-dark-bg-subtle, #212529) !important;
+    border-color: var(--bs-border-color, #495057) !important;
+}
+
+.CodeMirror {
+    color: var(--bs-body-color, #f8f9fa) !important;
+    background: var(--bs-dark-bg-subtle, #212529) !important;
+    border-color: var(--bs-border-color, #495057) !important;
+}
+
+.CodeMirror-cursor {
+    border-left: 1px solid var(--bs-body-color, #f8f9fa) !important;
+}
+
+.CodeMirror-selected {
+    background: var(--bs-tertiary-bg, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.CodeMirror-line {
+    color: var(--bs-body-color, #f8f9fa) !important;
+}
+
+.editor-toolbar {
+    background: var(--bs-dark, #212529) !important;
+    border-color: var(--bs-border-color, #495057) !important;
+}
+
+.editor-preview {
+    background: var(--bs-dark-bg-subtle, #212529) !important;
+    color: var(--bs-body-color, #f8f9fa) !important;
+}
+
+.cm-s-easymde .cm-header-1 {
+    color: #dc3545 !important;
+    font-size: 1.75rem
+}
+
+.cm-s-easymde .cm-header-2 {
+    color: var(--bs-purple, #6f42c1) !important;
+    font-size: 1.6rem
+}
+
+.cm-s-easymde .cm-header-3 {
+    color: var(--bs-purple, #6f42c1) !important;
+    font-size: 1.45rem
+}
+
+.cm-s-easymde .cm-header-4 {
+    color: var(--bs-purple, #6f42c1) !important;
+    font-size: 1.3rem
+}
+
+.cm-s-easymde .cm-header-5 {
+    color: var(--bs-purple, #6f42c1) !important;
+    font-size: 1.15rem
+}
+
+.cm-s-easymde .cm-header-6 {
+    color: var(--bs-purple, #6f42c1) !important;
+    font-size: 1rem
+}
+
+.editor-preview h1 {
+    color: #dc3545 !important;
+}
+
+.editor-preview h2,
+.editor-preview h3,
+.editor-preview h4,
+.editor-preview h5,
+.editor-preview h6,
+.editor-preview strong {
+    color: var(--bs-heading-color, #fff) !important;
+}
+
+.editor-preview a {
+    color: var(--bs-link-color, #0d6efd) !important;
+}
+
+.editor-preview-side {
+    background: var(--bs-dark-bg-subtle, #212529) !important;
+    color: var(--bs-body-color, #f8f9fa) !important;
+    border-color: var(--bs-border-color, #495057) !important;
+}
+
+.editor-statusbar {
+    color: var(--bs-secondary-color, #6c757d) !important;
+    background: var(--bs-dark, #212529) !important;
+    border-color: var(--bs-border-color, #495057) !important;
+}
+
+/* Syntax Highlighting - using Bootstrap colors where possible */
+
+.cm-s-easymde .cm-quote {
+    color: var(--bs-info, #0dcaf0) !important;
+}
+
+.cm-s-easymde .cm-keyword {
+    color: var(--bs-pink, #d63384) !important;
+}
+
+.cm-s-easymde .cm-atom {
+    color: var(--bs-purple, #6f42c1) !important;
+}
+
+.cm-s-easymde .cm-number {
+    color: var(--bs-danger, #dc3545) !important;
+}
+
+.cm-s-easymde .cm-def {
+    color: var(--bs-success, #198754) !important;
+}
+
+.cm-s-easymde .cm-variable {
+    color: var(--bs-body-color, #f8f9fa) !important;
+}
+
+.cm-s-easymde .cm-variable-2 {
+    color: var(--bs-warning, #ffc107) !important;
+}
+
+.cm-s-easymde .cm-variable-3 {
+    color: var(--bs-success, #198754) !important;
+}
+
+.cm-s-easymde .cm-property {
+    color: var(--bs-info, #0dcaf0) !important;
+}
+
+.cm-s-easymde .cm-operator {
+    color: var(--bs-pink, #d63384) !important;
+}
+
+.cm-s-easymde .cm-comment {
+    color: var(--bs-secondary, #6c757d) !important;
+}
+
+.cm-s-easymde .cm-string {
+    color: var(--bs-warning, #ffc107) !important;
+}
+
+.cm-s-easymde .cm-string-2 {
+    color: var(--bs-warning, #ffc107) !important;
+}
+
+.cm-s-easymde .cm-tag {
+    color: var(--bs-pink, #d63384) !important;
+}
+
+.cm-s-easymde .cm-meta {
+    color: var(--bs-success, #198754) !important;
+}
+
+.cm-s-easymde .cm-attribute {
+    color: var(--bs-info, #0dcaf0) !important;
+}
+
+.cm-s-easymde .cm-builtin {
+    color: var(--bs-success, #198754) !important;
+}
+
+.cm-s-easymde .cm-bracket {
+    color: var(--bs-body-color, #f8f9fa) !important;
+}
+
+.cm-s-easymde .cm-hr {
+    color: var(--bs-orange, #fd7e14) !important;
+}
+
+.cm-s-easymde .cm-link {
+    color: var(--bs-info, #0dcaf0) !important;
+}
+
+.cm-s-easymde .cm-error {
+    background: var(--bs-danger, #dc3545) !important;
+    color: var(--bs-body-color, #f8f9fa) !important;
+}
+
+/* Dark theme for editor with Bootstrap dark mode support */
+.dark-mode .CodeMirror,
+[data-bs-theme="dark"] .CodeMirror,
+.bg-dark .CodeMirror {
+    background: var(--bs-dark, #212529) !important;
+    color: var(--bs-light, #f8f9fa) !important;
+}

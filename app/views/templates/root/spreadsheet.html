@@ -1,0 +1,738 @@
+{% extends "base/base.html" %}
+
+{% block head %}
+<style>
+
+    .table-responsive {
+        margin-top: 1rem;
+    }
+
+
+
+    .table th {
+        position: sticky;
+        top: 0;
+        background-color: #212529;
+        color: #ffffffb9;
+        z-index: 1;
+        white-space: nowrap;
+        padding: 1.25rem 0.5rem;
+        border-bottom: 1px solid #ffffff !important;
+        margin-bottom: 0.5rem;
+    }
+
+    .table-sm td,
+    .table-sm th {
+        font-size: 0.875rem;
+        min-width: 7rem;
+        text-align: center;
+        vertical-align: middle;
+        text-wrap: wrap;
+    }
+    .table-sm tr {
+        height: 2.5rem;
+    }
+
+    .date-cell {
+        white-space: nowrap;
+        padding: 0.25rem 0.5rem;
+        min-width: 7rem;
+    }
+
+    .status-didnt-apply td, .status-wont-apply td  {
+        background-color: #000000;
+        font-style: italic;
+        opacity: 0.15 !important;
+    }
+    .status-awarded td {
+        background-color: #00ff2213;
+        font-style: italic;
+        opacity: 0.8 !important;
+    }
+    .status-rejected td {
+        background-color: #ff00001a;
+        font-style: italic;
+        opacity: 0.8 !important;
+    }
+    .status-submitted td {
+        background-color: #00ddfa40;
+    }
+    .status-in-progress td {
+        background-color: #ffea009a;
+        color: #ffffff
+    }
+
+
+
+    .date-soon{
+        font-weight: bold;
+        box-shadow: inset 0 0 0 5px #fffb00 !important;
+    }
+    
+    .date-soon.date-verified {
+        background-color: #fffb00 !important;
+        color: #000000 !important;
+        font-weight: bold;
+    }
+
+
+
+    .date-awaiting.date-unverified{
+        box-shadow: inset 0 0 0 5px #00ddfa !important;
+    }
+    .date-awaiting.date-verified {
+        background-color: #00ddfa !important;
+        color: #000000 !important;
+        font-weight: bold;
+    }
+
+    .date-missing, .missing-past-date {
+        background-color: #ff0000 !important;
+    }
+
+    .date-unverified {
+        color: #f230fc !important;
+    }
+
+    .date-speculative {
+        color: #ff0000 !important;
+        font-weight: bold;
+    }
+
+    .date-likely {
+        color: #fcab30 !important;
+    }
+
+    .date-verified {
+        color: #ffffff !important;
+    }
+
+    .date-unknown {
+        color: #ff0000 !important;
+        font-weight: bold;
+    }
+
+    .date-not-applicable {
+        color: #1e1e1e !important;
+        font-style: italic;
+    }
+
+
+
+    /* New filter section styles */
+    .filters-section {
+        background-color: #2a2d31;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .filters-title {
+        color: #ffffff;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .filters-content {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 3rem;
+        background-color: #212529;
+        color: #ffffff;
+        padding: 0.75rem 1.5rem;
+        border: 1px solid #373b3e;
+        min-width: 200px;
+        margin: 0.125rem 0 0;
+        border-radius: 0.25rem;
+        justify-content: center;
+    }
+
+    .filter-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #ffffff;
+        cursor: pointer;
+    }
+
+    .filter-checkbox input[type="checkbox"] {
+        cursor: pointer;
+    }
+
+    .status-select {
+        position: relative;
+    }
+
+    .dropdown-menu {
+        background-color: #212529;
+        color: #ffffff;
+        border: 1px solid #373b3e;
+        min-width: 200px;
+        position: absolute;
+        z-index: 1000;
+        float: left;
+        margin: 0.125rem 0 0;
+        border-radius: 0.25rem;
+    }
+
+    .form-check {
+        padding: 0.25rem 1rem;
+        color: #ffffff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-left: 0;
+    }
+
+    .form-check .form-check-input {
+        float: left;
+        margin-left: 0;
+    }
+
+    .form-check:hover {
+        background-color: #373b3e;
+        border-radius: 4px;
+    }
+
+    .form-check-input {
+        cursor: pointer;
+    }
+
+    /* Animation styles */
+    .table td,
+    .table th {
+        transition: padding 0.3s ease-out, width 0.3s ease-out, opacity 0.2s ease-out;
+        overflow: hidden;
+    }
+
+    .table td.collapsed,
+    .table th.collapsed {
+        padding: 0 !important;
+        border: none !important;
+        width: 0 !important;
+        opacity: 0;
+    }
+
+    .table tr {
+        transition: height 0.3s ease-out, padding 0.3s ease-out, opacity 0.2s ease-out;
+        overflow: hidden;
+    }
+
+    .table tr.collapsed {
+        padding: 0 !important;
+        border: none !important;
+        height: 0 !important;
+        opacity: 0;
+        line-height: 0 !important;
+    }
+
+    .table tr.collapsed td {
+        padding: 0 !important;
+        border: none !important;
+        height: 0 !important;
+        opacity: 0;
+    }
+
+</style>
+{% endblock %}
+
+
+{% block title %}Grant Cycles Spreadsheet{% endblock %}
+{% block content_header %}Grant Cycles Spreadsheet{% endblock %}
+
+
+
+{% block content %}
+<div class="">
+    <!-- New Filters Section -->
+    <div class="filters-section">
+
+        <!-- Filters Title -->
+        <div class="filters-title">
+            <i class="fas fa-filter"></i>
+            <span>Filters</span>
+        </div>
+
+        <!-- Filters Content -->
+        <div class="filters-content">
+
+            <!-- Filter Checkboxes -->
+            <div class="filter-group">
+
+                <!-- Only Active Filter -->
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filter-active" checked>
+                    <span>Only Active</span>
+                </label>
+
+                <!-- Hide Consise Name Filter -->
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filter-hide-consise-name">
+                    <span>Hide Consise Name</span>
+                </label>
+
+                <!-- Hide LOI Filter -->
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filter-hide-loi">
+                    <span>Hide LOI</span>
+                </label>
+
+                <!-- Hide Submitted Filter -->
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filter-hide-submitted">
+                    <span>Hide Submitted</span>
+                </label>
+
+                <!-- Hide Helpers Filter -->
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filter-hide-helpers" checked>
+                    <span>Hide Helpers</span>
+                </label>
+
+                <!-- Hide Disbursements Filter -->
+                <label class="filter-checkbox">
+                    <input type="checkbox" id="filter-hide-disbursements" checked>
+                    <span>Hide Disbursements</span>
+                </label>
+
+            </div>
+
+            <!-- Select Filters -->
+            <div class="filter-group">
+
+                <!-- Year Filter -->
+                <div class="status-select">
+                    <button class="btn btn-dark dropdown-toggle p-0" type="button" id="yearFilterDropdown" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Filter by Year
+                    </button>
+                    <div class="dropdown-menu year-dropdown-menu" aria-labelledby="yearFilterDropdown">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="2022" id="year-2022">
+                            <label class="form-check-label" for="year-2022">
+                                2022
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="2023" id="year-2023">
+                            <label class="form-check-label" for="year-2023">
+                                2023
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="2024" id="year-2024">
+                            <label class="form-check-label" for="year-2024">
+                                2024
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="2025" id="year-2025">
+                            <label class="form-check-label" for="year-2025">
+                                2025
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="status-select">
+                    <button class="btn btn-dark dropdown-toggle p-0" type="button" id="statusFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        Filter by Status
+                    </button>
+                    <div class="dropdown-menu status-dropdown-menu" aria-labelledby="statusFilterDropdown">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="in_progress" id="status-in-progress">
+                            <label class="form-check-label" for="status-in-progress">
+                                In Progress
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="submitted" id="status-submitted">
+                            <label class="form-check-label" for="status-submitted">
+                                Submitted
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="awarded" id="status-awarded">
+                            <label class="form-check-label" for="status-awarded">
+                                Awarded
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="rejected" id="status-rejected">
+                            <label class="form-check-label" for="status-rejected">
+                                Rejected
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="didnt_apply" id="status-didnt-apply">
+                            <label class="form-check-label" for="status-didnt-apply">
+                                Didn't Apply
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-unresponsive">
+        <table class="table table-bordered table-hover table-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>year</th>
+                    <th>is_active</th>
+                    <th>Name</th>
+                    <th>Consise Name</th>
+                    <th>Status</th>
+                    <th>LOI Open</th>
+                    <th>LOI Due</th>
+                    <th>LOI Submitted</th>
+                    <th>App Open</th>
+                    <th>App Due</th>
+                    <th>App Submitted</th>
+                    <th>Decision</th>
+                    <th>Payout</th>
+                    <th>Amt Requested</th>
+                    <th>Amt Awarded</th>
+                    <th>Percent Funded</th>
+                    <th>Total Funding Disbursed</th>
+                    <th>Total Recipients</th>
+                    <th>Average Award Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for grant_cycle in grant_cycles %}
+                <tr class="{{ grant_cycle.status | css_class_ss_status }}">
+                    <!-- hidden columns -->
+                    <td>
+                        {{ grant_cycle.first_action_date.year }}
+                    </td>
+                    <td>
+                        {{ grant_cycle.is_active }}
+                    </td>
+
+
+                    <td class="text-start text-nowrap w-25">
+                        <a href="/grant-cycles/{{ grant_cycle.id }}" class="text-decoration-none text-body">
+                            <div class="px-2 py-2 w-100">
+                                <span class="fw-bold fs-6">{{ grant_cycle.organization.name }}</span> <br>
+                                <span class="text-muted ps-1">{{ grant_cycle.grant_program.name }}: {{ grant_cycle.name }}</span>
+                            </div>
+                        </a>
+                    </td>
+                    <td>
+                        {{ grant_cycle.grant_proposal.consise_name }}
+                    </td>
+                    <td class="">{{ grant_cycle.status.value }}</td>
+                    <td class="date-cell {{ grant_cycle.loi_open_date | css_class_ss_date(grant_cycle.status, grant_cycle.loi_open_date_verification) }}">
+                        {{ grant_cycle.loi_open_date.strftime('%Y-%m-%d') if grant_cycle.loi_open_date }}
+                    </td>
+                    <td class="date-cell {{ grant_cycle.loi_due_date | css_class_ss_date(grant_cycle.status, grant_cycle.loi_due_date_verification) }}">
+                        {{ grant_cycle.loi_due_date.strftime('%Y-%m-%d') if grant_cycle.loi_due_date }}
+                    </td>
+                    <td class="date-cell {{ grant_cycle.loi_due_date | css_class_missing_past_date(grant_cycle.status, grant_cycle.loi_due_date) }}">
+                        {{ grant_cycle.loi_submitted_date.strftime('%Y-%m-%d') if grant_cycle.loi_submitted_date }}
+                    </td>
+                    <td class="date-cell {{ grant_cycle.application_open_date | css_class_ss_date(grant_cycle.status, grant_cycle.application_open_date_verification) }}">
+                        {{ grant_cycle.application_open_date.strftime('%Y-%m-%d') if grant_cycle.application_open_date }}
+                    </td>
+                    <td class="date-cell {{ grant_cycle.application_due_date | css_class_ss_date(grant_cycle.status, grant_cycle.application_due_date_verification) }}">
+                        {{ grant_cycle.application_due_date.strftime('%Y-%m-%d') if grant_cycle.application_due_date }}
+                    </td>
+                    <td class="date-cell {{ grant_cycle.application_due_date | css_class_missing_past_date(grant_cycle.status, grant_cycle.application_due_date) }}">
+                        {{ grant_cycle.application_submitted_date.strftime('%Y-%m-%d') if grant_cycle.application_submitted_date }}
+                    </td>
+                    <td class="date-cell {{ grant_cycle.decision_date | css_class_ss_date(grant_cycle.status, grant_cycle.decision_date_verification) }}">
+                        {{ grant_cycle.decision_date.strftime('%Y-%m-%d') if grant_cycle.decision_date }}
+                    </td>
+                    <td class="date-cell {{ grant_cycle.payout_date | css_class_ss_date(grant_cycle.status, grant_cycle.payout_date_verification) }} {{ grant_cycle.payout_date | css_class_missing_past_date(grant_cycle.status, grant_cycle.application_due_date) }}">
+                        {{ grant_cycle.payout_date.strftime('%Y-%m-%d') if grant_cycle.payout_date }}
+                    </td>
+                    <td class="text-end pe-4 {{ grant_cycle.amount_requested | css_class_missing_past_date(grant_cycle.status, grant_cycle.application_due_date) }}">
+                        {% if grant_cycle.amount_requested %}
+                            ${{ "{:,.0f}".format(grant_cycle.amount_requested) }}
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4 {{ grant_cycle.amount_awarded | css_class_missing_past_date(grant_cycle.status, grant_cycle.payout_date) }}">
+                        {% if grant_cycle.amount_awarded %}
+                            ${{ "{:,.0f}".format(grant_cycle.amount_awarded) }}
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if grant_cycle.percent_funded %}
+                            {{ "{:,.0f}".format(grant_cycle.percent_funded) }}%
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        {% if grant_cycle.total_funding_disbursed %}
+                            ${{ "{:,.0f}".format(grant_cycle.total_funding_disbursed) }}
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        {% if grant_cycle.total_recipients %}
+                            {{ grant_cycle.total_recipients }}
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        {% if grant_cycle.average_award_amount %}
+                            ${{ "{:,.0f}".format(grant_cycle.average_award_amount) }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    // Table filtering system
+    class TableFilter {
+        constructor(tableSelector) {
+            this.table = document.querySelector(tableSelector);
+            this.filters = new Map();
+            this.initializeFilters();
+            this.applyDefaultFilters();  // Apply default filters on initialization
+        }
+
+        initializeFilters() {
+            // Hide Consise Name Filter Listener
+            document.getElementById('filter-hide-consise-name')?.addEventListener('change', (e) => {
+                this.setFilter('hideConsiseName', e.target.checked);
+                this.applyFilters();
+            });
+
+            // Hide LOI Columns Filter Listener
+            document.getElementById('filter-hide-loi')?.addEventListener('change', (e) => {
+                this.setFilter('hideLoi', e.target.checked);
+                this.applyFilters();
+            });
+
+            // Hide Submitted Columns Filter Listener
+            document.getElementById('filter-hide-submitted')?.addEventListener('change', (e) => {
+                this.setFilter('hideSubmitted', e.target.checked);
+                this.applyFilters();
+            });
+
+            // Hide Helpers Columns Filter Listener
+            document.getElementById('filter-hide-helpers')?.addEventListener('change', (e) => {
+                this.setFilter('hideHelpers', e.target.checked);
+                this.applyFilters();
+            });
+
+            // Only Active Filter Listener
+            document.getElementById('filter-active')?.addEventListener('change', (e) => {
+                this.setFilter('onlyActive', e.target.checked);
+                this.applyFilters();
+            });
+
+            // Hide Disbursements Filter Listener
+            document.getElementById('filter-hide-disbursements')?.addEventListener('change', (e) => {
+                this.setFilter('hideDisbursements', e.target.checked);
+                this.applyFilters();
+            });
+
+            // Status Filter Listener
+            const statusCheckboxes = document.querySelectorAll('.status-dropdown-menu .form-check-input');
+            statusCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    const selectedStatuses = Array.from(statusCheckboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value);
+                    this.setFilter('status', selectedStatuses);
+                    this.applyFilters();
+                });
+            });
+
+            // Year Filter Listener
+            const yearCheckboxes = document.querySelectorAll('.year-dropdown-menu .form-check-input');
+            yearCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    const selectedYears = Array.from(yearCheckboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value);
+                    this.setFilter('year', selectedYears);
+                    this.applyFilters();
+                });
+            });
+        }
+
+        applyDefaultFilters() {
+            // Set and apply default filter states
+            const defaultFilters = {
+                'onlyActive': true,
+                'hideHelpers': true,
+                'hideDisbursements': true
+            };
+
+            // Set default filters
+            Object.entries(defaultFilters).forEach(([key, value]) => {
+                this.setFilter(key, value);
+            });
+
+            // Apply filters immediately
+            this.applyFilters();
+        }
+
+        setFilter(name, value) {
+            this.filters.set(name, value);
+        }
+
+        applyFilters() {
+            // Get all rows except header
+            const rows = Array.from(this.table.querySelectorAll('tbody tr'));
+            const headerCells = Array.from(this.table.querySelectorAll('thead th'));
+
+            // Apply column visibility filters
+            this.applyColumnFilters(headerCells);
+
+            // Apply row filters
+            rows.forEach(row => {
+                const visible = this.shouldShowRow(row);
+                if (visible) {
+                    row.style.display = '';
+                    // Remove collapsed class after display is set to ensure animation works
+                    setTimeout(() => row.classList.remove('collapsed'), 10);
+                } else {
+                    row.classList.add('collapsed');
+                    // Hide element after animation completes
+                    setTimeout(() => row.style.display = 'none', 200);
+                }
+            });
+        }
+
+        applyColumnFilters(headerCells) {
+            const consiseNameColumns = ['Consise Name'];
+            const loiColumns = ['LOI Open', 'LOI Due', 'LOI Submitted'];
+            const submittedColumns = ['LOI Submitted', 'App Submitted'];
+            const helpersColumns = ['is_active', 'year'];
+            const disbursementsColumns = ['Total Funding Disbursed', 'Total Recipients', 'Average Award Amount'];
+            
+            headerCells.forEach((cell, index) => {
+                const columnText = cell.textContent.trim();
+                let hide = false;
+
+                // Hide Consise Name Column
+                if (this.filters.get('hideConsiseName') && consiseNameColumns.includes(columnText)) {
+                    hide = true;
+                }
+                // Hide LOI Columns
+                if (this.filters.get('hideLoi') && loiColumns.includes(columnText)) {
+                    hide = true;
+                }
+                // Hide Submitted Columns
+                if (this.filters.get('hideSubmitted') && submittedColumns.includes(columnText)) {
+                    hide = true;
+                }
+                // Hide Helpers Columns
+                if (this.filters.get('hideHelpers') && helpersColumns.includes(columnText)) {
+                    hide = true;
+                }
+                // Hide Disbursements Columns
+                if (this.filters.get('hideDisbursements') && disbursementsColumns.includes(columnText)) {
+                    hide = true;
+                }
+
+                // Hide/show the column
+                this.toggleColumn(index, !hide);
+            });
+        }
+
+        toggleColumn(index, show) {
+            const cells = this.table.querySelectorAll(`tr > *:nth-child(${index + 1})`);
+            cells.forEach(cell => {
+                if (show) {
+                    cell.style.display = '';
+                    // Remove collapsed class after display is set to ensure animation works
+                    setTimeout(() => cell.classList.remove('collapsed'), 10);
+                } else {
+                    cell.classList.add('collapsed');
+                    // Hide element after animation completes
+                    setTimeout(() => cell.style.display = 'none', 200);
+                }
+            });
+        }
+
+        shouldShowRow(row) {
+            let show = true;
+
+            // Get the index of columns from headers
+            const statusColumnIndex = Array.from(this.table.querySelectorAll('thead th'))
+                .findIndex(th => th.textContent.trim() === 'Status');
+            const isActiveColumnIndex = Array.from(this.table.querySelectorAll('thead th'))
+                .findIndex(th => th.textContent.trim() === 'is_active');
+            const yearColumnIndex = Array.from(this.table.querySelectorAll('thead th'))
+                .findIndex(th => th.textContent.trim() === 'year');
+
+            if (statusColumnIndex === -1) {
+                console.error('Status column not found');
+                return true;
+            }
+
+            // Year filter
+            const selectedYears = this.filters.get('year') || [];
+            if (selectedYears.length > 0) {
+                const yearCell = row.querySelector(`td:nth-child(${yearColumnIndex + 1})`);
+                const year = yearCell.textContent.trim();
+                show = show && selectedYears.includes(year);
+            }
+
+            // Status filter
+            const selectedStatuses = this.filters.get('status') || [];
+            if (selectedStatuses.length > 0) {
+                const statusCell = row.querySelector(`td:nth-child(${statusColumnIndex + 1})`);
+                const status = this.getStatusFromClasses(statusCell);
+                show = show && selectedStatuses.includes(status);
+            }
+
+            // Active filter
+            if (this.filters.get('onlyActive')) {
+                const isActiveCell = row.querySelector(`td:nth-child(${isActiveColumnIndex + 1})`);
+                const isActive = isActiveCell.textContent.trim() === 'True';
+                show = show && isActive;
+            }
+
+            return show;
+        }
+
+        getStatusFromClasses(cell) {
+            const statusClasses = {
+                'status-in-progress': 'in_progress',
+                'status-submitted': 'submitted',
+                'status-awarded': 'awarded',
+                'status-rejected': 'rejected',
+                'status-didnt-apply': 'didnt_apply'
+            };
+
+            for (const [className, status] of Object.entries(statusClasses)) {
+                if (cell.classList.contains(className)) {
+                    return status;
+                }
+            }
+            return null;
+        }
+    }
+
+    // Initialize table filter
+    const tableFilter = new TableFilter('table');
+</script>
+{% endblock %}
+
+

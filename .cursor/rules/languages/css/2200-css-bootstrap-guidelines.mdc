@@ -1,0 +1,155 @@
+---
+description: FOLLOW Bootstrap classes first, then utility classes, then component classes, and custom CSS last when STYLING components to ENSURE consistent design system
+globs: **/*.css, **/*.html
+alwaysApply: false
+---
+
+# CSS and Bootstrap Guidelines
+
+## Context
+
+- When writing or modifying CSS/HTML styles in this codebase
+- When implementing new UI components or refactoring existing ones
+- When deciding on the approach for styling elements
+
+## Requirements
+
+- Follow the priority order for CSS usage: Bootstrap classes → Utility classes → Component classes → Custom CSS
+- Use existing Bootstrap utilities and components as the foundation for all styling
+- Create custom component classes only when reusing the same pattern multiple times
+- Write custom CSS only when necessary functionality cannot be achieved with existing classes
+- Use CSS variables for consistent theming and easier maintenance
+- Follow mobile-first design principles for responsive layouts
+- Organize CSS files according to the established structure
+
+## File Structure
+
+```
+static/css/
+├── main.css           # Core styles and utilities
+├── components/        # Reusable component styles
+│   ├── buttons.css
+│   ├── cards.css
+│   └── forms.css
+└── admin/            # Admin-specific styles
+    └── dashboard.css
+```
+
+## Examples
+
+<example>
+<!-- Good: Using Bootstrap classes first -->
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Dashboard Summary</h5>
+      <button class="btn btn-primary btn-sm">Refresh</button>
+    </div>
+    <p class="text-muted small mt-2">Last updated: Today</p>
+  </div>
+</div>
+
+<!-- Good: Using utility classes for common patterns -->
+<div class="content-wrapper py-3">
+  <div class="text-muted small">Status: Active</div>
+</div>
+
+<!-- Good: Using component classes for reusable patterns -->
+<div class="card-dashboard">
+  <div class="form-section">
+    <!-- Form content -->
+  </div>
+</div>
+
+/*Good: Custom CSS only when necessary */
+/* In components/cards.css */
+.card-dashboard {
+    @extend .card;  /* Extend Bootstrap card*/
+    border-left: 4px solid var(--primary);
+}
+</example>
+
+<example type="invalid">
+<!-- Bad: Ignoring Bootstrap classes and using excessive custom CSS -->
+<div class="my-custom-card">
+  <div class="my-custom-card-body">
+    <div class="my-custom-header">
+      <h5 class="my-custom-title">Dashboard Summary</h5>
+      <button class="my-custom-button">Refresh</button>
+    </div>
+    <p class="my-custom-text">Last updated: Today</p>
+  </div>
+</div>
+
+/*Bad: Redefining styles that Bootstrap already provides*/
+.my-custom-card {
+    display: block;
+    border: 1px solid #ddd;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+.my-custom-button {
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    vertical-align: middle;
+    user-select: none;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+    color: #fff;
+    background-color: #007bff;
+    border: 1px solid #007bff;
+}
+</example>
+
+## Best Practices
+
+### 1. Use CSS Variables
+
+```css
+:root {
+    --primary: #007bff;
+    --spacing-lg: 2rem;
+    --border-radius-lg: 0.5rem;
+}
+
+.alert-custom {
+    border-color: var(--primary);
+    padding: var(--spacing-lg);
+}
+```
+
+### 2. Extend Existing Styles
+
+```css
+.btn-custom {
+    @extend .btn;
+    @extend .btn-primary;
+    border-radius: var(--border-radius-lg);
+}
+```
+
+### 3. Mobile-First Design
+
+```css
+.container {
+    padding: 1rem;  /* Mobile default */
+    
+    @media (min-width: 768px) {
+        padding: 2rem;  /* Desktop */
+    }
+}
+```
+
+## Critical Rules
+
+- Always use existing Bootstrap classes before creating custom CSS
+- Follow the established CSS folder structure for organizing styles
+- Use semantic class names for component classes (e.g., .card-dashboard, not .special-box)
+- Use CSS variables for colors, spacing, and other theme-related values
+- Apply the mobile-first approach for all responsive designs
+- Keep custom CSS to a minimum, using it only when Bootstrap classes can't achieve the desired result
+- Comment custom CSS to explain its purpose, especially when overriding Bootstrap defaults

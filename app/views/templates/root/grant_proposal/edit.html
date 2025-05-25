@@ -1,0 +1,109 @@
+{% extends "base/base.html" %}
+
+{% block title %}Grant Proposal - {{ grant_cycle.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3>{{ 'Edit' if grant_proposal else 'New' }} Grant Proposal</h3>
+    <h4>{{ grant_cycle.full_name }}</h4>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <form id="proposalForm">
+                <input type="hidden" id="proposalId" value="{{ grant_proposal.id }}">
+                
+                <div class="mb-3">
+                    <label for="consise_name" class="form-label">Consise Name</label>
+                    <small class="text-muted d-block">Shortest possible name, e.g. 'Electronics Equipment', or 'General Food Pantry'</small>
+                    <input type="text" class="form-control" id="consise_name" name="consise_name" 
+                           value="{{ grant_proposal.consise_name or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="project_name" class="form-label">Project Name</label>
+                    <small class="text-muted d-block">Project Name used in the proposal, e.g. 'Electronics Equipment for the Community Center'</small>
+                    <input type="text" class="form-control" id="project_name" name="project_name" 
+                           value="{{ grant_proposal.project_name or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="summary" class="form-label">Summary</label>
+                    <textarea class="form-control" id="summary" name="summary" 
+                              rows="3">{{ grant_proposal.summary or '' }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="text" class="form-label">Proposal Text</label>
+                    <textarea class="form-control" id="text" name="text" 
+                              rows="10">{{ grant_proposal.text or '' }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="notes" name="notes" 
+                              rows="3">{{ grant_proposal.notes or '' }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="requested_amount" class="form-label">Requested Amount</label>
+                    <input type="number" class="form-control" id="requested_amount" 
+                           name="requested_amount" value="{{ grant_proposal.requested_amount or '' }}">
+                </div>
+
+            </form>
+            {% if grant_proposal %}
+                <button type="button" class="btn btn-primary" onclick="updateProposal()">
+                    Save Changes
+                </button>
+            {% else %}
+                <button type="button" class="btn btn-primary" onclick="createProposal()">
+                    Create Proposal
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+    import { toast } from '/static/js/toast.js';
+
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+
+    window.createProposal = async function() {
+        try {
+            const data = {
+                grant_cycle_id: {{ grant_cycle.id }},
+                consise_name: document.getElementById('consise_name').value,
+                project_name: document.getElementById('project_name').value,
+                summary: document.getElementById('summary').value,
+                text: document.getElementById('text').value,
+                notes: document.getElementById('notes').value,
+                requested_amount: document.getElementById('requested_amount').value
+            };
+            await apiCrud.create('grant-proposals', data);
+            toast.show('Proposal created successfully', 'success');
+            window.location.href = `/grant-cycles/{{ grant_cycle.id }}`;
+        } catch (error) {
+            toast.show(error.message || 'Error creating proposal', 'danger');
+        }
+    };
+
+    window.updateProposal = async function() {
+        try {
+            const data = uiHelpers.getFormData('proposalForm');
+            const proposalId = document.getElementById('proposalId').value;
+            await apiCrud.update('grant-proposals', proposalId, data);
+            toast.show('Proposal updated successfully', 'success');
+            window.location.href = `/grant-cycles/{{ grant_cycle.id }}`;
+        } catch (error) {
+            toast.show(error.message || 'Error updating proposal', 'danger');
+        }
+    };
+</script>
+{% endblock %} 

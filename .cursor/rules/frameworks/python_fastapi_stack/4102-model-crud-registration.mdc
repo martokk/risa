@@ -1,0 +1,92 @@
+---
+description: FOLLOW when CREATING new models or CRUD modules to ensure they are properly registered in __init__.py
+globs: app/models/*.py, app/crud/*.py
+alwaysApply: false
+---
+
+# Model and CRUD Registration
+
+## Context
+
+- When creating a new model in the `app/models/` directory
+- When creating a new CRUD module in the `app/crud/` directory
+- When reviewing newly added models or CRUD modules
+
+## Requirements
+
+- Register all new models in `app/models/__init__.py`
+- Register all new CRUD modules in `app/crud/__init__.py`
+- Use consistent import pattern: `from .[module_name] import *`
+- Maintain alphabetical ordering in import statements
+- Do not modify any other code in the __init__.py files
+
+## Registration Process
+
+### 1. Model Registration
+
+- After creating a new model file (e.g., `app/models/new_model.py`)
+- Add `from .new_model import *` to `app/models/__init__.py`
+- Place import in alphabetical order with other imports
+
+### 2. CRUD Registration
+
+- After creating a new CRUD file (e.g., `app/crud/new_model.py`)
+- Add `from .new_model import *` to `app/crud/__init__.py`
+- Place import in alphabetical order with other imports
+
+## Examples
+
+<example>
+# Original app/models/__init__.py
+from .alerts import *
+from .base import *
+from .context import *
+from .user import *
+
+# After adding a new 'document.py' model
+
+from .alerts import *
+from .base import*
+from .context import *
+from .document import*  # New model added in alphabetical order
+from .user import *
+</example>
+
+<example>
+# Original app/crud/__init__.py
+from .context import *
+from .tag import *
+from .user import *
+
+# After adding a new 'document.py' CRUD module
+
+from .context import *
+from .document import*  # New CRUD module added in alphabetical order
+from .tag import *
+from .user import*
+</example>
+
+<example type="invalid">
+# Incorrect registration - wrong import format
+from .new_model import NewModel, NewModelCreate  # Should use wildcard import
+
+# Incorrect registration - missing registration
+
+# (No import added to __init__.py after creating new_model.py)
+
+# Incorrect registration - modifying other code
+
+from .alerts import *# Modified line
+from .base import BaseModel  # Changed from wildcard import
+from .context import*
+from .new_model import *
+</example>
+
+## Critical Rules
+
+- ALWAYS add an import for new model files to `app/models/__init__.py`
+- ALWAYS add an import for new CRUD modules to `app/crud/__init__.py`
+- ALWAYS use the format `from .[module_name] import *`
+- ALWAYS maintain alphabetical ordering of imports
+- NEVER modify existing import statements
+- NEVER add anything else besides the import statement

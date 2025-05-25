@@ -1,0 +1,162 @@
+# Test Fixtures Guidelines
+
+## Context
+
+- When creating test fixtures for pytest tests
+- When organizing test utilities and shared resources
+- When managing test dependencies and setup
+
+## Requirements
+
+- Place all reusable fixtures in `tests/conftest.py`
+- Only keep test-specific fixtures in test files
+- Follow consistent naming conventions for fixtures
+- Document all fixtures with clear docstrings
+- Use proper type hints for fixture parameters and return values
+- Organize fixtures by functionality in conftest.py
+- Consider fixture scope (function, class, module, session)
+
+## Examples
+
+<example>
+# Good: Reusable fixtures in conftest.py
+
+@pytest.fixture
+async def db() -> AsyncGenerator[Session, None]:
+    """Provide a database session for tests."""
+    connection = engine.connect()
+    transaction = connection.begin()
+    session = TestingSessionLocal(bind=connection)
+    
+    try:
+        yield session
+    finally:
+        session.close()
+        transaction.rollback()
+        connection.close()
+
+@pytest.fixture
+async def test_user(db: Session) -> models.User:
+    """Create a test user for authentication tests."""
+    user_in = models.UserCreate(
+        username="test_user",
+        email="test@example.com",
+        password="test_password",
+    )
+    return await crud.user.create(db=db, obj_in=user_in)
+
+# Good: Test-specific fixture in test file
+
+@pytest.fixture
+def specific_test_data() -> dict[str, str]:
+    """Provide specific data only needed for this test module."""
+    return {
+        "test_key": "test_value",
+        "only_used": "in_this_test"
+    }
+</example>
+
+<example type="invalid">
+# Bad: Reusable fixture in test file instead of conftest.py
+
+@pytest.fixture
+async def db_session():  # Missing return type hint
+    """Database session fixture that should be in conftest.py."""
+    engine = create_engine("sqlite:///./test.db")
+    session = Session(engine)
+    yield session
+    session.close()
+
+# Bad: Undocumented fixture
+
+@pytest.fixture
+def test_data():
+    return {"key": "value"}
+
+# Bad: Fixture with unclear scope/purpose
+
+@pytest.fixture
+def setup():  # Vague name, missing type hints
+    # Generic setup that could be reused
+    return {"config": {}, "data": []}
+</example>
+
+## Critical Rules
+
+- ALWAYS place reusable fixtures in `tests/conftest.py`
+- ONLY keep test-specific fixtures in test files
+- ALWAYS include proper type hints for fixtures
+- ALWAYS document fixtures with clear docstrings
+- NEVER duplicate fixtures across test files
+- NEVER create fixtures with unclear scope or purpose
+- ALWAYS use descriptive names for fixtures
+- ALWAYS clean up resources in fixtures (database connections, files, etc.)
+- CONSIDER fixture scope to optimize test performance
+- FOLLOW consistent naming patterns for related fixtures
+
+## Fixture Organization in conftest.py
+
+Group fixtures by functionality:
+
+1. **Database Fixtures**
+   - Database session management
+   - Test data setup/teardown
+   - Transaction handling
+
+2. **Authentication Fixtures**
+   - Test users
+   - Authentication tokens
+   - Permission setup
+
+3. **Client Fixtures**
+   - Test client setup
+   - API client configuration
+   - Mock client behavior
+
+4. **Request/Response Fixtures**
+   - Mock requests
+   - Test cookies
+   - Headers setup
+
+5. **Environment Fixtures**
+   - Test settings
+   - Path configurations
+   - Environment variables
+
+## Best Practices
+
+1. **Fixture Dependencies**
+   ```python
+   @pytest.fixture
+   async def authenticated_client(
+       client: TestClient,
+       test_user_token: str
+   ) -> TestClient:
+       """Create an authenticated test client."""
+       client.headers["Authorization"] = f"Bearer {test_user_token}"
+       return client
+   ```
+
+2. **Resource Cleanup**
+   ```python
+   @pytest.fixture
+   async def temp_file() -> AsyncGenerator[Path, None]:
+       """Create a temporary file for testing."""
+       path = Path("test.tmp")
+       path.write_text("test data")
+       try:
+           yield path
+       finally:
+           path.unlink()
+   ```
+
+3. **Fixture Scope**
+   ```python
+   @pytest.fixture(scope="session")
+   def app_config() -> dict[str, Any]:
+       """Provide application configuration for all tests."""
+       return {
+           "testing": True,
+           "database_url": "sqlite:///:memory:",
+       }
+   ``` 

@@ -1,0 +1,37 @@
+{# This modal is always rendered empty; JS populates fields for edit. #}
+<div class="modal fade" id="contextModal" tabindex="-1" aria-labelledby="contextModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content outline-context">
+            <form id="contextForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contextModalLabel">Create/Edit Context</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+
+                        <!-- Hidden input for context ID -->
+                        <input type="hidden" id="contextId" name="context_id" value="">
+
+                        <label for="contextName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="contextName" name="name" value=""
+                            required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contextTemplateSelect" class="form-label">Context Template</label>
+                        <select class="form-select" id="contextTemplateSelect" name="template_id">
+                            <option value="">-- None --</option>
+                            {% for t in context_templates %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveContextBtn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

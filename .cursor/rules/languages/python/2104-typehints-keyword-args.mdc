@@ -1,0 +1,30 @@
+---
+description: USE type hints and return types for ALL functions.
+globs: **/*.py
+alwaysApply: false
+---
+
+## Description
+Enforce the use of type hints, return types, and explicit keyword arguments for clarity and maintainability.
+
+## Requirements
+
+- Always use type hints for all function parameters and return types.
+- When calling functions, always name keyword arguments explicitly (e.g., `obj_in=obj_in`), except for positional arguments.
+- Do not name positional arguments unless required by the function signature.
+
+## Examples
+
+<example>
+# Good: Type hints and explicit keyword arguments
+async def create_template(db: Session, obj_in: TemplateCreate) -> Template:
+    template = await crud.context_template.create(db, obj_in=obj_in)
+    return template
+</example>
+
+<example type="invalid">
+# Bad: Missing type hints and unnamed keyword arguments
+async def create_template(db, obj_in):
+    template = await crud.context_template.create(db, obj_in)
+    return template
+</example> 

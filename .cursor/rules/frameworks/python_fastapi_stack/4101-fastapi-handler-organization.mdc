@@ -1,0 +1,145 @@
+---
+description: FOLLOW when CREATING FastAPI handlers to ensure proper organization of API endpoints and page handlers
+globs: app/api/**/*.py, app/views/pages/**/*.py
+alwaysApply: false
+---
+
+# FastAPI Handler Organization
+
+## Context
+
+- When implementing new API endpoints or page handlers
+- When refactoring existing handlers
+- When deciding where to place a new route function
+
+## Requirements
+
+- Organize handlers based on their response type
+- Place JSON-returning handlers in API endpoints directory
+- Place HTML-returning handlers in page handlers directory
+- Register routes in the appropriate router file
+- Follow existing subfolder structure for organization
+
+## Handler Organization Rules
+
+### 1. API Endpoints (JSON Responses)
+
+- **Location**: `app/api/v1/endpoints/`
+- **Response Types**: JSONResponse or Pydantic models
+- **Registration**: Register in `app/routes/api.py`
+- **Subfolder Structure**: Organize by entity/feature (e.g., users, tags, contexts)
+
+### 2. Page Handlers (HTML Responses)
+
+- **Location**: `app/views/pages/`
+- **Response Types**: HTMLResponse, TemplateResponse
+- **Registration**: Register in `app/routes/views.py`
+- **Subfolder Structure**:
+    - `root/`: Main content pages
+    - `tools/`: Tool-specific pages
+    - `user/`: User profile and settings
+    - `login/`: Authentication pages
+
+## Examples
+
+<example>
+# API Endpoint (JSON Response)
+# File: app/api/v1/endpoints/tag.py
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlmodel import Session
+
+from app import crud, models
+from app.core.db import get_db
+
+router = APIRouter(prefix="/tags", tags=["Tags"])
+
+@router.get("/", response_model=list[models.TagRead])
+async def get_tags(
+    db: Session = Depends(get_db),
+) -> list[models.Tag]:
+    """Retrieves all tags.
+
+    Args:
+        db: Database session dependency
+
+    Returns:
+        List of Tag objects
+    """
+    return await crud.tag.get_multi(db=db)
+
+# Registration in app/routes/api.py
+
+# api_router.include_router(tag.router, tags=["Tags"])
+
+</example>
+
+<example>
+# Page Handler (HTML Response)
+# File: app/views/pages/root/tag.py
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import HTMLResponse
+from sqlmodel import Session
+
+from app import crud
+from app.core.db import get_db
+from app.views.templates import templates
+from app.views.templates.context import get_template_context
+
+router = APIRouter()
+
+@router.get("/tags", response_class=HTMLResponse)
+async def tags_page(
+    request: Request,
+    db: Session = Depends(get_db),
+    context: dict = Depends(get_template_context),
+) -> HTMLResponse:
+    """Tags management page.
+
+    Args:
+        request: FastAPI request object
+        db: Database session dependency
+        context: Template context dictionary
+
+    Returns:
+        HTML response with rendered template
+    """
+    tags = await crud.tag.get_multi(db=db)
+    context["tags"] = tags
+    
+    return templates.TemplateResponse(
+        "root/tag.html",
+        context,
+    )
+
+# Registration in app/routes/views.py
+
+# root_router.include_router(tag.router, tags=["Tags"])
+
+</example>
+
+<example type="invalid">
+# Incorrect: HTML response in API endpoint directory
+# File: app/api/v1/endpoints/dashboard.py
+
+from fastapi import APIRouter, Request
+from fastapi.responses import HTMLResponse
+
+router = APIRouter()
+
+@router.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(request: Request):
+    # This should be in app/views/pages/root/dashboard.py instead
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+</example>
+
+## Critical Rules
+
+- ALWAYS place JSON-returning handlers in `app/api/v1/endpoints/`
+- ALWAYS place HTML-returning handlers in `app/views/pages/` with appropriate subfolder
+- NEVER mix response types within the same router file
+- ALWAYS register API endpoints in `app/routes/api.py`
+- ALWAYS register page handlers in `app/routes/views.py`
+- ALWAYS follow existing subfolder structure when adding new handlers
+- ALWAYS include appropriate response_model or response_class in route decorators

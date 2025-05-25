@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  grant_manager:
+    container_name: "grant_manager"
+    image: ghcr.io/martokk/grant_manager:latest
+    restart: unless-stopped
+    volumes:
+      # - /home/ubuntu/volumes/grant_manager/data:/grant_manager/data
+      - ./app:/app
+    ports:
+      - "5000:5000"
+    user: "${UID}:${GID}"

@@ -1,0 +1,391 @@
+---
+description: FOLLOW this pattern when IMPLEMENTING CRUD operations for new data types to ENSURE consistent API and UI interfaces
+globs: **/*.py, **/*.html
+alwaysApply: false
+---
+
+# CRUD Pattern Implementation
+
+## Context
+
+- When implementing CRUD operations for a new data type
+- When creating API endpoints for entity management
+- When implementing corresponding view pages and templates
+- When registering routes for new entities
+- When adding UI components for entity management
+
+## Requirements
+
+- Follow the established API endpoint structure for consistent REST interfaces
+- Implement corresponding view pages using the standard template pattern
+- Create HTML templates with consistent form structure and JavaScript integration
+- Use proper error handling in both API and UI components
+- Register routes in the appropriate router files
+- Add navigation links to make the interface accessible
+- Follow established naming conventions and code organization patterns
+
+## Examples
+
+<example>
+# Good: API Endpoint Implementation (app/api/v1/endpoints/[entity].py)
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlmodel import Session
+
+from app import crud, models
+from app.api.deps import get_current_active_user
+from app.core.db import get_db
+
+router = APIRouter(prefix="/[entity_plural]", tags=["[Entity_plural]"])
+
+@router.get("/", response_model=list[models.EntityRead])
+async def get_entities(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[models.User, Depends(get_current_active_user)],
+) -> list[models.Entity]:
+    """Get all entities."""
+    return await crud.entity.get_multi(db=db)
+
+@router.post("/", response_model=models.EntityRead, status_code=status.HTTP_201_CREATED)
+async def create_entity(
+    *,
+    db: Annotated[Session, Depends(get_db)],
+    entity_in: models.EntityCreate,
+    current_user: Annotated[models.User, Depends(get_current_active_user)],
+) -> models.Entity:
+    """Create a new entity."""
+    try:
+        return await crud.entity.create(db=db, obj_in=entity_in)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
+
+@router.get("/{entity_id}", response_model=models.EntityRead)
+async def get_entity(
+    *,
+    db: Annotated[Session, Depends(get_db)],
+    entity_id: int,
+    current_user: Annotated[models.User, Depends(get_current_active_user)],
+) -> models.Entity:
+    """Get entity by ID."""
+    entity = await crud.entity.get(db=db, id=entity_id)
+    if not entity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Entity not found",
+        )
+    return entity
+
+@router.put("/{entity_id}", response_model=models.EntityRead)
+async def update_entity(
+    *,
+    db: Annotated[Session, Depends(get_db)],
+    entity_id: int,
+    entity_in: models.EntityUpdate,
+    current_user: Annotated[models.User, Depends(get_current_active_user)],
+) -> models.Entity:
+    """Update entity."""
+    entity = await crud.entity.get(db=db, id=entity_id)
+    if not entity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Entity not found",
+        )
+    try:
+        return await crud.entity.update(db=db, db_obj=entity, obj_in=entity_in)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        ) from e
+
+@router.delete("/{entity_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_entity(
+    *,
+    db: Annotated[Session, Depends(get_db)],
+    entity_id: int,
+    current_user: Annotated[models.User, Depends(get_current_active_user)],
+) -> None:
+    """Delete entity."""
+    entity = await crud.entity.get(db=db, id=entity_id)
+    if not entity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Entity not found",
+        )
+    await crud.entity.remove(db=db, id=entity_id)
+
+# Good: View Page Implementation (app/views/pages/root/[entity].py)
+
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends
+from fastapi.responses import HTMLResponse
+from sqlmodel import Session
+
+from app import crud
+from app.core.db import get_db
+from app.views.templates import templates
+from app.views.templates.context import get_template_context
+
+router = APIRouter(tags=["[entity_plural]"])
+
+@router.get("/[entity_plural]", response_class=HTMLResponse)
+async def entities_page(
+    db: Annotated[Session, Depends(get_db)],
+    context: dict[str, Any] = Depends(get_template_context),
+) -> HTMLResponse:
+    """Entities page."""
+    entities = await crud.entity.get_multi(db=db)
+    context["entities"] = entities
+    return templates.TemplateResponse(
+        "root/[entity].html",
+        context,
+    )
+
+# Good: Route Registration (app/routes/api.py)
+
+from app.api.v1.endpoints import entity
+
+api_router.include_router(entity.router, tags=["[Entity_plural]"])
+
+# Good: Route Registration (app/routes/views.py)
+
+from app.views.pages.root import entity
+
+root_router.include_router(entity.router, tags=["[Entity_plural]"])
+</example>
+
+<example type="invalid">
+# Bad: Inconsistent API Endpoint Structure
+
+from fastapi import APIRouter, Depends
+from sqlmodel import Session
+
+from app.models.entity import Entity  # Direct import instead of using app.models
+from app.crud.entity import entity_crud  # Incorrect naming and direct import
+
+router = APIRouter()  # Missing prefix and tags
+
+@router.get("/entities")  # Inconsistent URL structure
+async def list_all(db: Session = Depends(get_db)):  # Inconsistent parameter naming
+    """List entities."""
+    return entity_crud.get_all(db)  # Incorrect CRUD method name
+
+@router.post("/entity/new")  # Inconsistent URL pattern
+async def add_entity(entity_data: dict, db: Session = Depends(get_db)):  # Using dict instead of Pydantic model
+    # Direct database operations instead of using CRUD
+    entity = Entity(**entity_data)
+    db.add(entity)
+    db.commit()
+    db.refresh(entity)
+    return entity
+
+# Bad: Inconsistent View Implementation
+
+@router.get("/entity-management")  # Inconsistent URL naming
+def entity_management_page(request: Request, db: Session = Depends(get_db)):
+    # Direct database query instead of using CRUD
+    entities = db.query(Entity).all()
+
+    # Direct template context manipulation
+    return templates.TemplateResponse(
+        "entity_management.html",  # Inconsistent template naming
+        {"request": request, "entities": entities}
+    )
+
+# Bad: Missing Error Handling
+
+@router.put("/entity/{id}")
+def update(id: int, data: dict, db: Session = Depends(get_db)):
+    # No error handling for not found
+    entity = db.query(Entity).get(id)
+
+    # Direct update without validation
+    for key, value in data.items():
+        setattr(entity, key, value)
+    
+    db.commit()
+    return entity
+</example>
+
+## Template Implementation (app/views/templates/root/[entity].html)
+
+```html
+{% extends "base/base.html" %}
+
+{% block title %}[Entities]{% endblock %}
+{% block content_header %}[Entities]{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Add Button -->
+    <div class="mb-4">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+            <i class="fas fa-plus"></i> Add [Entity]
+        </button>
+    </div>
+
+    <!-- List View -->
+    <div class="row">
+        {% for entity in entities %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ entity.name }}</h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                onclick="editEntity('{{ entity.id }}', '{{ entity.name }}')"
+                                data-bs-toggle="modal" data-bs-target="#editModal">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                onclick="deleteEntity('{{ entity.id }}')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add/Edit Modals -->
+<!-- Include modals with forms following the pattern in tag.html -->
+
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    // Initialize API with tokens
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+
+    // Entity type for all operations
+    const ENTITY_TYPE = '[entity_plural]';
+
+    // CRUD Operations
+    window.addEntity = async function() {
+        try {
+            const data = uiHelpers.getFormData('addForm');
+            await apiCrud.create(ENTITY_TYPE, data);
+            uiHelpers.refreshPage();
+        } catch (error) {
+            uiHelpers.showError(error);
+        }
+    };
+
+    window.editEntity = function(id, name) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editName').value = name;
+    };
+
+    window.updateEntity = async function() {
+        try {
+            const id = document.getElementById('editId').value;
+            const data = uiHelpers.getFormData('editForm');
+            await apiCrud.update(ENTITY_TYPE, id, data);
+            uiHelpers.refreshPage();
+        } catch (error) {
+            uiHelpers.showError(error);
+        }
+    };
+
+    window.deleteEntity = async function(id) {
+        if (uiHelpers.confirm('Are you sure you want to delete this entity?')) {
+            try {
+                await apiCrud.delete(ENTITY_TYPE, id);
+                uiHelpers.refreshPage();
+            } catch (error) {
+                uiHelpers.showError(error);
+            }
+        }
+    };
+</script>
+{% endblock %}
+```
+
+## Navigation Link (app/views/templates/base/navbar_logged_in.html)
+
+```html
+<li class="nav-item">
+    <a class="nav-link" href="/[entity_plural]">[Entity_plural]</a>
+</li>
+```
+
+## CRUD Pattern Implementation Steps
+
+### 1. API Endpoint Implementation
+
+Create a new file in `app/api/v1/endpoints/[entity].py` with standard CRUD endpoints following the pattern shown in the examples.
+
+### 2. View Page Implementation
+
+Create a new file in `app/views/pages/root/[entity].py` with the page handler to render the entity management page.
+
+### 3. Template Implementation
+
+Create a new file in `app/views/templates/root/[entity].html` with the HTML template for entity management, including:
+
+- List view of entities
+- Add/edit modals
+- JavaScript for CRUD operations
+
+### 4. Route Registration
+
+Register the new routes in:
+
+- `app/routes/api.py` for API endpoints
+- `app/routes/views.py` for view pages
+
+### 5. Navigation Link
+
+Add a navigation link in `app/views/templates/base/navbar_logged_in.html` to make the new page accessible.
+
+## Best Practices
+
+1. **Naming Conventions**:
+   - Use plural form for API routes (`/api/v1/tags/`)
+   - Use singular form for model names (`Tag`, `TagCreate`)
+   - Use consistent casing (PascalCase for models, snake_case for variables)
+
+2. **Form Inputs**:
+   - Always use `name` attributes that match model field names
+   - Include proper validation attributes (`required`, etc.)
+   - Use hidden inputs for IDs in edit forms
+
+3. **Error Handling**:
+   - Always wrap API calls in try/catch blocks
+   - Use the UI helpers for consistent error display
+   - Include meaningful error messages
+
+4. **Security**:
+   - Always include authentication dependencies
+   - Use proper HTTP methods (GET, POST, PUT, DELETE)
+   - Validate input data on both client and server
+
+5. **Code Organization**:
+   - Keep JavaScript modular and reusable
+   - Use consistent template structure
+   - Follow the established project patterns
+
+## Critical Rules
+
+- **MOST IMPORTANT**: DO NOT MAKE SWEEPING CHANGES TO EXISTING CODE. You cause more bugs and problems than you solve. If you are given a task to do, only change the code that is directly related to the task.
+- Always follow the established CRUD pattern for all new data types
+- Always implement proper error handling in both API and UI components
+- Always include authentication dependencies for protected endpoints
+- Always use the api_utils.js module for all frontend CRUD operations
+- Maintain consistent naming and URL patterns across all entities
+- Use proper HTTP status codes for all responses (201 for creation, 204 for deletion, etc.)
+- Register all routes in the appropriate router files
+- Add navigation links for all new entity pages

@@ -1,0 +1,275 @@
+# Poetry pyproject.toml: https://python-poetry.org/docs/pyproject/
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "app"
+version = "0.0.1"
+description = "grant_manager"
+readme = "README.md"
+authors = ["martokk <25113632+martokk@users.noreply.github.com>"]
+license = "MIT"
+repository = "https://github.com/martokk/grant_manager"
+homepage = "https://github.com/martokk/grant_manager"
+
+# Keywords description https://python-poetry.org/docs/pyproject/#keywords
+keywords = ["fastapi", "poetry", "python", "sqlmodel", "alembic", "loguru", "crud"]
+
+# Pypi classifiers: https://pypi.org/classifiers/
+classifiers = []
+
+[tool.poetry.scripts]
+# Entry points for the package https://python-poetry.org/docs/pyproject/#scripts
+"app" = "app.__main__:app"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+loguru = "^0.7.2"
+pyyaml = "^6.0"
+python-dotenv = "^1.0.1"
+shortuuid = "^1.0.13"
+httpx = "^0.27.2"
+wheel = "^0.45.1"
+fastapi = "^0.115.5"
+uvicorn = "^0.32.1"
+fastapi-utils = "^0.8.0"
+jinja2 = "^3.1.4"
+pyjwt = "^2.10.0"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+alembic = "^1.14.0"
+asyncpg = "^0.30.0"
+python-multipart = "^0.0.17"
+pydantic = "^2.10.2"
+sqlmodel = "^0.0.22"
+types-pyyaml = "^6.0.12.8"
+types-attrs = "^19.1.0"
+pydantic-settings = "^2.6.1"
+anthropic = "^0.43.0"
+google-generativeai = "^0.8.3"
+groq = "^0.15.0"
+openai = "^1.59.7"
+email-validator = "^2.2.0"
+emails = "^0.6"
+chromadb = "^0.6.3"
+python-docx = "^1.1.2"
+phidata = "^2.7.10"
+
+[tool.poetry.group.dev.dependencies]
+bandit = "^1.7.10"
+darglint = "^1.8.1"
+mypy = "^1.13.0"
+mypy-extensions = "^1.0.0"
+pre-commit = "^4.0.1"
+pydocstyle = "^6.3.0"
+pylint = "^3.3.1"
+pytest = "^8.3.3"
+pytest-mock = "^3.14.0"
+safety = "^3.2.3"
+coverage = "^7.6.8"
+coverage-badge = "^1.1.2"
+pytest-html = "^4.1.1"
+pytest-cov = "^6.0.0"
+pytest-asyncio = "^0.24.0"
+ruff = "^0.5.3"
+
+[tool.ruff]
+# Same as Black
+line-length = 100
+indent-width = 4
+target-version = "py312"
+
+# Exclude files/directories (combined from isort and flake8)
+exclude = [
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".tox",
+    ".venv",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "env",
+    "migrations",
+    "venv",
+    "typings",
+    "pyqt5_ui.py",
+    "resources_rc.py",
+]
+
+
+
+[tool.ruff.lint]
+# Ignore certain rules (from your flake8 config)
+ignore = ["F403", "RET504"]
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Enable rules
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+known-third-party = []
+extra-standard-library = ["typing", "typings", "types", "typing_extensions", "mypy", "mypy_extensions"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+combine-as-imports = true
+relative-imports-order = "closest-to-furthest"
+lines-after-imports = 2
+split-on-trailing-comma = true
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Body", "fastapi.Path"]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore specific rules in test files
+"tests/*" = ["S101"]  # Allow assert in tests
+"**/tests/*" = ["S101"]  # Allow assert in tests
+"*_test.py" = ["S101"]  # Allow assert in tests
+"conftest.py" = ["S101"]  # Allow assert in tests
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.black]
+# https://github.com/psf/black
+target-version = ["py311"]
+line-length = 100
+color = true
+
+exclude = '''
+/(
+    \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+    | env
+    | migrations
+    | venv
+    | typings
+)/
+'''
+
+[tool.mypy]
+# https://mypy.readthedocs.io/en/latest/config_file.html#using-a-pyproject-toml-file
+python_version = "3.12"
+pretty = true
+show_traceback = true
+color_output = true
+allow_redefinition = false
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+ignore_missing_imports = true
+implicit_reexport = false
+no_implicit_optional = true
+show_column_numbers = true
+show_error_codes = true
+show_error_context = true
+strict_equality = true
+strict_optional = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+exclude = ["typings", "migrations", "venv", "build", "dist", "docs", ".tox", ".git", "__pycache__"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "*.pyqt5_ui"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+# https://docs.pytest.org/en/6.2.x/customize.html#pyproject-toml
+# Directories that are not visited by pytest collector:
+norecursedirs =["hooks", "*.egg", ".eggs", "dist", "build", "docs", ".tox", ".git", "__pycache__"]
+doctest_optionflags = ["NUMBER", "NORMALIZE_WHITESPACE", "IGNORE_EXCEPTION_DETAIL"]
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+asyncio_mode="auto"
+log_cli_level = "CRITICAL"  # Set to WARNING to suppress INFO and DEBUG logs
+# filterwarnings = [
+#     "ignore::DeprecationWarning:passlib.*:",
+#     "ignore::pydantic.PydanticDeprecatedSince20",
+# ]
+testpaths = ["tests"]
+
+# PYTEST OPTIONS
+# -v : verbose
+# --cov=app : coverage
+# --color=yes : color
+# --tb=short | --tb=long : short traceback
+addopts = "-v --cov=app --color=yes --tb=short"
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = [
+    "app/api/**/*",
+    "app/api/*",
+]
+
+[tool.coverage.report]
+fail_under = 50
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
+
+[tool.pylint.'MESSAGES CONTROL']
+extension-pkg-whitelist = "pydantic"
+
+[tool.pylint]
+# https://pylint.pycqa.org/en/latest/user_guide/run.html
+extension-pkg-whitelist = ['pydantic']
+ignore = ["typings", "migrations", "venv", "build", "dist", "docs", ".tox", ".git", "__pycache__"]
+max-line-length = 100
+exclude = ["typings", "migrations", "venv", "build", "dist", "docs", ".tox", ".git", "__pycache__"]
+ignore_missing_imports = true
+show_column_numbers = true
+no_pretty = true
+follow_imports = "silent"
+
+[tool.pyright]
+ignore = ["typings", "migrations", "venv", "build", "dist", "docs", ".tox", ".git", "__pycache__"]
+
+
+[tool.pyupgrade]
+py310-plus = true
+skip = ["typings", "migrations", "venv", "build", "dist", "docs", ".tox", ".git", "__pycache__"]
+exclude = [".venv/*", "typings/*", "migrations/*"]
+
+[tool.bandit]
+skips = ["B104"]

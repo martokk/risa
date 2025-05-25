@@ -1,0 +1,131 @@
+---
+description: FOLLOW when CREATING or EDITING Jinja2 templates to ensure consistent structure
+globs: app/views/templates/**/*.html
+alwaysApply: false
+---
+
+# Jinja2 Template Structure
+
+## Context
+
+- When creating new template files
+- When modifying existing templates
+- When implementing page-specific JavaScript or CSS
+
+## Requirements
+
+- Extend from the appropriate base template
+- Use the correct block names according to their purpose
+- Follow the template inheritance pattern
+- Keep templates DRY with proper includes
+- Place JavaScript code in the correct blocks
+
+## Template Blocks
+
+### Content Blocks
+
+- `{% block content %}`: Main content area
+- `{% block title %}`: Page title
+- `{% block meta_description %}`: SEO meta description
+- `{% block meta_keywords %}`: SEO meta keywords
+
+### JavaScript Blocks
+
+- `{% block js_scripts %}`: For page-specific JavaScript code
+- `{% block js_dependencies %}`: For additional JavaScript dependencies
+- NEVER use `{% block extra_js %}`, it does not exist
+
+### CSS Blocks
+
+- `{% block head %}`: Additional head elements
+- `{% block css %}`: Page-specific CSS
+
+## Examples
+
+<example>
+{# New page template #}
+{% extends "base/base.html" %}
+
+{% block title %}My Page Title{% endblock %}
+{% block meta_description %}Description for search engines{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Page Content</h1>
+        {% include "components/_partial.html" %}
+    </div>
+{% endblock %}
+
+{% block js_dependencies %}
+    <script src="/static/lib/third-party.js"></script>
+{% endblock %}
+
+{% block js_scripts %}
+    <script type="module">
+        // Page-specific JavaScript
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize components
+        });
+    </script>
+{% endblock %}
+</example>
+
+<example type="invalid">
+{# Incorrect template usage #}
+{% extends "base/base.html" %}
+
+{% block content %}
+    <div class="container">
+        <h1>Page Content</h1>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // This block doesn't exist in base templates
+    </script>
+{% endblock %}
+
+{# Scripts placed outside proper blocks #}
+<script>
+    // This script is outside a proper block
+</script>
+</example>
+
+## Template Inheritance
+
+```html
+{# base/base.html - Root template #}
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    {% block content %}{% endblock %}
+
+    {# JavaScript Dependencies #}
+    <script src="/static/js/scripts.js"></script>
+    {% block js_dependencies %}{% endblock %}
+    {% block js_scripts %}{% endblock %}
+</body>
+</html>
+
+{# admin/base.html - Admin template #}
+{% extends "base/base.html" %}
+{% block content %}
+    <div class="admin-container">
+        {% block admin_content %}{% endblock %}
+    </div>
+{% endblock %}
+```
+
+## Critical Rules
+
+- Always extend from the appropriate base template for the section you're working on
+- Place JavaScript code ONLY in the designated blocks (`js_dependencies` or `js_scripts`)
+- Never use blocks that don't exist in the base templates (e.g., `extra_js`)
+- Keep JavaScript at the end of the body by using the proper blocks
+- Use `js_dependencies` for third-party libraries and `js_scripts` for page-specific code
+- Keep templates DRY with proper includes and component reuse
+- Reuse existing javascript when possible instead of writing new code.

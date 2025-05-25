@@ -1,0 +1,61 @@
+---
+description: Standard for handling authentication in tests. Explains how to authenticate test clients for both API and page handler (HTML) tests, including correct usage of fixtures and cookie/header setup. Ensures consistent, reliable authentication in all test scenarios.
+globs: tests/**/*.py
+alwaysApply: false
+---
+
+# Authentication Handling in Tests
+
+## Context
+
+- When writing or updating tests that require authentication
+- When testing protected API endpoints or HTML page handlers
+- When using HTTPX, TestClient, or AsyncClient in test code
+
+## Requirements
+
+- Always use the provided authentication fixtures from `conftest.py` for test user or superuser authentication.
+- For API tests, use the `normal_user_token_headers` or `superuser_token_headers` fixture and pass as `headers=...` in client requests.
+- For page handler (HTML) tests, use the `normal_user_cookies` or `superuser_cookies` fixture and set them on the test client before making requests.
+- Set cookies on the client by assigning the fixture to `async_client.cookies` (not per-request) to ensure cookies persist across requests.
+- Do not set cookies using the `cookies=` parameter in individual requests, as this may not persist or be recognized by the app.
+- Always perform authentication setup before making requests to protected routes.
+- If the authentication method changes (e.g., session-based, JWT, etc.), update the fixtures and this rule accordingly.
+
+## Examples
+
+<example>
+# API test using token headers
+async def test_api_endpoint(async_client: AsyncClient, normal_user_token_headers: dict[str, str]) -> None:
+    resp = await async_client.get("/api/v1/protected-endpoint", headers=normal_user_token_headers)
+    assert resp.status_code == 200
+
+# Page handler test using cookies
+async def test_page_handler(async_client: AsyncClient, normal_user_cookies: Cookies) -> None:
+    async_client.cookies = normal_user_cookies
+    resp = await async_client.get("/protected-page", follow_redirects=True)
+    assert resp.status_code == 200
+</example>
+
+<example type="invalid">
+# Bad: Setting cookies per request (may not persist or be recognized)
+resp = await async_client.get("/protected-page", cookies=normal_user_cookies)
+
+# Bad: Not authenticating before accessing protected route
+resp = await async_client.get("/protected-page")
+</example>
+
+## Critical Rules
+
+- Always use the correct fixture for the type of test (headers for API, cookies for HTML/pages).
+- Always set cookies on the client object, not per request, for page handler tests.
+- Never skip authentication setup for protected routes.
+- Update this rule if authentication mechanisms change in the project. 
+
+
+## Critical Rules
+
+- Always use the correct fixture for the type of test (headers for API, cookies for HTML/pages).
+- Always set cookies on the client object, not per request, for page handler tests.
+- Never skip authentication setup for protected routes.
+- Update this rule if authentication mechanisms change in the project. 

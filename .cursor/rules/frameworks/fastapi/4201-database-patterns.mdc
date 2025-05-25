@@ -1,0 +1,289 @@
+---
+description: USE consistent database pattern with dependency injection and CRUD operations when INTERACTING with database in FastAPI to ENSURE maintainable data access
+globs: **/*.py
+alwaysApply: false
+---
+
+# FastAPI Database Interaction Patterns
+
+## Context
+
+- When defining database models and their relationships
+- When implementing CRUD operations for database entities
+- When accessing database within route handlers
+- When defining database dependencies for FastAPI endpoints
+- When registering models and CRUD operations in the application
+
+## Requirements
+
+- Always use dependency injection for database sessions
+- Name the database session parameter consistently as `db`
+- Follow the Model-CRUD separation pattern for all database entities
+- Implement proper model inheritance hierarchy (Base → Entity → Create/Update/Read)
+- Register all models and CRUD modules in their respective `__init__.py` files
+- Use type hints consistently across database interactions
+- Implement proper validation in model classes
+- Always use async CRUD operations when available
+
+## Examples
+
+<example>
+# Good: Database Dependency Injection with consistent parameter naming
+
+from typing import Annotated, Any
+from fastapi import APIRouter, Depends, Form, Response
+from sqlmodel import Session
+
+from app.core.db import get_db
+from app.models.user import User
+
+@router.post("/endpoint", response_class=Response)
+async def handler(
+    content: Annotated[str, Form()],
+    db: Annotated[Session, Depends(get_db)],  # Always use 'db' as parameter name
+) -> Response:
+    # Database operations
+    pass
+
+# Good: Complete Model Definition with inheritance hierarchy
+
+from typing import Optional
+from sqlmodel import Field, SQLModel
+from pydantic import model_validator
+
+class Example(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    content: str = Field(default="", description="Content field", nullable=False)
+    is_active: bool = Field(default=True)
+
+class ExampleCreate(SQLModel):
+    content: str
+    is_active: Optional[bool] = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_pre_validation_defaults(cls, values: dict[str, Any]) -> dict[str, Any]:
+        # Set defaults or generated values
+        return values
+
+class ExampleUpdate(SQLModel):
+    content: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class ExampleRead(SQLModel):
+    id: int
+    content: str
+    is_active: bool
+
+# Good: CRUD Implementation using BaseCRUD
+
+from app import models
+from app.crud.base import BaseCRUD
+
+class ExampleCRUD(BaseCRUD[models.Example, models.ExampleCreate, models.ExampleUpdate]):
+    # Custom methods if needed
+    async def get_active(self, db: Session) -> list[models.Example]:
+        """Get all active examples."""
+        return await self.get_multi(db=db, filters={"is_active": True})
+
+# Initialize the CRUD instance
+
+example = ExampleCRUD(model=models.Example)
+
+# Good: CRUD Usage in Routes
+
+from app import crud, models
+from fastapi import Depends
+from sqlmodel import Session
+
+@router.get("/examples", response_model=list[models.ExampleRead])
+async def get_examples(
+    db: Annotated[Session, Depends(get_db)],
+) -> list[models.Example]:
+    """Get all examples."""
+    return await crud.example.get_multi(db=db)
+
+@router.post("/examples", response_model=models.ExampleRead, status_code=201)
+async def create_example(
+    example_in: models.ExampleCreate,
+    db: Annotated[Session, Depends(get_db)],
+) -> models.Example:
+    """Create a new example."""
+    return await crud.example.create(db=db, obj_in=example_in)
+
+@router.put("/examples/{example_id}", response_model=models.ExampleRead)
+async def update_example(
+    example_id: int,
+    example_in: models.ExampleUpdate,
+    db: Annotated[Session, Depends(get_db)],
+) -> models.Example:
+    """Update an example."""
+    example = await crud.example.get(db=db, id=example_id)
+    if not example:
+        raise HTTPException(status_code=404, detail="Example not found")
+    return await crud.example.update(db=db, db_obj=example, obj_in=example_in)
+
+# Good: Model Registration in __init__.py
+
+# In app/models/__init__.py
+
+from app.models.user import User, UserCreate, UserUpdate, UserRead
+from app.models.example import Example, ExampleCreate, ExampleUpdate, ExampleRead
+
+# In app/crud/__init__.py
+
+from app.crud.user import user
+from app.crud.example import example
+</example>
+
+<example type="invalid">
+# Bad: Inconsistent database parameter naming
+
+@router.post("/endpoint")
+async def handler(
+    content: str = Form(...),
+    session: Session = Depends(get_db),  # Inconsistent parameter name
+) -> JSONResponse:
+    pass
+
+# Bad: Missing model hierarchy and validation
+
+# Incomplete model without proper inheritance
+
+class Example(BaseModel):
+    id: int
+    content: str
+
+# Bad: Direct database operations in routes without CRUD
+
+@router.get("/examples")
+def get_examples(db: Session = Depends(get_db)):
+    # Direct query in route handler
+    examples = db.query(Example).all()
+    return examples
+
+@router.post("/examples")
+def create_example(content: str, db: Session = Depends(get_db)):
+    # Direct creation without model validation
+    example = Example(content=content)
+    db.add(example)
+    db.commit()
+    db.refresh(example)
+    return example
+
+# Bad: Redundant CRUD operations without inheritance
+
+class ExampleCRUD:
+    def get_all(self, db: Session) -> list[Example]:
+        return db.query(Example).all()
+
+    def create(self, db: Session, content: str) -> Example:
+        example = Example(content=content)
+        db.add(example)
+        db.commit()
+        db.refresh(example)
+        return example
+    
+    # Duplicated code pattern for each entity
+    
+
+# Bad: Missing model and CRUD registration
+
+# Models and CRUD modules not imported in __init__.py
+
+# Leading to inconsistent imports across the codebase
+
+</example>
+
+## Database Model Pattern Implementation Steps
+
+### 1. Database Dependency Injection
+
+When using database dependency injection with FastAPI's `Depends`, always name the parameter `db`:
+
+```python
+@router.post("/endpoint", response_class=Response)
+async def handler(
+    request: Request,
+    content: str = Form(...),
+    db: Session = Depends(get_db),  # Always use 'db' as parameter name
+) -> Response:
+    pass
+```
+
+### 2. Model Definition (app/models/example.py)
+
+```python
+class Example(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    content: str = Field(default="", description="Content field", nullable=False)
+
+class ExampleCreate(SQLModel):
+    content: str
+    
+    @model_validator(mode="before")
+    @classmethod
+    def set_pre_validation_defaults(cls, values: dict[str, Any]) -> dict[str, Any]:
+        values["id"] = values.get("id", generate_uuid_random())
+        return values
+
+class ExampleUpdate(SQLModel):
+    content: Optional[str] = None
+
+class ExampleRead(SQLModel):
+    id: int
+    content: str
+```
+
+### 3. CRUD Implementation (app/crud/example.py)
+
+```python
+from app import models
+from app.crud.base import BaseCRUD
+
+class ExampleCRUD(BaseCRUD[models.Example, models.ExampleCreate, models.ExampleUpdate]):
+    # Add custom methods if needed
+    pass
+
+example = ExampleCRUD(model=models.Example)
+```
+
+### 4. Registration in __init__.py Files
+
+```python
+# In app/models/__init__.py
+from app.models.example import Example, ExampleCreate, ExampleUpdate, ExampleRead
+
+# In app/crud/__init__.py
+from app.crud.example import example
+```
+
+### 5. Usage in Routes
+
+```python
+@router.get("/examples", response_model=list[models.ExampleRead])
+async def get_examples(
+    db: Annotated[Session, Depends(get_db)],
+) -> list[models.Example]:
+    return await crud.example.get_multi(db=db)
+
+@router.post("/examples", response_model=models.ExampleRead)
+async def create_example(
+    example_in: models.ExampleCreate,
+    db: Annotated[Session, Depends(get_db)],
+) -> models.Example:
+    return await crud.example.create(db=db, obj_in=example_in)
+```
+
+## Critical Rules
+
+- Always use dependency injection for database access with parameter named `db`
+- Follow the complete model hierarchy (Base table model → Create/Update/Read models)
+- Use BaseCRUD inheritance for consistent database operations
+- Register all models and CRUD modules in their respective __init__.py files
+- Separate database operations from route handlers using the CRUD pattern
+- Use appropriate return types and response models for all endpoints
+- Implement proper validation in model classes (especially Create models)
+- Never perform direct database operations in route handlers
+- Use Annotated type hints for all dependencies to improve code readability
+- Always use status_code=201 for creation endpoints

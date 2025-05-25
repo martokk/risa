@@ -1,0 +1,218 @@
+---
+description: FOLLOW when CREATING new models or CRUD modules to ensure they are properly registered in __init__.py
+globs: **/*.py
+alwaysApply: false
+---
+
+# Model and CRUD Registration Patterns
+
+## Context
+
+- When creating new database models
+- When implementing new CRUD modules
+- When ensuring proper imports throughout the application
+- When registering models for SQLModel/Alembic migrations
+- When managing model dependencies and relationships
+
+## Requirements
+
+- Register all models in `app/models/__init__.py`
+- Register all CRUD modules in `app/crud/__init__.py`
+- Use consistent import patterns for models and CRUD modules
+- Follow the standard import patterns in handlers and routes
+- Maintain alphabetical order in registration files for readability
+- Group related models and CRUD modules together in registrations
+- Use the standard naming conventions for model variants
+
+## Examples
+
+<example>
+# Good: Proper Model Registration in app/models/__init__.py
+
+# First import base models that others might depend on
+
+from app.models.base import BaseModel, TimestampModel, UUIDModel
+
+# Import user models before other models that might reference users
+
+from app.models.user import User, UserCreate, UserUpdate, UserRead
+
+# Then import domain models in alphabetical order
+
+from app.models.example import Example, ExampleCreate, ExampleUpdate, ExampleRead
+from app.models.profile import Profile, ProfileCreate, ProfileUpdate, ProfileRead
+from app.models.tag import Tag, TagCreate, TagUpdate, TagRead
+
+# Good: Proper CRUD Registration in app/crud/__init__.py
+
+# Import base classes first
+
+from app.crud.base import BaseCRUD
+from app.crud.base_ordered import BaseOrderedCRUD
+
+# Import core CRUD modules
+
+from app.crud.user import user
+
+# Then import domain CRUD modules in alphabetical order
+
+from app.crud.example import example
+from app.crud.profile import profile
+from app.crud.tag import tag
+
+# Good: Proper Import Usage in Routes
+
+from app import crud, models
+
+@router.get("/examples", response_model=list[models.ExampleRead])
+async def get_examples(
+    db: Annotated[Session, Depends(get_db)],
+) -> list[models.Example]:
+    """Get all examples."""
+    return await crud.example.get_multi(db=db)
+
+@router.post("/examples", response_model=models.ExampleRead)
+async def create_example(
+    example_in: models.ExampleCreate,
+    db: Annotated[Session, Depends(get_db)],
+) -> models.Example:
+    """Create a new example."""
+    return await crud.example.create(db=db, obj_in=example_in)
+</example>
+
+<example type="invalid">
+# Bad: Missing or incomplete model registration
+
+# Inconsistent or missing imports in app/models/__init__.py
+
+from app.models.user import User  # Missing UserCreate, UserUpdate, UserRead
+
+# Missing imports for other models
+
+# Bad: Inconsistent CRUD registration
+
+# In app/crud/__init__.py
+
+from app.crud.user import UserCRUD  # Wrong import, should import instance
+user_crud = UserCRUD()  # Wrong, instance should be created in the module
+
+# Bad: Direct imports in route handlers instead of using central imports
+
+# In route handler file
+
+from app.models.example import Example  # Direct import instead of from app import models
+from app.crud.example import example_crud  # Wrong import name
+
+@router.get("/examples")
+async def get_examples(db: Session = Depends(get_db)):
+    return example_crud.get_multi(db=db)  # Wrong CRUD instance name
+</example>
+
+## Proper Model Registration Steps
+
+### 1. Register Models in app/models/__init__.py
+
+Always import all model variants (Base, Create, Update, Read) in the models/__init__.py file:
+
+```python
+# app/models/__init__.py
+
+# Base models first
+from app.models.base import BaseModel, TimestampModel
+
+# User models before other models that might reference them
+from app.models.user import User, UserCreate, UserUpdate, UserRead
+
+# Domain models in alphabetical order
+from app.models.example import Example, ExampleCreate, ExampleUpdate, ExampleRead
+from app.models.tag import Tag, TagCreate, TagUpdate, TagRead
+```
+
+### 2. Register CRUD Modules in app/crud/__init__.py
+
+Import all CRUD module instances, not classes:
+
+```python
+# app/crud/__init__.py
+
+# Base CRUD classes
+from app.crud.base import BaseCRUD
+
+# Core CRUD modules
+from app.crud.user import user
+
+# Domain CRUD modules in alphabetical order
+from app.crud.example import example
+from app.crud.tag import tag
+```
+
+### 3. Follow Standard Import Patterns in Routes
+
+Use the central imports to access models and CRUD modules:
+
+```python
+from app import crud, models
+
+@router.post("/examples", response_model=models.ExampleRead)
+async def create_example(
+    example_in: models.ExampleCreate,
+    db: Annotated[Session, Depends(get_db)],
+) -> models.Example:
+    return await crud.example.create(db=db, obj_in=example_in)
+```
+
+### 4. Create Properly Named Model Instances
+
+When creating new models, follow the standard naming conventions:
+
+```python
+# Base table model
+class Example(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    # ...
+
+# Create model for input validation
+class ExampleCreate(SQLModel):
+    # Fields required for creation
+    # ...
+
+# Update model with optional fields
+class ExampleUpdate(SQLModel):
+    field1: Optional[str] = None
+    field2: Optional[int] = None
+    # ...
+
+# Read model for responses
+class ExampleRead(SQLModel):
+    id: int
+    field1: str
+    field2: int
+    # ...
+```
+
+### 5. Create Properly Named CRUD Instances
+
+When creating new CRUD modules, follow the standard naming conventions:
+
+```python
+# Define the class with proper generics
+class ExampleCRUD(BaseCRUD[models.Example, models.ExampleCreate, models.ExampleUpdate]):
+    # Add custom methods if needed
+    pass
+
+# Initialize the instance with the model
+example = ExampleCRUD(model=models.Example)
+```
+
+## Critical Rules
+
+- Always register all model variants in the models/__init__.py file
+- Always register all CRUD instances in the crud/__init__.py file
+- Use the app.models and app.crud imports in route handlers
+- Follow the standard naming conventions for models and CRUD modules
+- Create and register model variants in the same file as the base model
+- Create and register CRUD instances in the same file as their class definition
+- Maintain alphabetical order in registration files for better readability
+- Register models in dependency order (base models first, then models that reference them)
+- Never use direct imports when the centralized import pattern is available
+- Ensure all model names follow the convention: Model, ModelCreate, ModelUpdate, ModelRead

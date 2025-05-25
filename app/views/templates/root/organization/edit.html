@@ -1,0 +1,69 @@
+{% extends "base/base.html" %}
+
+{% block title %}{{ "Edit" if organization else "New" }} Organization{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title mb-0">{{ "Edit" if organization else "New" }} Organization</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ '/organizations/' + organization.id|string + '/edit' if organization else '/organizations/new' }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                value="{{ organization.name if organization else '' }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                >{{ organization.description if organization else '' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="url" class="form-label">Website URL</label>
+                            <input type="url" class="form-control" id="url" name="url" 
+                                   value="{{ organization.url if organization else '' }}"
+                                   placeholder="https://example.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="organization_type" class="form-label">Type</label>
+                            <select class="form-select" id="organization_type" name="organization_type" required>
+                                {% for type in organization_types %}
+                                <option value="{{ type }}" 
+                                    {{ 'selected' if organization and organization.organization_type == type else '' }}>
+                                    {{ type }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status" required>
+                                {% for status in organization_statuses %}
+                                <option value="{{ status }}"
+                                    {{ 'selected' if organization and organization.status == status else '' }}>
+                                    {{ status }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ '/organizations/' + organization.id|string if organization else '/organizations' }}" 
+                                class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,26 @@
+/* Text Time Period Colors */
+.text-timeperiod-start {
+    color: var(--color-timeperiod-start);
+}
+
+.text-timeperiod-end {
+    color: var(--color-timeperiod-end);
+}
+
+.text-timeperiod-all {
+    color: var(--color-timeperiod-all);
+}
+
+
+/* Background Time Period Colors */
+.bg-timeperiod-start {
+    background-color: var(--color-timeperiod-start-dark) !important;
+}
+
+.bg-timeperiod-end {
+    background-color: var(--color-timeperiod-end-dark) !important;
+}
+
+.bg-timeperiod-all {
+    background-color: var(--color-timeperiod-all);
+}

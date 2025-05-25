@@ -1,0 +1,59 @@
+---
+description: USE browser-tools-mcp when DEBUGGING web issues to IDENTIFY and RESOLVE problems effectively
+globs: **/*
+alwaysApply: true
+---
+
+# Browser Tools MCP Usage Standards
+
+## Context
+
+- When debugging client-side rendering issues
+- When investigating JavaScript errors or unexpected behavior
+- When analyzing performance bottlenecks
+- When testing accessibility compliance
+- When inspecting network requests and responses
+
+## Requirements
+
+- Choose the appropriate browser tool for the specific debugging need
+- Capture relevant evidence before making code changes
+- Follow a systematic debugging workflow
+- Document findings clearly using screenshots when applicable
+
+## Examples
+
+<example>
+```javascript
+// When debugging a JavaScript error:
+// 1. First check console errors
+mcp__getConsoleErrors()
+// 2. Look at complete console logs for context
+mcp__getConsoleLogs()
+// 3. Take a screenshot to document the issue if a screeenshot is needed
+mcp__takeScreenshot()
+// 4. If network related, check network errors
+mcp__getNetworkErrors()
+```
+This approach systematically gathers all relevant information before attempting to solve the problem.
+</example>
+
+<example type="invalid">
+```javascript
+// Immediately jumping to solution without diagnosis:
+mcp__takeScreenshot()
+// Then immediately making code changes without understanding the problem
+```
+This approach fails to gather necessary diagnostic information first.
+</example>
+
+## Critical Rules
+
+- Use mcp__getConsoleErrors() first when debugging JavaScript errors
+- Use mcp__runAccessibilityAudit() for all user-facing interface changes
+- Run mcp__getNetworkLogs() when debugging API interactions or loading issues
+- Capture mcp__takeScreenshot() as evidence if needed before making changes
+- Use mcp__runPerformanceAudit() when investigating slowness or responsiveness issues
+- Clear logs with mcp__wipeLogs() before starting a new debugging session
+- Use mcp__runDebuggerMode() for complex interaction or state debugging scenarios
+- Document specific elements with mcp__getSelectedElement() when investigating DOM issues

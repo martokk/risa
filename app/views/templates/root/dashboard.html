@@ -1,0 +1,136 @@
+{% extends "base/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block content_header %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+
+        <!-- In-Progress Grants Count -->
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <h5 class="card-title">In-Progress</h5>
+                    <h2 class="mb-2">{{ in_progress_count | default(0) }}</h2>
+                </div>
+            </div>
+        </div>
+        <!-- Upcoming AWAITING Grants in 6 Months -->
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Upcoming (6 Mo)</h5>
+                    <h2 class="mb-2">{{ upcoming_awaiting_count | default(0) }}</h2>
+                </div>
+            </div>
+        </div>
+        <!-- Submitted Grants Count -->
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Submitted</h5>
+                    <h2 class="mb-2">{{ submitted_count | default(0) }}</h2>
+                </div>
+            </div>
+        </div>
+        <!-- Total Requested from Submitted Grants -->
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Requested</h5>
+                    <h2 class="mb-2">${{ (total_requested_submitted | default(0.0)) | int }}</h2>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="row">
+        <!-- Upcoming Deadlines -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">Upcoming Deadlines (30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_deadlines %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Event</th>
+                                        <th>Grant Cycle</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in upcoming_deadlines %}
+                                    <tr>
+                                        <td>{{ event.date.strftime('%b %-d') }}</td>
+                                        <td>{{ event.event }}</td>
+                                        <td>
+                                            <a href="/grant-cycles/{{ event.grant_cycle.id }}" class="text-decoration-none">
+                                                {{ event.grant_cycle.full_name }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if event.date_verification == 'Verified' %}bg-success{% else %}bg-warning{% endif %}">
+                                                {{ event.date_verification.value }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            No upcoming deadlines found.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                        <div class="list-group list-group-flush">
+                            {% for activity in recent_activities %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">
+                                        <a href="/grant-cycles/{{ activity.grant_cycle.id }}" class="text-decoration-none">
+                                            {{ activity.grant_cycle.full_name }}
+                                        </a>
+                                    </h6>
+                                    
+                                </div>
+                                <p class="mb-1">Status changed from <span class="badge bg-secondary">{{ activity.previous_status.value }}</span> to <span class="badge bg-secondary">{{ activity.new_status.value }}</span></p>
+                                <small class="text-muted">{{ activity.reason }}</small>
+                                <div class="d-flex w-100 justify-content-end">
+                                    <small class="text-muted">{{ activity.changed_at.strftime('%m/%d %H:%M') }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-0">
+                            No recent activity found.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

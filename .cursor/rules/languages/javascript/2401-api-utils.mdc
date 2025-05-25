@@ -1,0 +1,232 @@
+---
+description: USE api_utils.js for all frontend CRUD operations and form handling to ENSURE consistent API interactions across components
+globs: **/*.js, **/*.html
+alwaysApply: false
+---
+
+# API Utils Integration Guidelines
+
+## Context
+
+- When implementing frontend components that interact with backend APIs
+- When handling form submissions and data operations
+- When managing API tokens and authentication
+- When displaying success/error messages after API operations
+
+## Requirements
+
+- Use the `api_utils.js` module for all CRUD operations
+- Initialize the API with proper authentication tokens
+- Follow consistent patterns for form handling and submission
+- Use the provided UI helpers for common frontend tasks
+- Implement proper error handling for all API operations
+- Maintain user feedback during asynchronous operations
+
+## Examples
+
+<example>
+// Good: Proper initialization and usage of api_utils.js
+import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+// Initialize API with authentication tokens
+initializeApi({
+    access_token: "{{ tokens.access_token }}",
+    refresh_token: "{{ tokens.refresh_token }}"
+});
+
+// Entity management using CRUD operations
+document.addEventListener('DOMContentLoaded', async () => {
+    // Get all entities using the standardized getter
+    const entities = await apiCrud.getAll('tags');
+
+    // Render the entities
+    renderEntities(entities);
+    
+    // Set up the create form
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        try {
+            // Get form data using the helper
+            const data = uiHelpers.getFormData('createForm');
+            
+            // Create entity using the standardized create method
+            await apiCrud.create('tags', data);
+            
+            // Show success message and refresh
+            uiHelpers.showAlert('success', 'Tag created successfully');
+            uiHelpers.refreshPage();
+        } catch (error) {
+            // Handle errors consistently
+            uiHelpers.showError(error);
+        }
+    });
+    
+    // Set up delete buttons with confirmation
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            
+            if (uiHelpers.confirm('Are you sure you want to delete this item?')) {
+                try {
+                    // Delete using the standardized delete method
+                    await apiCrud.delete('tags', id);
+                    
+                    // Remove from UI
+                    document.getElementById(`entity-${id}`).remove();
+                    
+                    // Show success message
+                    uiHelpers.showAlert('success', 'Tag deleted successfully');
+                } catch (error) {
+                    uiHelpers.showError(error);
+                }
+            }
+        });
+    });
+});
+</example>
+
+<example type="invalid">
+// Bad: Not using api_utils.js for API operations
+document.addEventListener('DOMContentLoaded', () => {
+    // Fetching data without using apiCrud
+    fetch('/api/v1/tags')
+        .then(response => response.json())
+        .then(data => {
+            renderEntities(data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load tags');
+        });
+
+    // Form handling without using uiHelpers
+    document.getElementById('createForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const description = document.getElementById('description').value;
+        
+        // Custom fetch instead of using apiCrud.create
+        fetch('/api/v1/tags', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            },
+            body: JSON.stringify({ name, description })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to create tag');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Tag created!');
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating tag: ' + error.message);
+        });
+    });
+    
+    // Delete handling without using apiCrud.delete
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            
+            if (confirm('Are you sure?')) {
+                fetch(`/api/v1/tags/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to delete');
+                    }
+                    document.getElementById(`entity-${id}`).remove();
+                    alert('Deleted successfully');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting: ' + error.message);
+                });
+            }
+        });
+    });
+});
+</example>
+
+## API Utils Functions
+
+### 1. API Initialization
+
+```javascript
+// Initialize API with authentication tokens
+import { initializeApi } from '/static/js/api_utils.js';
+
+initializeApi({
+    access_token: "{{ tokens.access_token }}",
+    refresh_token: "{{ tokens.refresh_token }}"
+});
+```
+
+### 2. CRUD Operations
+
+```javascript
+import { apiCrud } from '/static/js/api_utils.js';
+
+// Create
+await apiCrud.create('entity_plural', data);
+
+// Read All
+const entities = await apiCrud.getAll('entity_plural');
+
+// Read One
+const entity = await apiCrud.getById('entity_plural', id);
+
+// Update
+await apiCrud.update('entity_plural', id, data);
+
+// Delete
+await apiCrud.delete('entity_plural', id);
+```
+
+### 3. UI Helpers
+
+```javascript
+import { uiHelpers } from '/static/js/api_utils.js';
+
+// Form Handling
+uiHelpers.initializeForm('formId', initialData);
+const data = uiHelpers.getFormData('formId');
+
+// User Interaction
+if (uiHelpers.confirm('Are you sure?')) {
+    // Proceed with action
+}
+
+// Notifications
+uiHelpers.showAlert('success', 'Operation completed successfully');
+uiHelpers.showError(error);
+
+// Page Navigation
+uiHelpers.refreshPage();
+uiHelpers.navigateTo('/some/path');
+```
+
+## Critical Rules
+
+- Always initialize the API with proper tokens at the beginning of each script
+- Use apiCrud methods exclusively for all backend data operations
+- Never make direct fetch calls to API endpoints
+- Use uiHelpers for all form handling and user interaction
+- Implement proper error handling with try/catch for all API operations
+- Use the entity plural name consistently in all API operations
+- Never manually construct API URLs or authentication headers
+- Provide meaningful success/error messages to users after operations
+- Maintain consistent user experience with loading indicators during API calls

@@ -1,0 +1,256 @@
+---
+description: This is the architecture for this python-fastapi-stack based project.
+globs: **/*
+alwaysApply: true
+---
+
+# Architecture of python-fastapi-stack
+
+## Status: Approved
+
+## Technical Summary
+
+The python-fastapi-stack is a boilerplate for a modern Python stack using FastAPI for the backend, SQLModel for database operations, and Jinja2 for templating. It follows a structured pattern for CRUD operations and provides both REST API endpoints and web views for user interaction.
+
+This project's initial codebase is based off the python-fastapi-stack boilerplate. It has been built out to include all the project features from this starting point.
+
+## Technology Table
+
+| Technology | Description |
+|------------|-------------|
+| FastAPI | Backend web framework providing both API and web interfaces |
+| SQLModel | SQLAlchemy-based ORM for database operations |
+| SQLite3 | Local database storage |
+| Alembic | Database migration management |
+| Jinja2 | HTML templating engine |
+| Bootstrap | Frontend CSS framework |
+| JWT | Token-based authentication |
+| OAuth2 | Authentication flow implementation |
+| Poetry | Dependency management |
+| Loguru | Logging system |
+| HTML/CSS/JavaScript | Frontend technology stack |
+
+## Core Components
+
+### 1. Application Initialization (`app.py`)
+
+- FastAPI app instance creation with project settings
+- Router registration (API and views)
+- Static files mounting
+- Security middleware implementation
+- Startup event handlers
+- Comprehensive security headers (CSP, HSTS, etc.)
+
+### 2. Security & Authentication (`security.py`)
+
+- Password hashing and verification (using bcrypt)
+- JWT token encoding and decoding
+- Access and refresh token management
+- OAuth2 password flow implementation
+- Token generation with configurable expiration
+- Token refresh mechanism
+
+### 3. Server Configuration (`server.py`)
+
+- Uvicorn server setup and configuration
+- Configuration loading from settings
+- Worker management
+- Logging configuration
+
+### 4. Additional Components
+
+- **Notification System** (`services/notify.py`): Email notifications and template-based generation
+- **Database Connection** (`core/db.py`): Database connection and session management
+- **Logging** (`core/logger.py`): Centralized logging configuration
+
+## Architectural Diagrams
+
+### Component Architecture
+
+```mermaid
+graph TD
+    User[User] --> WebInterface[Web Interface]
+    User --> APIEndpoints[API Endpoints]
+    
+    WebInterface --> Routes[Routes]
+    APIEndpoints --> Routes
+    
+    Routes --> CRUD[CRUD Operations]
+    Routes --> Services[Services]
+    
+    CRUD --> Models[SQLModel Models]
+    Models --> Database[(SQLite Database)]
+    
+    Services --> ExternalSystems[External Systems]
+    
+    subgraph Application
+        WebInterface
+        APIEndpoints
+        Routes
+        CRUD
+        Models
+        Services
+    end
+    
+    style User fill:#f9f,stroke:#333
+    style Application fill:#eef,stroke:#333,stroke-dasharray: 5 5
+    style Database fill:#bbf,stroke:#333
+    style ExternalSystems fill:#fbb,stroke:#333
+```
+
+### Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant WebApp as Web App/API
+    participant Auth as Auth Service
+    participant DB as Database
+    
+    User->>WebApp: Login Request
+    WebApp->>Auth: Validate Credentials
+    Auth->>DB: Check User
+    DB->>Auth: User Data
+    Auth->>WebApp: Generate Tokens
+    WebApp->>User: Set Cookies/Headers
+    
+    User->>WebApp: Protected Route Request
+    WebApp->>Auth: Token Validation
+    alt Valid Token
+        Auth->>WebApp: Authorized
+        WebApp->>User: Protected Resource
+    else Invalid Token
+        Auth->>WebApp: Unauthorized
+        WebApp->>User: Redirect to Login
+    end
+    
+    User->>WebApp: Token Expired
+    WebApp->>Auth: Refresh Token
+    Auth->>WebApp: New Access Token
+    WebApp->>User: Continue Session
+```
+
+## Data Models and Key Concepts
+
+### Core Entities
+
+## Project Scaffold Structure
+
+```
+app/
+├── core/              # Core application components
+│   ├── app.py         # FastAPI application initialization
+│   ├── db.py          # Database connection and session management
+│   ├── logger.py      # Logging configuration
+│   ├── security.py    # Security and authentication
+│   └── server.py      # Server configuration
+│
+├── api/  
+│   ├── v1/            # API endpoints and routes
+│   │   └── endpoints/ # API endpoints
+│   │       └── [entity].py # Entity-specific API endpoints
+│   │
+│   └── deps.py        # API dependencies
+│
+├── crud/              # Database CRUD operations
+│   ├── base.py        # Base CRUD class with generic operations
+│   ├── base_ordered.py # Extension for ordered entities
+│   └── [entity].py    # Entity-specific CRUD implementations
+│
+├── models/            # SQLModel database models
+│   ├── base.py        # Base model classes
+│   ├── common.py      # Common model components
+│   ├── user.py        # User authentication models
+│   └── [entity].py    # Entity-specific models
+│
+├── services/          # External service integrations
+│   └── notify.py      # Notification service (email, sms, etc.)
+│
+├── logic/             # Business logic layer
+│   └── init_db.py     # Database initialization
+│
+├── tasks/             # Background and scheduled tasks
+│
+├── utils/             # Utility functions and helpers
+│
+├── routes/            # Route definitions and registration
+│   ├── api.py         # API route registration
+│   └── views.py       # View route registration
+│
+├── views/             # Web view handlers and templates
+│   ├── pages/         # Page-specific handlers
+│   ├── static/        # Static files (CSS, JS)
+│   │   ├── css/       # CSS files
+│   │   └── js/        # JavaScript files
+│   │
+│   ├── templates/     # Jinja2 templates
+│   │   ├── base/      # Base templates
+│   │   ├── __init__.py # Template initialization
+│   │   ├── context.py # Template context
+│   │   └── filters.py # Template filters
+│   │
+│   └── deps.py        # View-specific dependencies
+│
+├── middleware/        # Request/response middleware
+│
+├── handlers/          # Custom handlers
+│
+├── data/              # Data storage and resources
+│
+├── agents/            # LLM Agent-based functionalities
+│
+├── workflows/         # LLM Agent-based Multi-step process workflows
+│
+├── __init__.py        # App initialization, settings, and version
+├── __main__.py        # Entry point for running the app directly
+├── paths.py           # Path definitions for the application
+└── pyproject.toml     # Poetry project configuration
+```
+
+## Key Architectural Decisions
+
+1. **Dual-Purpose Application**
+   - Serves both as a REST API and web application
+   - API routes use `/api/v1/*` pattern
+   - Web routes use direct paths
+   - Shared models and CRUD operations between API and web
+
+2. **CRUD Pattern Implementation**
+   - Generic base CRUD class for common operations
+   - Entity-specific CRUD classes extending base functionality
+   - Consistent database operations across the application
+
+3. **Local Single-User Design**
+   - Designed for a single user with full control
+   - Runs locally without multi-user authentication
+   - Emphasizes functionality over complex authentication
+
+## Database Management
+
+The project uses SQLModel with Alembic for migrations:
+
+- When models change, migrations must be generated and applied
+- End users need to run:
+
+  ```sh
+  1. alembic revision --autogenerate -m "description_of_changes"
+  2. alembic upgrade head
+  ```
+
+## Best Practices
+
+1. **API Development**
+   - Use proper HTTP methods (GET, POST, PUT, DELETE)
+   - Implement proper response models
+   - Return appropriate status codes
+   - Document using OpenAPI/Swagger
+
+2. **Web Development**
+   - Use templates for rendering
+   - Implement proper form handling
+   - Use the alert system for user feedback
+   - Handle sessions via cookies
+
+## Additional Contexts
+
+@file /cursor/rules/project/0301-project-architecture.mdc - Project Specific Architecture
