@@ -11,11 +11,6 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
-                <!-- Dashboard -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/dashboard">Dashboard</a>
-                </li>
-
                 <!-- Manage -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
@@ -24,26 +19,21 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item" href="/organizations">Organizations</a>
+                            <a class="dropdown-item" href="/sd-base-models">SD Base Models</a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="/grant-programs">Grant Programs</a>
+                            <a class="dropdown-item" href="/sd-checkpoints">SD Checkpoints</a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="/grant-cycles">Grant Cycles</a>
+                            <a class="dropdown-item" href="/sd-extra-networks">SD Extra Networks</a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="/grant-proposals">Grant Proposals</a>
+                            <a class="dropdown-item" href="/characters">Characters</a>
                         </li>
                         
                         <li><hr class="dropdown-divider"></li>
                         
-                        <li>
-                            <a class="dropdown-item" href="/contexts">Contexts</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/context-templates/">Context Templates</a>
-                        </li>
+                      
                     </ul>
                 </li>
 
@@ -53,33 +43,14 @@
                         aria-expanded="false">
                         Tools
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                    {# <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
                         <li>
                             <a class="dropdown-item" href="/tools/calculators">Calculators</a>
                         </li>
-                    </ul>
+                    </ul> #}
                 </li>
 
-                <!-- Calendar -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="calendarDropdown" role="button" 
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        Calendar
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="calendarDropdown">
-                        <li>
-                            <a class="dropdown-item" href="/calendar/upcoming">
-                                <i class="fas fa-calendar-alt"></i> Upcoming
-                            </a>
-                        </li>
-                        <!-- Add more calendar views here in the future -->
-                    </ul>
-                </li>
-
-                <!-- Spreadsheet -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/spreadsheet">Spreadsheet</a>
-                </li>
+                
 {# 
             <ul class="navbar-nav ml-auto navbar-right">
                 

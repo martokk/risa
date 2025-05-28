@@ -118,3 +118,13 @@ h5 {
 h6 {
     font-size: 1rem
 }
+
+.form-group label {
+    padding-top: 10px;
+}
+
+.form-group ul {
+    padding-left: 20px;
+    padding-bottom: 10px;
+    list-style-type: none;
+}

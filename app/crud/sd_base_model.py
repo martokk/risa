@@ -1,6 +1,8 @@
 from sqlmodel import Session
+
+from app import models
+
 from .base import BaseCRUD
-import models
 
 
 class SDBaseModelCRUD(
@@ -12,7 +14,7 @@ class SDBaseModelCRUD(
 ):
     """CRUD operations for SDBaseModel."""
 
-    def add_checkpoint(
+    async def add_checkpoint(
         self,
         db: Session,
         id: str,
@@ -20,13 +22,11 @@ class SDBaseModelCRUD(
         checkpoint_name: str,
         is_realistic: bool,
     ) -> models.SDBaseModel:
-        db_base_model = self.get_or_none(db, id=id)
+        db_base_model = await self.get_or_none(db, id=id)
         if not db_base_model:
             raise ValueError(f"SDBaseModel with id '{id}' not found")
 
-        actual_checkpoint: models.SDCheckpoint | None = db.get(
-            models.SDCheckpoint, checkpoint_id
-        )
+        actual_checkpoint: models.SDCheckpoint | None = db.get(models.SDCheckpoint, checkpoint_id)
 
         if not actual_checkpoint:
             checkpoint_create_schema = models.SDCheckpointCreate(
@@ -34,9 +34,7 @@ class SDBaseModelCRUD(
                 name=checkpoint_name,
                 is_realistic=is_realistic,
             )
-            actual_checkpoint = models.SDCheckpoint.model_validate(
-                checkpoint_create_schema
-            )
+            actual_checkpoint = models.SDCheckpoint.model_validate(checkpoint_create_schema)
             db.add(actual_checkpoint)
         else:
             pass
@@ -51,7 +49,7 @@ class SDBaseModelCRUD(
 
         return db_base_model
 
-    def add_extra_network(
+    async def add_extra_network(
         self,
         db: Session,
         id: str,
@@ -63,9 +61,13 @@ class SDBaseModelCRUD(
         only_checkpoints: list[models.SDCheckpoint] = [],
         exclude_checkpoints: list[models.SDCheckpoint] = [],
     ) -> models.SDBaseModel:
-        db_base_model = self.get_or_none(db, id=id)
+        db_base_model = await self.get_or_none(db, id=id)
         if not db_base_model:
             raise ValueError(f"SDBaseModel with id '{id}' not found")
+
+        if not lora_tag:
+            # Or handle this case as an error, depending on requirements
+            raise ValueError("lora_tag cannot be None when adding an extra network")
 
         safetensors_name = lora_tag.split(":")[1]
         extra_network_id = f"{character_id}_{safetensors_name}_{db_base_model.id}"
@@ -85,9 +87,7 @@ class SDBaseModelCRUD(
                 exclude_checkpoints=exclude_checkpoints,
                 sd_base_model_id=db_base_model.id,
             )
-            actual_extra_network = models.SDExtraNetwork.model_validate(
-                extra_network_create_schema
-            )
+            actual_extra_network = models.SDExtraNetwork.model_validate(extra_network_create_schema)
             db.add(actual_extra_network)
         else:
             pass

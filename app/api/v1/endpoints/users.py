@@ -37,7 +37,7 @@ async def get_users(
     Returns:
         list[ModelClass]: List of objects.
     """
-    return await crud.user.get_multi(db=db, skip=skip, limit=limit)
+    return await crud.user.get_all(db=db, skip=skip, limit=limit)
 
 
 @router.get("/me", response_model=models.UserRead)

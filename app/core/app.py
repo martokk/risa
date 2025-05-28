@@ -1,9 +1,10 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app import logger, settings, version
 from app.api import deps
@@ -12,8 +13,6 @@ from app.paths import STATIC_PATH
 from app.routes.api import api_router
 from app.routes.views import views_router
 from app.services import notify
-from app.services.status_updater import StatusUpdateService
-from app.tasks.scheduler import TaskScheduler
 
 
 # def run_playground_app():
@@ -28,6 +27,14 @@ from app.tasks.scheduler import TaskScheduler
 #             "--reload",
 #         ]
 #     )
+
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Skip auth for export endpoint
+        if request.url.path.endswith("/api/v1/export"):
+            return await call_next(request)
+        return await call_next(request)
 
 
 async def startup_event(db: Session | None = None) -> None:
@@ -47,11 +54,6 @@ async def startup_event(db: Session | None = None) -> None:
         db = next(deps.get_db())
     await initialize_tables_and_initial_data(db=db)
 
-    # Run status updater
-    logger.info("Running status updater")
-    status_updater = StatusUpdateService(db=db)
-    await status_updater.update_grant_cycle_statuses()
-
     # Start the playground app in a separate thread
     # threading.Thread(target=run_playground_app).start()
 
@@ -62,8 +64,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await startup_event()
 
     # Start task scheduler
-    task_scheduler = TaskScheduler(app=app)
-    await task_scheduler.register_startup_event()
+    # task_scheduler = TaskScheduler(app=app)
+    # await task_scheduler.register_startup_event()
 
     yield
 
@@ -81,6 +83,9 @@ app = FastAPI(
     debug=settings.DEBUG,
     lifespan=lifespan,
 )
+
+# Add auth middleware that skips export endpoint
+app.add_middleware(AuthMiddleware)
 
 # Include routers
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)

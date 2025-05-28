@@ -1,17 +1,12 @@
 from fastapi import APIRouter
 
 from app.views.pages import context_templates, contexts
+from app.views.pages.character import character
 from app.views.pages.login import login
-from app.views.pages.root import (
-    calendar,
-    grant_cycle,
-    grant_program,
-    grant_proposal,
-    organization,
-    root,
-    spreadsheet,
-)
-from app.views.pages.tools import calculators
+from app.views.pages.root import root
+from app.views.pages.sd_base_model import sd_base_model
+from app.views.pages.sd_checkpoint import sd_checkpoint
+from app.views.pages.sd_extra_network import sd_extra_network
 from app.views.pages.user import user
 
 
@@ -19,17 +14,15 @@ from app.views.pages.user import user
 root_router = APIRouter()
 root_router.include_router(root.router, tags=["Root"])
 root_router.include_router(login.router, tags=["Logins"])
-root_router.include_router(organization.router, tags=["Organizations"])
-root_router.include_router(grant_program.router, tags=["Grant Programs"])
-root_router.include_router(grant_cycle.router, tags=["Grant Cycles"])
-root_router.include_router(grant_proposal.router)
-root_router.include_router(calendar.router, tags=["calendar"])
-root_router.include_router(spreadsheet.router, tags=["spreadsheet"])
+
 root_router.include_router(contexts.router, tags=["Contexts"])
 root_router.include_router(context_templates.router, tags=["Context Templates"])
 
-# Tools
-root_router.include_router(calculators.router, tags=["Calculators"])
+# SD specific routes
+root_router.include_router(sd_base_model.router, tags=["SD Base Models"])
+root_router.include_router(sd_checkpoint.router, tags=["SD Checkpoints"])
+root_router.include_router(sd_extra_network.router, tags=["SD Extra Networks"])
+root_router.include_router(character.router, tags=["Characters"])
 
 # User routes
 user_router = APIRouter(prefix="/user")

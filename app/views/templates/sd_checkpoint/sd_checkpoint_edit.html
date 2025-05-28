@@ -1,0 +1,91 @@
+{% extends "base/base.html" %}
+
+{% block title %}Edit SD Checkpoint: {{ sd_checkpoint.name }}{% endblock %}
+{% block content_header %}Edit SD Checkpoint: {{ sd_checkpoint.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card card-warning">
+        <div class="card-header">
+            <h3 class="card-title">Update SD Checkpoint Details</h3>
+        </div>
+        <!-- /.card-header -->
+        <!-- form start -->
+        <form id="editSDCheckpointForm">
+            <input type="hidden" id="sdCheckpointEditId" name="id" value="{{ sd_checkpoint.id }}">
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="sdCheckpointIdInput">ID</label>
+                    <input type="text" class="form-control" id="sdCheckpointIdInput" name="id" value="{{ sd_checkpoint.id }}" placeholder="Enter ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="sdCheckpointName">Name</label>
+                    <input type="text" class="form-control" id="sdCheckpointName" name="name" value="{{ sd_checkpoint.name }}" placeholder="Enter Name" required>
+                </div>
+                <div class="form-group">
+                    <label for="sdBaseModelId">Base Model</label>
+                    <select class="form-control" id="sdBaseModelId" name="sd_base_model_id" required>
+                        <option value="" disabled>Select Base Model</option>
+                        {% for base_model in sd_base_models %}
+                            <option value="{{ base_model.id }}" {% if sd_checkpoint.sd_base_model_id == base_model.id %}selected{% endif %}>{{ base_model.name }} ({{base_model.id}})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="isRealistic" name="is_realistic" {% if sd_checkpoint.is_realistic %}checked{% endif %}>
+                    <label class="form-check-label" for="isRealistic">Is Realistic</label>
+                </div>
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer">
+                <button type="submit" class="btn btn-warning">Update</button>
+                <a href="{{ url_for('list_sd_checkpoints_page') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found in template context. API calls might fail if authentication is required.');
+    initializeApi({});
+    {% endif %}
+
+    const form = document.getElementById('editSDCheckpointForm');
+    if (form) {
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            try {
+                const formData = uiHelpers.getFormData('editSDCheckpointForm');
+                // Ensure is_realistic is a boolean
+                formData.is_realistic = document.getElementById('isRealistic').checked;
+                
+                // The original ID is passed in the hidden input sdCheckpointEditId but also as sd_checkpoint.id from context
+                // The visible ID field is sdCheckpointIdInput, which can be edited.
+                // We need to pass the *original* ID to the API for the update path, 
+                // and the potentially new ID (from sdCheckpointIdInput) in the form data.
+                await apiCrud.update('sd-checkpoints', '{{sd_checkpoint.id}}', formData);
+
+                uiHelpers.showToast('SD Checkpoint updated successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('list_sd_checkpoints_page') }}";
+                }, 1500);
+
+            } catch (error) {
+                console.error('Failed to update SD Checkpoint:', error);
+                uiHelpers.showError(error.message || 'Failed to update SD Checkpoint. Please check console for details.');
+            }
+        });
+    }
+</script>
+{% endblock %} 

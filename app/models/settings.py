@@ -60,7 +60,7 @@ class Settings(BaseSettings):
     NOTIFY_ON_START: bool = True
 
     # Project Settings
-    PROJECT_NAME: str = "grant_manager"
+    PROJECT_NAME: str = "risa_ai"
     PACKAGE_NAME: str = PROJECT_NAME.lower().replace("-", "_").replace(" ", "_")
     PROJECT_DESCRIPTION: str = f"{PROJECT_NAME}"
     VERSION: str = ""
@@ -81,6 +81,9 @@ class Settings(BaseSettings):
 
     # Phidata Playground API Key
     PHI_API_KEY: str = ""
+
+    # Export API Key
+    EXPORT_API_KEY: str = ""
 
     @property
     def TIMEZONE_INFO(self) -> ZoneInfo:

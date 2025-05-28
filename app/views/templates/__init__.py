@@ -5,16 +5,9 @@ from fastapi.templating import Jinja2Templates
 from app import paths, settings
 from app.utils.datetime import format_datetime, utc_to_local
 from app.views.templates.filters import (
-    active_status,
-    css_class_missing_past_date,
-    css_class_ss_date,
-    css_class_ss_status,
     filter_humanize,
     filter_nl2br,
-    format_currency,
     format_date,
-    status_color,
-    verification_color,
 )
 
 
@@ -34,15 +27,6 @@ def get_templates() -> Jinja2Templates:
     templates.env.filters["utc_to_local"] = utc_to_local
     templates.env.filters["nl2br"] = filter_nl2br
     templates.env.filters["format_date"] = format_date
-    templates.env.filters["format_currency"] = format_currency
-    templates.env.filters["status_color"] = status_color
-    templates.env.filters["verification_color"] = verification_color
-    templates.env.filters["active_status"] = active_status
-
-    # CSS classes
-    templates.env.filters["css_class_ss_status"] = css_class_ss_status
-    templates.env.filters["css_class_ss_date"] = css_class_ss_date
-    templates.env.filters["css_class_missing_past_date"] = css_class_missing_past_date
 
     # Add global variables to templates
     templates.env.globals["PROJECT_NAME"] = settings.PROJECT_NAME

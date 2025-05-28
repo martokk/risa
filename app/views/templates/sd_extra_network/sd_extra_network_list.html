@@ -1,0 +1,90 @@
+{% extends "base/base.html" %}
+
+{% block title %}SD Extra Networks{% endblock %}
+{% block content_header %}SD Extra Networks{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-3">
+        <a href="{{ url_for('create_sd_extra_network_page') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New SD Extra Network
+        </a>
+    </div>
+
+    {% if sd_extra_networks %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Existing SD Extra Networks</h3>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Safetensors</th>
+                        <th>Character</th>
+                        <th>Base Model</th>
+                        <th style="width: 200px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sd_extra_networks %}
+                    <tr>
+                        <td><a href="/sd-extra-network/{{ item.id }}/view">{{ item.safetensors_name }}</a></td>
+                        <td><a href="/character/{{ item.character.id }}/view">{{ item.character.name }}</a></td>
+                        <td><a href="/sd-base-model/{{ item.sd_base_model.id }}/view">{{ item.sd_base_model.name }}</a></td>
+                        
+                        <td>
+                            <a href="/sd-extra-networks/{{ item.id }}/view" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="/sd-extra-networks/{{ item.id }}/edit" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.lora_tag if item.lora_tag else item.safetensors_name }}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No SD Extra Networks found. <a href="/sd-extra-networks/create">Create one now!</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found in template context. API calls might fail if authentication is required.');
+    initializeApi({});
+    {% endif %}
+
+    window.confirmDelete = async function(id, name) {
+        if (uiHelpers.confirm(`Are you sure you want to delete SD Extra Network "${name}" (ID: ${id})?`)) {
+            try {
+                await apiCrud.delete('sd-extra-networks', id);
+                uiHelpers.showToast('SD Extra Network deleted successfully!', 'success');
+                setTimeout(() => {
+                    uiHelpers.refreshPage();
+                }, 1500);
+            } catch (error) {
+                console.error('Failed to delete SD Extra Network:', error);
+                uiHelpers.showError(error.message || 'Failed to delete SD Extra Network. Please check console for details.');
+            }
+        }
+    };
+</script>
+{% endblock %} 

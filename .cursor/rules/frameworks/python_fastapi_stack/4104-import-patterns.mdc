@@ -39,7 +39,7 @@ async def get_examples(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[models.Example]:
     """Get all examples."""
-    return await crud.example.get_multi(db=db)
+    return await crud.example.get_all(db=db)
 
 @router.post("/examples", response_model=models.ExampleRead)
 async def create_example(
@@ -76,7 +76,7 @@ from app.logger import logger
 async def get_users(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[User]:  # Direct reference to User instead of models.User
-    return await user.get_multi(db=db)  # Direct reference to user instead of crud.user
+    return await user.get_all(db=db)  # Direct reference to user instead of crud.user
 
 # Bad: Inconsistent import patterns within the same file
 
@@ -87,7 +87,7 @@ from app.crud.example import example  # Bad import in the same file
 async def get_examples(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[models.Example]:
-    return await example.get_multi(db=db)  # Inconsistent with using crud.example
+    return await example.get_all(db=db)  # Inconsistent with using crud.example
 </example>
 
 ## Core App Modules
@@ -125,7 +125,7 @@ from app import crud
 
 # Performing CRUD operations
 user = await crud.user.get(db=db, id=user_id)
-tags = await crud.tag.get_multi(db=db)
+tags = await crud.tag.get_all(db=db)
 ```
 
 ### Other Core Modules

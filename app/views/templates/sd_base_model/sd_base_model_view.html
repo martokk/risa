@@ -1,0 +1,58 @@
+{% extends "base/base.html" %}
+
+{% block title %}View SD Base Model: {{ sd_base_model.name }}{% endblock %}
+{% block content_header %}View SD Base Model: {{ sd_base_model.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Details</h3>
+            <div class="card-tools">
+                <a href="{{ url_for('edit_sd_base_model_page', sd_base_model_id=sd_base_model.id) }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{{ url_for('list_sd_base_models_page') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID:</dt>
+                <dd class="col-sm-9">{{ sd_base_model.id }}</dd>
+
+                <dt class="col-sm-3">Name:</dt>
+                <dd class="col-sm-9">{{ sd_base_model.name }}</dd>
+
+                <dt class="col-sm-3">Checkpoints:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_base_model.sd_checkpoints %}
+                        <ul>
+                        {% for cp in sd_base_model.sd_checkpoints %}
+                            <li><a href="/sd-checkpoints/{{ cp.id }}">{{ cp.name }}</a></li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        None
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Extra Networks:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_base_model.sd_extra_networks %}
+                        <ul>
+                        {% for en in sd_base_model.sd_extra_networks %}
+                            <li><a href="/sd-extra-networks/{{ en.id }}">{{ en }}</a></li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        None
+                    {% endif %}
+                </dd>
+               
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %} 

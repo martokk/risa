@@ -1,10 +1,12 @@
-from sqlmodel import SQLModel, Field, Relationship, Column, JSON
 from typing import TYPE_CHECKING, Any
+
 from pydantic import root_validator
+from sqlmodel import JSON, Column, Field, Relationship, SQLModel
+
 
 if TYPE_CHECKING:
-    from .sd_base_model import SDBaseModel
     from .character import Character
+    from .sd_base_model import SDBaseModel
     from .sd_checkpoint import SDCheckpoint
 
 
@@ -12,18 +14,10 @@ class SDExtraNetworkBase(SQLModel):
     id: str | None = Field(default=None, primary_key=True, index=True)
     sd_base_model_id: str = Field(foreign_key="sdbasemodel.id")
     character_id: str = Field(foreign_key="character.id")
-    lora_tag: str | None = Field(
-        default=None, description="The LORA tag (ie. '<lora:XXXX:1>')"
-    )
-    trigger: str | None = Field(
-        default=None, description="The trigger words for the lora"
-    )
-    only_realistic: bool = Field(
-        default=False, description="Only use on realistic models"
-    )
-    only_nonrealistic: bool = Field(
-        default=False, description="Only use on non-realistic models"
-    )
+    lora_tag: str | None = Field(default=None, description="The LORA tag (ie. '<lora:XXXX:1>')")
+    trigger: str | None = Field(default=None, description="The trigger words for the lora")
+    only_realistic: bool = Field(default=False, description="Only use on realistic models")
+    only_nonrealistic: bool = Field(default=False, description="Only use on non-realistic models")
     only_checkpoints: list["SDCheckpoint"] = Field(
         default=[],
         description="Only use on these models (ie. 'ponyRealism_V21')",
@@ -35,27 +29,56 @@ class SDExtraNetworkBase(SQLModel):
         sa_column=Column(JSON),
     )
 
+    @property
+    def safetensors_name(self):
+        if self.lora_tag:
+            return self.lora_tag.split(":")[1]
+        return None
+
+    def get_id(self):
+        return f"{self.character.id}_{self.safetensors_name}_{self.sd_base_model.id}"
+
 
 class SDExtraNetwork(SDExtraNetworkBase, table=True):
     sd_base_model: "SDBaseModel" = Relationship(back_populates="sd_extra_networks")
     character: "Character" = Relationship(back_populates="sd_extra_networks")
+
+    def __str__(self):
+        return f"{self.character.name} - {self.safetensors_name} ({self.sd_base_model.name})"
 
 
 class SDExtraNetworkCreate(SDExtraNetworkBase):
     @root_validator(pre=True)
     @classmethod
     def generate_id(cls, values: dict[str, Any]) -> dict[str, Any]:
-        if values is None:
-            return values
         if values.get("id") is None:
-            if not values.get("lora_tag") and not values.get("trigger"):
-                raise ValueError("lora_tag or trigger must be provided")
-            safetensors_name = (
-                values.get("lora_tag").split(":")[1] if values.get("lora_tag") else None
-            )
-            values["id"] = (
-                f"{values.get('character_id')}_{safetensors_name}_{values.get('sd_base_model_id')}"
-            )
+            lora_tag_value = values.get("lora_tag")
+            trigger_value = values.get("trigger")
+
+            if not lora_tag_value and not trigger_value:
+                raise ValueError("lora_tag or trigger must be provided to generate an ID")
+
+            safetensors_name = None
+            if isinstance(lora_tag_value, str) and lora_tag_value.strip():
+                try:
+                    safetensors_name = lora_tag_value.split(":")[1]
+                except IndexError:
+                    raise ValueError(
+                        f"Invalid lora_tag format: {lora_tag_value}. Expected format like '<lora:NAME:1>'."
+                    )
+
+            if safetensors_name is None and lora_tag_value:
+                pass
+
+            character_id = values.get("character_id")
+            sd_base_model_id = values.get("sd_base_model_id")
+
+            if not character_id or not sd_base_model_id:
+                raise ValueError(
+                    "character_id and sd_base_model_id must be provided to generate an ID"
+                )
+
+            values["id"] = f"{character_id}_{safetensors_name}_{sd_base_model_id}"
         return values
 
 
@@ -69,9 +92,10 @@ class SDExtraNetworkRead(SDExtraNetworkBase):
 
 # Resolve forward references by ensuring the referenced models are imported
 # and then calling update_forward_refs() on each model that uses them.
-from .sd_base_model import SDBaseModel
 from .character import Character
+from .sd_base_model import SDBaseModel
 from .sd_checkpoint import SDCheckpoint
+
 
 SDExtraNetworkBase.update_forward_refs()
 SDExtraNetwork.update_forward_refs()

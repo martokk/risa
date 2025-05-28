@@ -113,7 +113,7 @@ async def test_get_multi(
 ) -> None:
     """Test getting multiple records."""
     db_session.exec.return_value.fetchmany.return_value = test_models[:2]  # type: ignore
-    result = await crud.get_multi(db_session, skip=0, limit=2)
+    result = await crud.get_all(db_session, skip=0, limit=2)
     assert result == test_models[:2]
     assert len(result) == 2
 

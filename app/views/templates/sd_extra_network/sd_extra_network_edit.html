@@ -1,0 +1,144 @@
+{% extends "base/base.html" %}
+
+{% block title %}Edit SD Extra Network: {{ sd_extra_network.id }}{% endblock %}
+{% block content_header %}Edit SD Extra Network: {{ sd_extra_network.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card card-warning">
+        <div class="card-header">
+            <h3 class="card-title">Update SD Extra Network Details</h3>
+        </div>
+        <form id="editSDExtraNetworkForm">
+            <input type="hidden" name="original_id" value="{{ sd_extra_network.id }}">
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="sdExtraNetworkId">ID (auto-generated if empty, based on Character, Lora/Trigger, and Base Model)</label>
+                    <input type="text" class="form-control" id="sdExtraNetworkId" name="id" value="{{ sd_extra_network.id }}" placeholder="Leave empty to auto-generate">
+                    <small class="form-text text-muted">Current ID: {{ sd_extra_network.id }}</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="characterId">Character</label>
+                    <select class="form-control" id="characterId" name="character_id" required>
+                        {% for char in characters %}
+                            <option value="{{ char.id }}" {% if sd_extra_network.character.id == char.id %}selected{% endif %}>{{ char.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="sdBaseModelId">Base Model</label>
+                    <select class="form-control" id="sdBaseModelId" name="sd_base_model_id" required>
+                        {% for base_model in sd_base_models %}
+                            <option value="{{ base_model.id }}" {% if sd_extra_network.sd_base_model.id == base_model.id %}selected{% endif %}>{{ base_model.name }} ({{ base_model.id }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="loraTag">Lora Tag (e.g., &lt;lora:MODEL_NAME:1&gt;)</label>
+                    <input type="text" class="form-control" id="loraTag" name="lora_tag" value="{{ sd_extra_network.lora_tag if sd_extra_network.lora_tag is not none }}" placeholder="<lora:XXXX:1>">
+                    <small class="form-text text-muted">Either Lora Tag or Trigger is required for ID generation if ID field is empty.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="trigger">Trigger Words</label>
+                    <input type="text" class="form-control" id="trigger" name="trigger" value="{{ sd_extra_network.trigger if sd_extra_network.trigger is not none }}" placeholder="e.g., official art, character name">
+                </div>
+
+                <hr>
+                <h5 class="mt-3 mb-2">Restrictions</h5>
+
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="onlyRealistic" name="only_realistic" {% if sd_extra_network.only_realistic %}checked{% endif %}>
+                    <label class="form-check-label" for="onlyRealistic">Only use on Realistic models</label>
+                </div>
+
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="onlyNonRealistic" name="only_nonrealistic" {% if sd_extra_network.only_nonrealistic %}checked{% endif %}>
+                    <label class="form-check-label" for="onlyNonRealistic">Only use on Non-Realistic models</label>
+                </div>
+
+                <div class="form-group">
+                    <label for="onlyCheckpoints">Only use on these Checkpoints (comma-separated IDs)</label>
+                    <input type="text" class="form-control" id="onlyCheckpoints" name="only_checkpoints_str" value="{{ sd_extra_network.only_checkpoints|join(',') if sd_extra_network.only_checkpoints }}" placeholder="e.g., checkpoint_id1,checkpoint_id2">
+                </div>
+
+                <div class="form-group">
+                    <label for="excludeCheckpoints">Exclude these Checkpoints (comma-separated IDs)</label>
+                    <input type="text" class="form-control" id="excludeCheckpoints" name="exclude_checkpoints_str" value="{{ sd_extra_network.exclude_checkpoints|join(',') if sd_extra_network.exclude_checkpoints }}" placeholder="e.g., checkpoint_id3,checkpoint_id4">
+                </div>
+
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-warning">Update</button>
+                <a href="{{ url_for('list_sd_extra_networks_page') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found. API calls might fail.');
+    initializeApi({});
+    {% endif %}
+
+    const form = document.getElementById('editSDExtraNetworkForm');
+    if (form) {
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            try {
+                const rawFormData = uiHelpers.getFormData('editSDExtraNetworkForm');
+                const processedFormData = { ...rawFormData };
+                const originalId = rawFormData.original_id;
+                delete processedFormData.original_id;
+
+                processedFormData.only_realistic = document.getElementById('onlyRealistic').checked;
+                processedFormData.only_nonrealistic = document.getElementById('onlyNonRealistic').checked;
+
+                if (rawFormData.only_checkpoints_str && rawFormData.only_checkpoints_str.trim() !== "") {
+                    processedFormData.only_checkpoints = rawFormData.only_checkpoints_str.split(',').map(s => s.trim()).filter(s => s !== "");
+                } else {
+                    processedFormData.only_checkpoints = [];
+                }
+                delete processedFormData.only_checkpoints_str;
+
+                if (rawFormData.exclude_checkpoints_str && rawFormData.exclude_checkpoints_str.trim() !== "") {
+                    processedFormData.exclude_checkpoints = rawFormData.exclude_checkpoints_str.split(',').map(s => s.trim()).filter(s => s !== "");
+                } else {
+                    processedFormData.exclude_checkpoints = [];
+                }
+                delete processedFormData.exclude_checkpoints_str;
+
+                // If ID is provided and different from original, it's an attempt to change ID.
+                // If ID is empty, backend will try to regenerate. If same, it's a normal update.
+                if (processedFormData.id === "") { // Allow backend to regenerate ID if user clears it
+                    delete processedFormData.id; 
+                }
+
+                await apiCrud.update('sd-extra-networks', originalId, processedFormData);
+                uiHelpers.showToast('SD Extra Network updated successfully!', 'success');
+                setTimeout(() => {
+                    // Redirect to the potentially new ID's view page or list page
+                    // For simplicity, redirecting to list page.
+                    window.location.href = "{{ url_for('list_sd_extra_networks_page') }}";
+                }, 1500);
+            } catch (error) {
+                console.error('Failed to update SD Extra Network:', error);
+                uiHelpers.showError(error.responseJSON?.detail || error.message || 'Failed to update. Check console.');
+            }
+        });
+    }
+</script>
+{% endblock %} 

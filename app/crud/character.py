@@ -1,6 +1,8 @@
 from sqlmodel import Session
+
+from app import models
+
 from .base import BaseCRUD
-import models
 
 
 class CharacterCRUD(
@@ -46,9 +48,7 @@ class CharacterCRUD(
                 only_checkpoints=only_checkpoints,
                 exclude_checkpoints=exclude_checkpoints,
             )
-            actual_extra_network = models.SDExtraNetwork.model_validate(
-                extra_network_create_schema
-            )
+            actual_extra_network = models.SDExtraNetwork.model_validate(extra_network_create_schema)
             db.add(actual_extra_network)
         else:
             pass

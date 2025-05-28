@@ -60,9 +60,6 @@ This guide provides a comprehensive checklist for implementing new tools in the 
     - [ ] `results_card_body` - Results display structure
     - [ ] `js_scripts` - JavaScript for form processing
 - [ ] Create a form with appropriate input fields and validation
-- [ ] Use js from `app/views/static/js/form_processor.js` before creating additional js logic
-- [ ] Implement JavaScript to handle form submission and display results
-- [ ] Use the FormProcessor utility for consistent behavior
 - [ ] Don't ever use 'bg-light' class, since we are using dark theme.
 - [ ] Using bootstrap, add color the the results including the title/header, etc.
 

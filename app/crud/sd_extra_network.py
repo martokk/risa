@@ -1,5 +1,6 @@
+from app import models
+
 from .base import BaseCRUD
-import models
 
 
 class SDExtraNetworkCRUD(

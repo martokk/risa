@@ -46,7 +46,7 @@ async def get_entities(
     current_user: Annotated[models.User, Depends(get_current_active_user)],
 ) -> list[models.Entity]:
     """Get all entities."""
-    return await crud.entity.get_multi(db=db)
+    return await crud.entity.get_all(db=db)
 
 @router.post("/", response_model=models.EntityRead, status_code=status.HTTP_201_CREATED)
 async def create_entity(
@@ -140,7 +140,7 @@ async def entities_page(
     context: dict[str, Any] = Depends(get_template_context),
 ) -> HTMLResponse:
     """Entities page."""
-    entities = await crud.entity.get_multi(db=db)
+    entities = await crud.entity.get_all(db=db)
     context["entities"] = entities
     return templates.TemplateResponse(
         "root/[entity].html",

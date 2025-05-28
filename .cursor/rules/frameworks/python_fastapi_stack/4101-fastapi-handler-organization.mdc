@@ -66,7 +66,7 @@ async def get_tags(
     Returns:
         List of Tag objects
     """
-    return await crud.tag.get_multi(db=db)
+    return await crud.tag.get_all(db=db)
 
 # Registration in app/routes/api.py
 
@@ -105,7 +105,7 @@ async def tags_page(
     Returns:
         HTML response with rendered template
     """
-    tags = await crud.tag.get_multi(db=db)
+    tags = await crud.tag.get_all(db=db)
     context["tags"] = tags
     
     return templates.TemplateResponse(

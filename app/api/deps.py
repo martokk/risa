@@ -7,9 +7,14 @@ from sqlmodel import Session
 from app import crud, models, settings
 from app.core import security
 from app.core.db import SessionLocal
+from app.crud.exceptions import RecordNotFoundError
 
 
-reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/login/access-token")
+# Configure OAuth2 with auto_error=False to allow public endpoints
+reusable_oauth2 = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_PREFIX}/login/access-token",
+    auto_error=False,
+)
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -36,6 +41,11 @@ async def get_current_user_id(token: str = Depends(reusable_oauth2)) -> str:
     Returns:
         str: The user id.
     """
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
     return security.decode_token(token=token, key=settings.JWT_ACCESS_SECRET_KEY)
 
 
@@ -58,7 +68,7 @@ async def get_current_user(
     """
     try:
         return await crud.user.get(db=db, id=user_id)
-    except crud.RecordNotFoundError as exc:
+    except RecordNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User from access token not found"
         ) from exc

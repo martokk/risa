@@ -1,0 +1,91 @@
+{% extends "base/base.html" %}
+
+{% block title %}Characters{% endblock %}
+{% block content_header %}Characters{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-3">
+        <a href="{{ url_for('create_character_page') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Character
+        </a>
+    </div>
+
+    {% if characters %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Existing Characters</h3>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Extra Networks (Total)</th>
+                        <th style="width: 200px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in characters %}
+                    <tr>
+                
+                        <td><a href="{{ url_for('view_character_page', character_id=item.id) }}">{{ item.name }}</a></td>
+                        <td>{{ item.sd_extra_networks | length }}</td>
+                        <td>
+                            <a href="{{ url_for('view_character_page', character_id=item.id) }}" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{{ url_for('edit_character_page', character_id=item.id) }}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+
+                            {% if item.id != 'default_fallback' %}
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.name }}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No Characters found. <a href="{{ url_for('create_character_page') }}">Create one now!</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found in template context. API calls might fail if authentication is required.');
+    initializeApi({});
+    {% endif %}
+
+    window.confirmDelete = async function(id, name) {
+        if (uiHelpers.confirm(`Are you sure you want to delete Character "${name}" (ID: ${id})?`)) {
+            try {
+                await apiCrud.delete('characters', id);
+                uiHelpers.showToast('Character deleted successfully!', 'success');
+                setTimeout(() => {
+                    uiHelpers.refreshPage();
+                }, 1500);
+            } catch (error) {
+                console.error('Failed to delete Character:', error);
+                uiHelpers.showError(error.message || 'Failed to delete Character. Please check console for details.');
+            }
+        }
+    };
+</script>
+{% endblock %} 

@@ -1,12 +1,12 @@
 version: "3.9"
 
 services:
-  grant_manager:
-    container_name: "grant_manager"
-    image: ghcr.io/martokk/grant_manager:latest
+  risa_ai:
+    container_name: "risa_ai"
+    image: ghcr.io/martokk/risa_ai:latest
     restart: unless-stopped
     volumes:
-      # - /home/ubuntu/volumes/grant_manager/data:/grant_manager/data
+      # - /home/ubuntu/volumes/risa_ai/data:/risa_ai/data
       - ./app:/app
     ports:
       - "5000:5000"

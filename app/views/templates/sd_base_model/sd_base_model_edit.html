@@ -1,0 +1,74 @@
+{% extends "base/base.html" %}
+
+{% block title %}Edit SD Base Model: {{ sd_base_model.name }}{% endblock %}
+{% block content_header %}Edit SD Base Model: {{ sd_base_model.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card card-warning">
+        <div class="card-header">
+            <h3 class="card-title">Update SD Base Model Details</h3>
+        </div>
+        <!-- /.card-header -->
+        <!-- form start -->
+        <form id="editSDBaseModelForm">
+            <input type="hidden" id="sdBaseModelEditId" name="id" value="{{ sd_base_model.id }}">
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="sdBaseModelId">ID</label>
+                    <input type="text" class="form-control" id="sdBaseModelId" name="id" value="{{ sd_base_model.id }}" placeholder="Enter ID" required>
+
+                    <label for="sdBaseModelName">New Name</label>
+                    <input type="text" class="form-control" id="sdBaseModelName" name="name" value="{{ sd_base_model.name }}" placeholder="Enter Name" required>
+                </div>
+                {# Add other fields from SDBaseModelUpdate schema here if needed #}
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer">
+                <button type="submit" class="btn btn-warning">Update</button>
+                <a href="{{ url_for('list_sd_base_models_page') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    // Initialize the API with tokens if they are available in the context
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+
+    console.warn('API tokens not found in template context. API calls might fail if authentication is required.');
+    initializeApi({}); // Initialize with empty tokens or default config
+    {% endif %}
+
+    const form = document.getElementById('editSDBaseModelForm');
+    if (form) {
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            try {
+                const formData = uiHelpers.getFormData('editSDBaseModelForm');
+
+                await apiCrud.update('sd-base-models', '{{sd_base_model.id}}', formData);
+
+                uiHelpers.showToast('SD Base Model updated successfully!', 'success');
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('list_sd_base_models_page') }}";
+                }, 1500);
+
+            } catch (error) {
+                console.error('Failed to update SD Base Model:', error);
+                uiHelpers.showError(error.message || 'Failed to update SD Base Model. Please check console for details.');
+            }
+        });
+    }
+</script>
+{% endblock %} 

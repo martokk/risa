@@ -1,0 +1,84 @@
+{% extends "base/base.html" %}
+
+{% block title %}SD Base Models{% endblock %}
+{% block content_header %}SD Base Models{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-3">
+        <a href="{{ url_for('create_sd_base_model_page') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New SD Base Model
+        </a>
+    </div>
+
+    {% if sd_base_models %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Existing SD Base Models</h3>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th style="width: 10px">#</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th style="width: 200px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sd_base_models %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.id }}</td>
+                        <td>{{ item.name }}</td>
+                        <td>
+                            <a href="{{ url_for('view_sd_base_model_page', sd_base_model_id=item.id) }}" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{{ url_for('edit_sd_base_model_page', sd_base_model_id=item.id) }}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            {# Delete button will likely trigger a JavaScript confirmation and then an API call #}
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.name }}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No SD Base Models found. <a href="{{ url_for('create_sd_base_model_page') }}">Create one now!</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    initializeApi({
+            access_token: "{{ tokens.access_token }}",
+            refresh_token: "{{ tokens.refresh_token }}"
+        });
+
+    window.confirmDelete = async function(id, name) {
+        if (uiHelpers.confirm(`Are you sure you want to delete SD Base Model "${name}" (ID: ${id})?`)) {
+            // Make an API call to the delete endpoint
+            // e.g., await apiCrud.delete('sd-base-models', id);
+            // For now, just logging and alerting.
+            console.log(`Attempting to delete SD Base Model ID: ${id}`);
+            
+
+            await apiCrud.delete('sd-base-models', id);
+
+            uiHelpers.refreshPage();
+        }
+    };
+</script>
+{% endblock %} 

@@ -1,28 +1,28 @@
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
-    context_sections,
-    context_sections_texts,
-    context_templates,
-    contexts,
-    grant_cycles,
-    grant_programs,
-    grant_proposal,
-    organizations,
-    tasks,
+    character,
+    export,
+    sd_base_model,
+    sd_checkpoint,
+    sd_extra_network,
     users,
 )
 
 
 api_router = APIRouter()
 
+# Include the export router directly with empty dependencies to bypass auth
+api_router.include_router(
+    export.router,
+    prefix="/export",
+    tags=["Export"],
+    dependencies=[],  # Empty dependencies list to bypass auth
+)
+
+# Include routers that require auth
 api_router.include_router(users.router, tags=["Users"])
-api_router.include_router(organizations.router, tags=["Organizations"])
-api_router.include_router(contexts.router, tags=["Contexts"])
-api_router.include_router(context_sections.router, tags=["Context Sections"])
-api_router.include_router(context_sections_texts.router, tags=["Context Sections Texts"])
-api_router.include_router(context_templates.router, tags=["Context Templates"])
-api_router.include_router(grant_programs.router, tags=["Grant Programs"])
-api_router.include_router(grant_cycles.router, tags=["Grant Cycles"])
-api_router.include_router(grant_proposal.router, tags=["Grant Proposals"])
-api_router.include_router(tasks.router, tags=["Tasks"])
+api_router.include_router(character.router, tags=["Characters"])
+api_router.include_router(sd_base_model.router, tags=["SD Base Models"])
+api_router.include_router(sd_checkpoint.router, tags=["SD Checkpoints"])
+api_router.include_router(sd_extra_network.router, tags=["SD Extra Networks"])

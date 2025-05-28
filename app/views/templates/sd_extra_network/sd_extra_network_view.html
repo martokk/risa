@@ -1,0 +1,86 @@
+{% extends "base/base.html" %}
+
+{% block title %}View SD Extra Network: {{ sd_extra_network.id }}{% endblock %}
+{% block content_header %}View SD Extra Network: {{ sd_extra_network.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Details</h3>
+            <div class="card-tools">
+                <a href="{{ url_for('edit_sd_extra_network_page', sd_extra_network_id=sd_extra_network.id) }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{{ url_for('list_sd_extra_networks_page') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.id }}</dd>
+
+                <dt class="col-sm-3">Character:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_extra_network.character.id %}
+                        <a href="/character/{{ sd_extra_network.character.id }}/view">{{ sd_extra_network.character.name }}</a>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Base Model:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_extra_network.sd_base_model.id %}
+                        <a href="/sd-base-model/{{ sd_extra_network.sd_base_model.id }}/view">{{ sd_extra_network.sd_base_model.name }}</a>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Lora Tag:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.lora_tag if sd_extra_network.lora_tag else 'N/A' }}</dd>
+                
+                <dt class="col-sm-3">Safetensors Name (derived):</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.safetensors_name if sd_extra_network.safetensors_name else 'N/A' }}</dd>
+
+                <dt class="col-sm-3">Trigger Words:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.trigger if sd_extra_network.trigger else 'N/A' }}</dd>
+                
+                <hr class="col-12">
+                <dt class="col-sm-12 mt-2 mb-1">Restrictions:</dt>
+
+                <dt class="col-sm-3">Only Realistic:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_extra_network.only_realistic %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Only Non-Realistic:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_extra_network.only_nonrealistic %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Only on Checkpoints:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_extra_network.only_checkpoints %}
+                        {{ sd_extra_network.only_checkpoints|join(', ') }}
+                    {% else %}
+                        None
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Exclude Checkpoints:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_extra_network.exclude_checkpoints %}
+                        {{ sd_extra_network.exclude_checkpoints|join(', ') }}
+                    {% else %}
+                        None
+                    {% endif %}
+                </dd>
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %} 
