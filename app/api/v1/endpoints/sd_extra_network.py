@@ -22,7 +22,7 @@ async def get_sd_extra_networks(
     Retrieve SD Extra Networks.
     """
     logger.info(f"User {current_user.id} retrieving SD Extra Networks.")
-    sd_extra_networks = await crud.sd_extra_network.get_all(db=db, skip=skip, limit=limit)
+    sd_extra_networks = await crud.sd_extra_network.get_all(db)
     return sd_extra_networks
 
 

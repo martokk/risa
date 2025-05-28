@@ -35,16 +35,20 @@ class SDExtraNetworkBase(SQLModel):
             return self.lora_tag.split(":")[1]
         return None
 
+
+class SDExtraNetwork(SDExtraNetworkBase, table=True):
+    sd_base_model: "SDBaseModel" = Relationship(
+        back_populates="sd_extra_networks", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    character: "Character" = Relationship(
+        back_populates="sd_extra_networks", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
     def get_id(self):
         return f"{self.character.id}_{self.safetensors_name}_{self.sd_base_model.id}"
 
-
-class SDExtraNetwork(SDExtraNetworkBase, table=True):
-    sd_base_model: "SDBaseModel" = Relationship(back_populates="sd_extra_networks")
-    character: "Character" = Relationship(back_populates="sd_extra_networks")
-
     def __str__(self):
-        return f"{self.character.name} - {self.safetensors_name} ({self.sd_base_model.name})"
+        return f"{self.character_id} - {self.safetensors_name} ({self.sd_base_model_id})"
 
 
 class SDExtraNetworkCreate(SDExtraNetworkBase):
@@ -66,9 +70,6 @@ class SDExtraNetworkCreate(SDExtraNetworkBase):
                     raise ValueError(
                         f"Invalid lora_tag format: {lora_tag_value}. Expected format like '<lora:NAME:1>'."
                     )
-
-            if safetensors_name is None and lora_tag_value:
-                pass
 
             character_id = values.get("character_id")
             sd_base_model_id = values.get("sd_base_model_id")

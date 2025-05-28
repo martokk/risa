@@ -127,7 +127,7 @@
                 await apiCrud.create('sd-extra-networks', processedFormData);
                 uiHelpers.showToast('SD Extra Network created successfully!', 'success');
                 setTimeout(() => {
-                    window.location.href = "{{ url_for('list_sd_extra_networks_page') }}";
+                    window.location.href = "{{ url_for('view_character_page', character_id=selected_character_id) }}";
                 }, 1500);
             } catch (error) {
                 console.error('Failed to create SD Extra Network:', error);
