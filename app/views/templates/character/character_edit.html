@@ -1,13 +1,13 @@
 {% extends "base/base.html" %}
 
-{% block title %}Edit Character: {{ character.name }}{% endblock %}
-{% block content_header %}Edit Character: {{ character.name }} ({{ character.id }}){% endblock %}
+{% block title %}Edit: {{ character.name }}{% endblock %}
+{% block content_header %}Editr: {{ character.name }} ({{ character.id }}){% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="card card-warning">
         <div class="card-header">
-            <h3 class="card-title">Update Character Details</h3>
+            <h3 class="card-title">Update Character: {{ character.name }}</h3>
         </div>
         <form id="editCharacterForm">
             <input type="hidden" name="id" value="{{ character.id }}"> <!-- Keep original ID for the PUT request path -->
@@ -15,12 +15,42 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="characterIdEdit">ID (Cannot be changed after creation)</label>
-                            <input type="text" class="form-control" id="characterIdEdit" name="id_display" value="{{ character.id }}" disabled>
+                            <label for="characterIdEdit">ID</label>
+                            <input type="text" class="form-control" id="characterIdEdit" name="id_display" value="{{ character.id }}">
                         </div>
                         <div class="form-group">
-                            <label for="characterName">Name</label>
-                            <input type="text" class="form-control" id="characterName" name="name" value="{{ character.name }}" required>
+                            <label for="personName">Person Name</label>
+                            <input type="text" class="form-control" id="personName" name="person_name" value="{{ character.person_name if character.person_name is not none }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="characterName1">Character Name 1</label>
+                            <input type="text" class="form-control" id="characterName1" name="character_name1" value="{{ character.character_name1 if character.character_name1 is not none }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="characterName2">Character Name 2</label>
+                            <input type="text" class="form-control" id="characterName2" name="character_name2" value="{{ character.character_name2 if character.character_name2 is not none }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="characterName3">Character Name 3</label>
+                            <input type="text" class="form-control" id="characterName3" name="character_name3" value="{{ character.character_name3 if character.character_name3 is not none }}">
+                        </div>
+
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="characterIsKnown" name="is_known" {% if character.is_known %}checked{% endif %}>
+                                <label class="form-check-label" for="characterIsKnown">Is Known</label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="characterAgeGroup">Age Group</label>
+                            <input type="text" class="form-control" id="characterAgeGroup" name="age_group" value="{{ character.age_group if character.age_group is not none }}">
+                            <ul>
+                                <li><small class="form-text text-muted">child</small></li>
+                                <li><small class="form-text text-muted">teenager</small></li>
+                                <li><small class="form-text text-muted">young adult</small></li>
+                                <li><small class="form-text text-muted">adult</small></li>
+                            </ul>
                         </div>
                         <div class="form-group">
                             <label for="characterRace">Race</label>

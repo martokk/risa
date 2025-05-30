@@ -1,0 +1,132 @@
+{% extends "tools/tool_base.html" %}
+
+{% block title %}Safetensor Import Helper{% endblock %}
+{% block tool_name %}Safetensor Import Helper{% endblock %}
+
+{% block tool_description %}
+    View all available safetensors in the hub, organized by type and model.
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Base Models Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Base Models</h3>
+        </div>
+        <div class="card-body">
+            {% for hub_model in hub_models | sort(attribute="name") %}
+                {% if hub_model.safetensors_base_models %}
+                    <div class="mb-4">
+                        <h4 class="text-primary">{{ hub_model.name }}</h4>
+                        <ul class="list-group">
+                            {% for safetensor_base_model in hub_model.safetensors_base_models | sort(attribute="name") %}
+                                <li class="list-group-item">
+                                    <div class="row">
+                                        <div class="col-5">{{ safetensor_base_model.name }}</div>
+                                        <div class="col-3">
+                                            {% if safetensor_base_model.md5 %}
+                                            <span class="badge bg-primary text-white">{{ safetensor_base_model.md5[:8] }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-2 text-end">
+                                            {% set size_str = safetensor_base_model.size | filesizeformat %}
+                                            <span class="badge {% if 'MB' in size_str %}bg-secondary{% else %}bg-warning text-dark{% endif %}">{{ size_str }}</span>
+                                        </div>
+                                        <div class="col-2 text-end">
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSafetensor('{{ safetensor_base_model.path }}', '{{ safetensor_base_model.name }}')" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Loras Section -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">Loras</h3>
+        </div>
+        <div class="card-body">
+            {% set ns = namespace(seen_sha256s=[]) %}
+            {% for hub_model in hub_models | sort(attribute="name") %}
+                {% if hub_model.safetensors_loras %}
+                    <div class="mb-4">
+                        <h4 class="text-success">{{ hub_model.name }}</h4>
+                        <ul class="list-group">
+                            {% for safetensor_lora in hub_model.safetensors_loras | sort(attribute="name") %}
+                                {% set lora_sha256 = safetensor_lora.sha256 %}
+                                {% set has_already_been_seen = lora_sha256 in ns.seen_sha256s %}
+                                {% set _ = ns.seen_sha256s.append(lora_sha256) %}
+                                {% if lora_sha256 not in existing_sd_extra_networks_sha256s %}
+                                    <li class="list-group-item">
+                                        <div class="row">
+                                            <div class="col-5">{{ safetensor_lora.name }}</div>
+                                            <div class="col-3">
+                                                {% if lora_sha256 %}
+                                                    <a href="https://civitaiarchive.com/sha256/{{ lora_sha256 }}" target="_blank" rel="noopener noreferrer">
+                                                        {% if has_already_been_seen %}
+                                                            <span class="badge bg-danger text-white" title="Duplicate SHA256">{{ lora_sha256[:8] }}</span>
+                                                        {% else %}
+                                                            <span class="badge bg-success text-white">{{ lora_sha256[:8] }}</span>
+                                                        {% endif %}
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-2 text-end">
+                                                {% set size_str = safetensor_lora.size | filesizeformat %}
+                                                <span class="badge {% if 'MB' in size_str %}bg-secondary{% else %}bg-warning text-dark{% endif %}">{{ size_str }}</span>
+                                            </div>
+                                            <div class="col-2 text-end">
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteSafetensor('{{ safetensor_lora.path }}', '{{ safetensor_lora.name }}')" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
+
+{% block js_scripts %}
+<script>
+    window.deleteSafetensor = async function(filePath, fileName) {
+        if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
+            try {
+                const response = await fetch('/tools/delete_safetensor', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        file_path: filePath
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Files deleted successfully');
+                    location.reload();
+                } else {
+                    throw new Error(result.error || 'Failed to delete files');
+                }
+            } catch (error) {
+                alert('Error deleting files: ' + error.message);
+            }
+        }
+    };
+</script>
+{% endblock %} 

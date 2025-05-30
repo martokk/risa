@@ -22,7 +22,7 @@ async def get_characters(
     Retrieve characters.
     """
     logger.info(f"User {current_user.id} retrieving characters.")
-    characters = await crud.character.get_all(db=db, skip=skip, limit=limit)
+    characters = await crud.character.get_all(db)
     return characters
 
 

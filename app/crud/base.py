@@ -94,7 +94,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
             return None
         return result
 
-    async def get_all(
+    async def get_multi(
         self,
         db: Session,
         *args: BinaryExpression[Any],

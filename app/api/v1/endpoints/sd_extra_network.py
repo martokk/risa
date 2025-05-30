@@ -150,3 +150,35 @@ async def delete_sd_extra_network(
             detail=f"Error deleting SD Extra Network: {e}",
         )
     return
+
+
+@router.get("/{sd_extra_network_id}/sha256", response_model=dict[str, str | None])
+async def get_sd_extra_network_sha256(
+    *,
+    db: Annotated[Session, Depends(get_db)],
+    sd_extra_network_id: str,
+    current_user: Annotated[models.User, Depends(get_current_active_user)],
+) -> dict[str, str | None]:
+    """
+    Get SHA256 for an SD Extra Network.
+    """
+    logger.info(
+        f"User {current_user.id} fetching SHA256 for SD Extra Network: {sd_extra_network_id}"
+    )
+    try:
+        sha256 = await crud.sd_extra_network.attempt_to_get_sha256(db=db, id=sd_extra_network_id)
+        return {"sha256": sha256}
+    except ValueError as e:
+        logger.warning(f"Error getting SHA256 for SD Extra Network {sd_extra_network_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.error(
+            f"Unexpected error getting SHA256 for SD Extra Network {sd_extra_network_id}: {e}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting SHA256: {e}",
+        )

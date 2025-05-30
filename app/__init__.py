@@ -21,7 +21,7 @@ _load_dotenv(dotenv_path=_env_file)
 
 # Load settings
 version: str = get_version()
-settings = _Settings(VERSION=version)  # type: ignore
+settings = _Settings(VERSION=version)
 
 # Setup logger
 logger = setup_logger(settings)

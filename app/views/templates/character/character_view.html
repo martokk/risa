@@ -23,8 +23,21 @@
                     <dl class="row">
                         <dt class="col-sm-3">ID:</dt>
                         <dd class="col-sm-9">{{ character.id }}</dd>
-                        <dt class="col-sm-3">Name:</dt>
-                        <dd class="col-sm-9">{{ character.name }}</dd>
+                        <dt class="col-sm-3">Person Name:</dt>
+                        <dd class="col-sm-9">{{ character.person_name or '' }}</dd>
+                        <dt class="col-sm-3">Character Name 1:</dt>
+                        <dd class="col-sm-9">{{ character.character_name1 or '' }}</dd>
+                        <dt class="col-sm-3">Character Name 2:</dt>
+                        <dd class="col-sm-9">{{ character.character_name2 or '' }}</dd>
+                        <dt class="col-sm-3">Character Name 3:</dt>
+                        <dd class="col-sm-9">{{ character.character_name3 or '' }}</dd>
+
+                    </dl>
+                    <hr>
+                    <h5>Character Attributes</h5>
+                    <dl class="row">
+                        <dt class="col-sm-3">Is Known:</dt>
+                        <dd class="col-sm-9">{{ character.is_known }}</dd>
                         <dt class="col-sm-3">Race:</dt>
                         <dd class="col-sm-9">{{ character.race if character.race else '' }}</dd>
                         <dt class="col-sm-3">Skin Color:</dt>

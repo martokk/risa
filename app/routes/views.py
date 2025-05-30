@@ -7,6 +7,7 @@ from app.views.pages.root import root
 from app.views.pages.sd_base_model import sd_base_model
 from app.views.pages.sd_checkpoint import sd_checkpoint
 from app.views.pages.sd_extra_network import sd_extra_network
+from app.views.pages.tools import safetensors_import_helper
 from app.views.pages.user import user
 
 
@@ -28,8 +29,12 @@ root_router.include_router(character.router, tags=["Characters"])
 user_router = APIRouter(prefix="/user")
 user_router.include_router(user.router, tags=["Users"])
 
+# Tools
+tools_router = APIRouter(prefix="/tools")
+tools_router.include_router(safetensors_import_helper.router, tags=["Tools"])
 
 # Views router
 views_router = APIRouter(include_in_schema=False)
 views_router.include_router(root_router)
 views_router.include_router(user_router)
+views_router.include_router(tools_router)

@@ -82,6 +82,9 @@ class Settings(BaseSettings):
     # Phidata Playground API Key
     PHI_API_KEY: str = ""
 
+    # Hub Path
+    HUB_PATH: str = ""
+
     # Export API Key
     EXPORT_API_KEY: str = ""
 

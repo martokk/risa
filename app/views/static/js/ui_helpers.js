@@ -162,6 +162,12 @@ export const uiHelpers = {
             || this._createToastContainer();
 
         const toast = document.createElement('div');
+
+        // replace 'error' type with 'danger'
+        if (type === 'error') {
+            type = 'danger';
+        }
+
         toast.className = `toast align-items-center text-white bg-${type} border-0`;
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'assertive');
@@ -206,5 +212,8 @@ export const uiHelpers = {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    },
+    navigateTo(path) {
+        window.location.href = path;
     }
 }; 
