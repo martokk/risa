@@ -1,91 +1,94 @@
-{# HTMX Tag Processing Area Partial - Updated for Phase 5 #}
+{# HTMX Tag Processing Area Partial - Topbar Redesign #}
+<div class="topbar-tag-processor sticky-top py-2 px-3 bg-body-tertiary border-bottom shadow-sm">
+    <form hx-post="{{ url_for('post_dataset_tagger_process_tag') }}" hx-target="#tag-processor" hx-swap="innerHTML" class="d-flex flex-wrap align-items-center">
 
-{# Display current step information if available #}
-{% if initial_step_name or initial_step_description %}
-    <h5>
-        Step: {{ initial_step_name | default('N/A') }}
-        {% if initial_step_description %}
-            <small class="text-muted">- {{ initial_step_description }}</small>
+        {# Hidden fields for TaggingWorkflowState - Values from initial_state context #}
+        <input type="hidden" name="character_id" value="{{ initial_state.character_id }}">
+        <input type="hidden" name="folder_path" value="{{ initial_state.folder_path }}">
+        <input type="hidden" name="current_step_index" value="{{ initial_state.current_step_index }}">
+        <input type="hidden" name="current_input_type_index_in_step" value="{{ initial_state.current_input_type_index_in_step }}">
+        <input type="hidden" name="current_item_index_within_input_type" value="{{ initial_state.current_item_index_within_input_type }}">
+        <input type="hidden" name="pending_tags_from_last_manual_input" value="{{ initial_state.pending_tags_from_last_manual_input | join(',') }}">
+        <input type="hidden" name="active_manual_input_key" value="{{ initial_state.active_manual_input_key | default('') }}">
+        <input type="hidden" name="selected_images_input" id="selectedImagesInput" value="{{ selected_images | join(',') if selected_images else '' }}">
+
+        {# Notification Message - Placed first, will only show if message exists #}
+        {% if notification_message %}
+            <div class="alert alert-{{ notification_type | default('info') }} alert-dismissible fade show p-2 me-3 mb-0 d-inline-flex align-items-center" role="alert" style="font-size: 0.875rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <span class="flex-grow-1" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ notification_message }}</span>
+                <button type="button" class="btn-close btn-sm p-0 ms-2" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.75rem; line-height: 1; padding: 0.25rem 0.5rem !important;"></button>
+            </div>
         {% endif %}
-    </h5>
-    <hr>
-{% endif %}
-
-{# Display Notification Message #}
-{% if notification_message %}
-    <div class="alert alert-{{ notification_type | default('info') }} alert-dismissible fade show" role="alert">
-        {{ notification_message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-{% endif %}
-
-{# Form to wrap inputs and buttons for HTMX submission #}
-{# Temporarily hardcoding URL for debugging #}
-<form hx-post="{{ url_for('post_dataset_tagger_process_tag') }}" hx-target="#tag-processor" hx-swap="innerHTML">
-
-    {# Display the initial item (tag or manual question prompt) #}
-    <div class="mb-3">
-        {% if initial_item_type == "manual_question" %}
-            <label for="manual_tag_input" class="form-label"><strong>Question:</strong> {{ initial_display_item }}</label>
-            <input type="text" class="form-control" id="manual_tag_input" name="manual_tag_input" placeholder="Enter comma-separated tags here...">
-            {# Removed readonly/disabled, added required #}
-        {% elif initial_item_type == "tag" %}
-            <p><strong>Current Tag:</strong> {{ initial_display_item }}</p>
-        {% elif initial_item_type == "complete" %}
-            <div class="alert alert-success">{{ initial_display_item }}</div>
-        {% elif initial_item_type == "info" %}
-            <div class="alert alert-info">{{ initial_display_item }}</div>
-        {% else %}
-            <p>{{ initial_display_item | default("Loading...") }}</p>
+        
+        {# Step Information - Combined for brevity #}
+        {% if initial_step_name %}
+            <div class="me-3 mb-md-0 mb-2 d-flex align-items-center">
+                <span class="fw-bold small">Step:</span>
+                <span class="text-muted small ms-1">{{ initial_step_name }}</span>
+                {% if initial_step_description %}
+                    <span class="text-muted small fst-italic ms-1">- {{ initial_step_description }}</span>
+                {% endif %}
+            </div>
         {% endif %}
-    </div>
 
-    {# Hidden fields for TaggingWorkflowState - Values from initial_state context #}
-    {# These are now inside the form #}
-    <input type="hidden" name="character_id" value="{{ initial_state.character_id }}">
-    <input type="hidden" name="folder_path" value="{{ initial_state.folder_path }}">
-    <input type="hidden" name="current_step_index" value="{{ initial_state.current_step_index }}">
-    <input type="hidden" name="current_input_type_index_in_step" value="{{ initial_state.current_input_type_index_in_step }}">
-    <input type="hidden" name="current_item_index_within_input_type" value="{{ initial_state.current_item_index_within_input_type }}">
-    <input type="hidden" name="pending_tags_from_last_manual_input" value="{{ initial_state.pending_tags_from_last_manual_input | join(',') }}">
-    <input type="hidden" name="active_manual_input_key" value="{{ initial_state.active_manual_input_key | default('') }}">
-    <input type="hidden" name="selected_images_input" id="selectedImagesInput" value="{{ selected_images | join(',') if selected_images else '' }}">
-
-    {# Action buttons - now part of the form #}
-    {# Only enable buttons if not in 'complete' state #}
-    {% if initial_item_type != 'complete' %}
-        <div class="mt-3">
+        {# Display the initial item (tag or manual question prompt) #}
+        <div class="me-3 mb-md-0 mb-2 d-flex align-items-center flex-grow-1">
             {% if initial_item_type == "manual_question" %}
-                <button type="submit" name="action" value="submit_manual_input" class="btn btn-success me-2">Submit Tags</button>
-                <button type="submit" name="action" value="skip_tag" class="btn btn-secondary me-2">Skip Question</button> 
-                {# Changed skip_tag value if needed, or handle action="skip_tag" for questions in Python #}
+                <label for="manual_tag_input" class="form-label fw-bold small mb-0 me-2">Question:</label>
+                <span class="text-primary small me-2">{{ initial_display_item }}</span>
+                <input type="text" class="form-control form-control-sm flex-grow-1" id="manual_tag_input" name="manual_tag_input" placeholder="Enter comma-separated tags...">
             {% elif initial_item_type == "tag" %}
-                <div class="mt-3 d-flex justify-content-start align-items-center flex-wrap">
-                    <button type="submit" name="action" value="add_tag" class="btn btn-success me-2 mb-2">
-                        <i class="fas fa-plus-circle me-1"></i>Add Tag to Selected ({{ selected_images|length if selected_images else 0 }})
-                    </button>
-                    <button type="submit" name="action" value="skip_tag" class="btn btn-warning me-2 mb-2">
-                        <i class="fas fa-forward me-1"></i>Skip Tag
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-info me-2 mb-2" id="selectAllImagesBtn">
-                        <i class="fas fa-check-double me-1"></i>Select All Images
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary mb-2" id="deselectAllImagesBtn">
-                        <i class="fas fa-times-circle me-1"></i>Deselect All Images
-                    </button>
-                </div>
+                <span class="fw-bold small me-1">Tag:</span> <span class="badge bg-primary me-2">{{ initial_display_item }}</span>
+            {% elif initial_item_type == "complete" %}
+                <span class="badge bg-success me-2">{{ initial_display_item }}</span>
+            {% elif initial_item_type == "info" %}
+                 <span class="badge bg-info me-2">{{ initial_display_item }}</span>
+            {% elif initial_item_type == "step_description" %}
+                 <span class="text-muted small fst-italic me-2">{{ initial_display_item }}</span> {# Display for step name/description #}
+            {% else %}
+                <span class="text-muted small me-2">{{ initial_display_item | default("Loading...") }}</span>
             {% endif %}
         </div>
-    {% endif %}
 
-</form>
+        {# Action buttons - now part of the form, using btn-sm for smaller topbar appearance #}
+        {% if initial_item_type != 'complete' %}
+            <div class="d-flex align-items-center ms-auto">
+                {% if initial_item_type == "manual_question" %}
+                    <button type="submit" name="action" value="submit_manual_input" class="btn btn-success btn-sm me-2">Submit</button>
+                    <button type="submit" name="action" value="skip_tag" class="btn btn-secondary btn-sm me-2">Skip</button>
+                    <button type="button" class="btn btn-outline-info btn-sm me-2" id="selectAllImagesBtn">
+                        <i class="fas fa-check-double me-1"></i>All
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="deselectAllImagesBtn">
+                        <i class="fas fa-times-circle me-1"></i>None
+                    </button>
+                {% elif initial_item_type == "tag" %}
+                    <button type="submit" name="action" value="add_tag" class="btn btn-success btn-sm me-2">
+                        <i class="fas fa-plus-circle me-1"></i>Add ({{ selected_images|length if selected_images else 0 }})
+                    </button>
+                    <button type="submit" name="action" value="skip_tag" class="btn btn-warning btn-sm me-2">
+                        <i class="fas fa-forward me-1"></i>Skip
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-sm me-2" id="selectAllImagesBtn">
+                        <i class="fas fa-check-double me-1"></i>All
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="deselectAllImagesBtn">
+                        <i class="fas fa-times-circle me-1"></i>None
+                    </button>
+                {% endif %}
+            </div>
+        {% endif %}
+    </form>
 
-{% if initial_item_type != 'complete' %}
-<div class="mt-2 form-text text-muted">
-    Phase 5: Image selection and "Select All" now functional. Test thoroughly!
+    {# Phase/Status Message - outside form, below topbar visually if needed, or integrated #}
+    {# For a true topbar, this might be omitted or placed elsewhere in the main page #}
+    {# {% if initial_item_type != 'complete' %}
+        <div class="mt-1 text-muted small" style="font-size: 0.75rem;">
+            Phase 5: Image selection and "Select All" now functional. Test thoroughly!
+        </div>
+    {% else %}
+        <div class="mt-1 text-muted small" style="font-size: 0.75rem;">
+            Tagging complete. Start a new session if needed.
+        </div>
+    {% endif %} #}
 </div>
-{% else %}
-<div class="mt-2 form-text text-muted">
-    Tagging complete. Start a new session if needed.
-</div>
-{% endif %}

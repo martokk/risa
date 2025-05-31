@@ -407,79 +407,76 @@ async def get_dataset_tagger_workflow_page(
             "request": request,
             "initial_state": page_initial_state,
             "walkthrough_config": walkthrough_config,
-            # Add other necessary context variables here, e.g., for _tag_processing_area initial render
-            "current_step_index": 0,
-            "current_input_type_index_in_step": 0,
-            "current_item_index_within_input_type": 0,
-            "pending_tags_from_last_manual_input": [],
-            "active_manual_input_key": None,
-            "next_display_item": walkthrough_config.steps[0].name
-            if walkthrough_config.steps
-            else "No steps defined",  # Simplified first item
-            "next_item_type": "step_description",  # Simplified
-            "current_tag_to_display": None,
             "notification_message": None,
             "notification_type": "info",
+            "selected_images": [],
         }
     )
 
-    # Add initial state for _tag_processing_area.html, which is included with `with context`
-    # It expects variables like current_step_index, next_display_item etc.
-    # We need to determine the actual first item to display from walkthrough_config
-    # For now, a simplified version:
+    # Determine the actual first item to display for the partial
     first_step = walkthrough_config.steps[0] if walkthrough_config.steps else None
-    first_item_text = "Walkthrough Complete"
-    first_item_type = "complete"
+    initial_display_item_for_partial = "Tagging Complete!"  # Default if no steps
+    initial_item_type_for_partial = "complete"  # Default if no steps
+    initial_step_name_for_partial = None
+    initial_step_description_for_partial = None
+    active_manual_input_key_for_partial = None
 
     if first_step:
+        initial_step_name_for_partial = first_step.name
+        initial_step_description_for_partial = first_step.description
         if first_step.manual_inputs:
-            first_item_text = (
-                first_step.manual_inputs[0].get(list(first_step.manual_inputs[0].keys())[0])
-                if first_step.manual_inputs[0]
-                else "Manual Input"
-            )
-            first_item_type = "manual_question"
-            context["active_manual_input_key"] = (
-                list(first_step.manual_inputs[0].keys())[0] if first_step.manual_inputs[0] else None
-            )
+            question_dict = first_step.manual_inputs[0]
+            active_manual_input_key_for_partial = list(question_dict.keys())[0]
+            initial_display_item_for_partial = question_dict[active_manual_input_key_for_partial]
+            initial_item_type_for_partial = "manual_question"
         elif first_step.automatic_inputs:
-            first_item_text = first_step.automatic_inputs[0]
-            first_item_type = "tag"
-        elif first_step.character_tags:  # Simplified, actual tag needs DB lookup
-            # This part would need a db call to get the actual character tag
-            # For now, using the category name as placeholder
+            initial_display_item_for_partial = first_step.automatic_inputs[0]
+            initial_item_type_for_partial = "tag"
+        elif first_step.character_tags:
             try:
-                char_tags = await crud.character.get_tags_dict(
+                char_tags = await crud.character.get_dataset_tagger_tags(
                     db=db, character_id=character_id
-                )  # Assuming this async method exists
+                )
                 tag_category = first_step.character_tags[0]
                 actual_tag = char_tags.get(tag_category)
                 if actual_tag:
-                    first_item_text = actual_tag
-                    first_item_type = "tag"
+                    initial_display_item_for_partial = actual_tag
+                    initial_item_type_for_partial = "tag"
                 else:
-                    first_item_text = f"Character tag for '{tag_category}' (not found)"
-                    first_item_type = "info"  # or skip
+                    initial_display_item_for_partial = (
+                        f"Character tag for '{tag_category}' not found."
+                    )
+                    initial_item_type_for_partial = "info"
             except Exception as e:
                 logger.error(f"Failed to fetch character tags for initial display: {e}")
-                first_item_text = f"Error fetching character tag: {first_step.character_tags[0]}"
-                first_item_type = "error"  # or skip
-        else:
-            first_item_text = first_step.name  # Fallback to step name
-            first_item_type = "step_description"
+                initial_display_item_for_partial = (
+                    f"Error fetching tag: {first_step.character_tags[0]}"
+                )
+                initial_item_type_for_partial = "info"  # Or 'error' if template handles it
+        elif first_step.name:  # Fallback to step name if no inputs/tags in the first step
+            initial_display_item_for_partial = first_step.name
+            initial_item_type_for_partial = (
+                "step_description"  # This type will need handling in partial
+            )
+        else:  # If step has no inputs, tags, or even a name
+            initial_display_item_for_partial = "Step information unavailable"
+            initial_item_type_for_partial = "info"
 
-    context["next_display_item"] = first_item_text
-    context["next_item_type"] = first_item_type
-    context["current_walkthrough_step"] = first_step  # For displaying step name/description
-    context["TaggingWorkflowState"] = (
-        TaggingWorkflowState(  # For hidden fields in _tag_processing_area
-            character_id=character_id,
-            folder_path=folder_path,
-            current_step_index=0,
-            current_input_type_index_in_step=0,  # Initial state points to first manual_input if any
-            current_item_index_within_input_type=0,
-            active_manual_input_key=context.get("active_manual_input_key"),
-        )
+    # Add context specifically for the _tag_processing_area.html partial initial include
+    context["initial_display_item"] = initial_display_item_for_partial
+    context["initial_item_type"] = initial_item_type_for_partial
+    context["initial_step_name"] = initial_step_name_for_partial
+    context["initial_step_description"] = initial_step_description_for_partial
+
+    # This is the TaggingWorkflowState for the hidden fields in the partial
+    context["TaggingWorkflowState"] = TaggingWorkflowState(
+        character_id=character_id,
+        folder_path=folder_path,
+        current_step_index=0,
+        current_input_type_index_in_step=0,
+        current_item_index_within_input_type=0,
+        active_manual_input_key=active_manual_input_key_for_partial,  # Set based on first item logic
+        pending_tags_from_last_manual_input=[],  # Empty for initial load
     )
 
     logger.debug(

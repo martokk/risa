@@ -3,8 +3,8 @@
 {% block title %}Dataset Tagger - Workflow{% endblock %}
 
 {% block content %}
-<div class="mt-4"> {# Use container-fluid for full width #}
-    <h2>Dataset Tagger - Workflow</h2>
+<div class="pt-0"> {# Changed mt-4 to pt-2 to reduce top space #}
+    {# Removed H2 title "Dataset Tagger - Workflow" #}
     
     {# Thumbnail Generation Progress Area - Initially Hidden #}
     <div id="thumbnail-progress-area" class="mb-3" style="display: none;">
@@ -17,13 +17,19 @@
 
     {# Tag Processing Area - HTMX Target #}
     {# This will be initially populated by the main GET /workflow, then updated by HTMX #}
-    <div id="tag-processor" class="card">
-        <div class="card-header">
-            Current Action / Tag
-        </div>
-        <div class="card-body">
-            {% include "tools/dataset_tagger/_tag_processing_area.html" with context %}
-        </div>
+    <div id="tag-processor" class="mb-3">
+        {# The card class and structure are removed. #}
+        {# The _tag_processing_area.html now provides its own topbar styling. #}
+        {% with initial_state=TaggingWorkflowState, 
+                initial_display_item=initial_display_item, 
+                initial_item_type=initial_item_type, 
+                initial_step_name=initial_step_name, 
+                initial_step_description=initial_step_description,
+                notification_message=notification_message,
+                notification_type=notification_type,
+                selected_images=selected_images %}
+            {% include "tools/dataset_tagger/_tag_processing_area.html" %}
+        {% endwith %}
     </div>
 
     {# Image Grid Area #}
