@@ -615,6 +615,7 @@ async def post_dataset_tagger_process_tag(
         "initial_step_description": next_step_description,
         "notification_message": notification_message,
         "notification_type": notification_type,
+        "selected_images": selected_images,
     }
     context.update(partial_context)
 

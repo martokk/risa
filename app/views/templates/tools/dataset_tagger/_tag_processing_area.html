@@ -1,4 +1,4 @@
-{# HTMX Tag Processing Area Partial - Updated for Phase 4 #}
+{# HTMX Tag Processing Area Partial - Updated for Phase 5 #}
 
 {# Display current step information if available #}
 {% if initial_step_name or initial_step_description %}
@@ -49,7 +49,7 @@
     <input type="hidden" name="current_item_index_within_input_type" value="{{ initial_state.current_item_index_within_input_type }}">
     <input type="hidden" name="pending_tags_from_last_manual_input" value="{{ initial_state.pending_tags_from_last_manual_input | join(',') }}">
     <input type="hidden" name="active_manual_input_key" value="{{ initial_state.active_manual_input_key | default('') }}">
-    <input type="hidden" name="selected_images_input" id="selectedImagesInput" value=""> {# For JS image selection (Phase 5) #}
+    <input type="hidden" name="selected_images_input" id="selectedImagesInput" value="{{ selected_images | join(',') }}"> {# For JS image selection (Phase 5) #}
 
     {# Action buttons - now part of the form #}
     {# Only enable buttons if not in 'complete' state #}
@@ -63,7 +63,7 @@
                 <button type="submit" name="action" value="add_tag" class="btn btn-primary me-2">Add Tag to Selected</button> {# Enabled #}
                 <button type="submit" name="action" value="skip_tag" class="btn btn-secondary me-2">Skip Tag</button>
             {% endif %}
-            <button type="button" class="btn btn-info" disabled>Select All Images</button> {# JS controlled, Phase 5 #}
+            <button type="button" class="btn btn-info" id="selectAllImagesBtn">Select All Images</button> {# Enabled and ID added #}
         </div>
     {% endif %}
 
@@ -71,6 +71,10 @@
 
 {% if initial_item_type != 'complete' %}
 <div class="mt-2 form-text text-muted">
-    Phase 4: Manual input and "Add Tag" are now enabled. Image selection JS pending (Phase 5).
+    Phase 5: Image selection and "Select All" now functional. Test thoroughly!
+</div>
+{% else %}
+<div class="mt-2 form-text text-muted">
+    Tagging complete. Start a new session if needed.
 </div>
 {% endif %}

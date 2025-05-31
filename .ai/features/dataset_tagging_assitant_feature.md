@@ -494,10 +494,6 @@ That's a great way to approach a complex feature with LLM assistance! Breaking i
         * Ensure `hx-indicator` is used effectively for loading states.
         * Make notifications clear and well-styled.
         * Test usability across different `dataset_tagger_walkthrough.yaml` configurations.
-    4. **Code Refactoring (Manual with Cursor):**
-        * Move Pydantic models to `app/models/tool_specific/dataset_tagger_models.py`.
-        * If the tag progression logic in `dataset_tagger.py` becomes very large, consider moving it to `app/logic/dataset_tagger_logic.py`.
-        * Ensure all imports and dependencies are clean.
 * **Testing:**
     * Test with real characters and their tags from the database. Do character-specific tags display and apply correctly?
     * Test various error conditions: non-existent folder, invalid character ID in URL, `dataset_tagger_walkthrough.yaml` missing or malformed, unwritable tag files (if permissions can be simulated).

@@ -1,0 +1,8 @@
+.selected-image-outline {
+    outline: 4px solid #007bff !important;
+    /* Blue outline, !important to override other styles if needed */
+    outline-offset: -2px;
+    /* Optional: to pull the outline slightly inwards */
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    /* Optional: soft glow */
+}
