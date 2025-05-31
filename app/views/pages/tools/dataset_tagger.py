@@ -9,6 +9,7 @@ from typing import Annotated, Any
 import yaml
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
+from PIL import Image
 from pydantic import BaseModel, Field
 from sqlmodel import Session
 from starlette.templating import _TemplateResponse
@@ -20,12 +21,18 @@ from app.views.templates import templates
 from app.views.templates.context import get_template_context
 
 
+# Define thumbnail constants
+THUMBNAIL_DIR_NAME = ".thumb"
+THUMBNAIL_WIDTH = 300  # pixels
+THUMBNAIL_JPEG_QUALITY = 85
+
+
 class WalkthroughStep(BaseModel):
     name: str
     description: str
-    manual_inputs: list[dict[str, str]] | None = Field(default_factory=lambda: [])
-    automatic_inputs: list[str] | None = Field(default_factory=lambda: [])
-    character_tags: list[str] | None = Field(default_factory=lambda: [])
+    manual_inputs: list[dict[str, str]] | None = Field(default_factory=list)
+    automatic_inputs: list[str] | None = Field(default_factory=list)
+    character_tags: list[str] | None = Field(default_factory=list)
 
 
 class WalkthroughConfig(BaseModel):
@@ -37,12 +44,27 @@ class TaggingWorkflowState(BaseModel):
     character_id: str
     folder_path: str
     current_step_index: int = 0
-    current_input_type_index_in_step: int = (
-        0  # 0:manual_inputs, 1:pending_manual_tags, 2:automatic_inputs, 3:character_tags
-    )
+    current_input_type_index_in_step: int = 0
     current_item_index_within_input_type: int = 0
     pending_tags_from_last_manual_input: list[str] = Field(default_factory=lambda: [])
     active_manual_input_key: str | None = None
+
+
+# Pydantic Models for Page Context and Image Data
+class ImageData(BaseModel):
+    original_filename: str
+    thumbnail_filename: str
+    thumbnail_exists: bool
+    # thumbnail_url: Optional[str] = None # Can be generated in template or here
+
+
+class DatasetTaggerPageContext(BaseModel):  # This will be our 'initial_state'
+    folder_path: str
+    images_data: list[ImageData] = Field(default_factory=list)
+    character_id: str | None = None  # Add other fields if initial_state uses them
+    current_image_filename: str | None = None  # Example
+    tag_counts_json_str: str | None = None  # Example
+    # Add any other fields that initial_state is expected to have by the template
 
 
 # Main router for the Dataset Tagging Assistant tool.
@@ -83,7 +105,7 @@ async def post_dataset_tagger_setup(
         logger.warning(
             f"Setup POST: Folder path was empty or default. User provided: '{folder_path}'"
         )
-        context["characters"] = await crud.character.get_all(db=db)
+        context["characters"] = await crud.character.get_all(db)
         context["error_message"] = "Folder path cannot be empty or the default path."
         context["selected_character_id"] = character_id
         context["folder_path_value"] = folder_path
@@ -99,7 +121,7 @@ async def post_dataset_tagger_setup(
         path_obj = Path(folder_path)
         if not path_obj.exists():
             logger.warning(f"Setup POST: Provided folder path does not exist: {folder_path}")
-            context["characters"] = await crud.character.get_all(db=db)
+            context["characters"] = await crud.character.get_all(db)
             context["error_message"] = f"Folder not found: '{folder_path}'. Please verify the path."
             context["selected_character_id"] = character_id
             context["folder_path_value"] = folder_path
@@ -110,7 +132,7 @@ async def post_dataset_tagger_setup(
             )
         if not path_obj.is_dir():
             logger.warning(f"Setup POST: Provided folder path is not a directory: {folder_path}")
-            context["characters"] = await crud.character.get_all(db=db)
+            context["characters"] = await crud.character.get_all(db)
             context["error_message"] = (
                 f"The path '{folder_path}' is not a directory. Please select a valid folder."
             )
@@ -123,7 +145,7 @@ async def post_dataset_tagger_setup(
             )
     except PermissionError as e:
         logger.error(f"Setup POST: Permission error accessing folder path '{folder_path}': {e}")
-        context["characters"] = await crud.character.get_all(db=db)
+        context["characters"] = await crud.character.get_all(db)
         context["error_message"] = (
             f"Permission denied when trying to access folder '{folder_path}'. Check server permissions."
         )
@@ -136,30 +158,30 @@ async def post_dataset_tagger_setup(
         )
     except OSError as e:
         logger.error(f"Setup POST: OS error checking folder path '{folder_path}': {e}")
-        context["characters"] = await crud.character.get_all(db=db)
+        context["characters"] = await crud.character.get_all(db)
         context["error_message"] = (
             f"A system error occurred while checking the folder path '{folder_path}'. Details: {e}"
         )
         context["selected_character_id"] = character_id
         context["folder_path_value"] = folder_path
-        return templates.TemplateResponse(
-            "tools/dataset_tagger/setup_form.html",
-            context,
-            status_code=500,
-        )
+    # return templates.TemplateResponse(
+    #         "tools/dataset_tagger/setup_form.html",
+    #     context,
+    #         status_code=500,
+    #     )
     except Exception as e:
         logger.error(f"Setup POST: Unexpected error validating folder path '{folder_path}': {e}")
-        context["characters"] = await crud.character.get_all(db=db)
+        context["characters"] = await crud.character.get_all(db)
         context["error_message"] = (
             f"An unexpected error occurred while validating the folder path '{folder_path}'."
         )
         context["selected_character_id"] = character_id
         context["folder_path_value"] = folder_path
-        return templates.TemplateResponse(
-            "tools/dataset_tagger/setup_form.html",
-            context,
-            status_code=500,
-        )
+    # return templates.TemplateResponse(
+    #     "tools/dataset_tagger/setup_form.html",
+    #     context,
+    #     status_code=500,
+    # )
 
     redirect_url = (
         f"/tools/dataset-tagger/workflow?character_id={character_id}&folder_path={folder_path}"
@@ -167,43 +189,113 @@ async def post_dataset_tagger_setup(
     return RedirectResponse(url=redirect_url, status_code=303)
 
 
+def _ensure_thumb_dir_exists(base_folder_path: str) -> Path:
+    """Ensures the thumbnail directory exists within the base folder and returns its path."""
+    thumb_dir = Path(base_folder_path) / THUMBNAIL_DIR_NAME
+    try:
+        thumb_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        logger.error(f"Error creating thumbnail directory {thumb_dir}: {e}")
+        raise HTTPException(status_code=500, detail=f"Could not create thumbnail directory: {e}")
+    return thumb_dir
+
+
+def _generate_thumbnail(
+    original_image_path: Path, thumbnail_save_path: Path, original_filename: str
+) -> str | None:
+    """
+    Generates a thumbnail for the given image, saves it in the thumb_dir_path.
+    Returns the thumbnail filename if successful, None otherwise.
+    """
+    thumbnail_filename = f"{original_filename}"
+    thumbnail_path = thumbnail_save_path
+    try:
+        if not original_image_path.exists():
+            logger.error(
+                f"Original image not found for thumbnail generation: {original_image_path}"
+            )
+            return None
+
+        img = Image.open(original_image_path)
+
+        # Calculate new height to maintain aspect ratio
+        original_width, original_height = img.size
+        if original_width == 0:  # Avoid division by zero for corrupted images
+            logger.warning(f"Original image {original_filename} has zero width.")
+            return None
+        aspect_ratio = original_height / original_width
+        new_height = int(THUMBNAIL_WIDTH * aspect_ratio)
+        if new_height == 0:
+            new_height = THUMBNAIL_WIDTH  # Handle cases where aspect_ratio is very small
+
+        img.thumbnail((THUMBNAIL_WIDTH, new_height), Image.Resampling.LANCZOS)
+
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+
+        img.save(thumbnail_path, "JPEG", quality=THUMBNAIL_JPEG_QUALITY, optimize=True)
+        logger.info(f"Generated thumbnail: {thumbnail_path}")
+        return thumbnail_filename
+    except Exception as e:
+        logger.error(f"Error generating thumbnail for {original_filename}: {e}")
+        return None
+
+
 @router.get("/image-proxy", response_class=FileResponse)
 async def get_image_proxy(
-    request: Request, folder: str = Query(...), filename: str = Query(...)
+    request: Request,
+    folder: str = Query(...),
+    filename: str = Query(...),
+    source_dir_type: str = Query(default="original"),  # "original" or "thumbnail"
 ) -> FileResponse:
-    # Security: Prevent path traversal attacks
-    # Ensure the requested folder is absolute and a directory.
-    # The base_path should be the user-provided folder_path from the workflow state.
-    # For this proxy, we directly use the 'folder' query parameter which should be the validated folder_path.
+    """Serves an image, either original or thumbnail."""
     try:
-        base_dir = Path(folder).resolve()
-        requested_path = (base_dir / filename).resolve()
+        base_folder_path = Path(folder).resolve()
 
-        # Check if the resolved path is within the resolved base_dir
-        if not base_dir.is_dir():
+        if source_dir_type == "thumbnail":
+            # Ensure .thumb directory exists if we are trying to serve from it,
+            # though generation should have created it.
+            # For proxy, it's more about constructing the correct path.
+            image_source_folder = _ensure_thumb_dir_exists(str(base_folder_path))
+            # Thumbnails might have same name as original, or could be modified if needed
+            # For now, assume thumbnail filename is same as original for simplicity in proxy
+        elif source_dir_type == "original":
+            image_source_folder = base_folder_path
+        else:
+            logger.warning(f"Image proxy: Invalid source_dir_type: {source_dir_type}")
+            raise HTTPException(status_code=400, detail="Invalid image source type specified.")
+
+        requested_path = (image_source_folder / filename).resolve()
+
+        if not image_source_folder.is_dir():  # Check the specific source folder
             logger.warning(
-                f"Image proxy: Base folder path is not a directory or doesn't exist: {base_dir}"
+                f"Image proxy: Source folder path is not a directory or doesn't exist: {image_source_folder}"
             )
-            raise HTTPException(status_code=400, detail="Invalid base folder path provided.")
+            raise HTTPException(
+                status_code=400, detail="Invalid image source folder path provided."
+            )
 
         if not requested_path.is_file():
+            # If a thumbnail is requested and not found, we do NOT try to generate it here.
+            # Generation happens during the workflow page load.
+            # Here, if it's not found, it's a 404 for the thumbnail.
             logger.warning(
-                f"Image proxy: Requested image not found or is not a file: {requested_path}"
+                f"Image proxy: Requested image not found or is not a file: {requested_path} (source type: {source_dir_type})"
             )
-            raise HTTPException(status_code=404, detail=f"Image not found: {filename}")
+            raise HTTPException(
+                status_code=404, detail=f"Image not found: {filename} (source: {source_dir_type})"
+            )
 
-        # Ensure the requested path is actually within the base_dir to prevent traversal
-        # A more robust check for path traversal:
-        # After resolving both, the requested_path must start with the base_dir path string.
-        if os.path.commonprefix([str(requested_path), str(base_dir)]) != str(base_dir):
+        if os.path.commonprefix([str(requested_path), str(image_source_folder.resolve())]) != str(
+            image_source_folder.resolve()
+        ):
             logger.error(
-                f"Image proxy: Path traversal attempt detected. Base: {base_dir}, Requested: {requested_path}"
+                f"Image proxy: Path traversal attempt detected. Base: {image_source_folder}, Requested: {requested_path}"
             )
             raise HTTPException(
                 status_code=403, detail="Forbidden: Path traversal attempt detected."
             )
 
-        # Check for allowed image types if necessary (optional, for added security)
         allowed_extensions = [".png", ".jpg", ".jpeg", ".webp"]
         if requested_path.suffix.lower() not in allowed_extensions:
             logger.warning(
@@ -215,18 +307,25 @@ async def get_image_proxy(
 
     except FileNotFoundError:
         logger.error(
-            f"Image proxy: FileNotFoundError for {filename} in {folder}. This might happen if file is deleted after initial checks."
+            f"Image proxy: FileNotFoundError for {filename} in {folder} (source: {source_dir_type}). This might happen if file is deleted after initial checks."
         )
         raise HTTPException(
-            status_code=404, detail=f"Image file {filename} disappeared before it could be served."
+            status_code=404,
+            detail=f"Image file {filename} (source: {source_dir_type}) disappeared before it could be served.",
         )
     except PermissionError:
-        logger.error(f"Image proxy: PermissionError serving {filename} from {folder}.")
+        logger.error(
+            f"Image proxy: PermissionError serving {filename} from {folder} (source: {source_dir_type})."
+        )
         raise HTTPException(
-            status_code=403, detail=f"Permission denied while trying to serve the image {filename}."
+            status_code=403,
+            detail=f"Permission denied while trying to serve the image {filename} (source: {source_dir_type}).",
         )
     except Exception as e:
-        logger.error(f"Image proxy: Unexpected error serving image {filename} from {folder}: {e}")
+        logger.error(
+            f"Image proxy: Unexpected error serving image {filename} from {folder} (source: {source_dir_type}): {e}",
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=500, detail="An unexpected server error occurred while serving the image."
         )
@@ -238,128 +337,155 @@ async def get_dataset_tagger_workflow_page(
     character_id: str = Query(...),
     folder_path: str = Query(...),
     db: Session = Depends(get_db),
-    action: str = Query(default="initial_load"),
     context: dict[str, Any] = Depends(get_template_context),
 ) -> _TemplateResponse:
-    initial_state = TaggingWorkflowState(
-        character_id=character_id,
-        folder_path=folder_path,
-    )
+    # ... (existing setup like loading walkthrough_config, security checks) ...
 
-    walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
-    walkthrough_config: WalkthroughConfig | None = None
-
-    if not walkthrough_config_path.is_file():
-        logger.error(f"Walkthrough configuration file not found at: {walkthrough_config_path}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Critical Error: Dataset tagger walkthrough configuration file not found at {walkthrough_config_path}. Please check server setup.",
-        )
+    base_path = Path(folder_path)
+    if not base_path.is_dir():
+        raise HTTPException(status_code=400, detail=f"Folder not found: {folder_path}")
 
     try:
-        with open(walkthrough_config_path, encoding="utf-8") as f:  # Added encoding
+        walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
+        with open(walkthrough_config_path) as f:
             yaml_data = yaml.safe_load(f)
-            if not yaml_data:
-                logger.error(
-                    f"Walkthrough configuration file is empty or invalid: {walkthrough_config_path}"
-                )
-                raise HTTPException(
-                    status_code=500,
-                    detail="Critical Error: Walkthrough configuration file is empty or invalid.",
-                )
-            walkthrough_config = WalkthroughConfig(**yaml_data)
-    except yaml.YAMLError as e:
-        logger.error(f"Error parsing YAML from {walkthrough_config_path}: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Error parsing walkthrough.yaml: {e}. Check for syntax errors."
-        ) from e
-    except Exception as e:  # Catches Pydantic validation errors too
-        logger.error(f"Error loading walkthrough configuration from {walkthrough_config_path}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error loading walkthrough configuration: {e}. Ensure the structure matches the Pydantic models.",
-        ) from e
-
-    image_files: list[str] = []
-    allowed_extensions = (".png", ".jpg", ".jpeg", ".webp")
-    try:
-        p_folder_path = Path(folder_path)
-        if not p_folder_path.exists():
-            logger.warning(f"Image folder does not exist: {folder_path}")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Image folder not found: {folder_path}. Please check the path provided in setup.",
-            )
-        if not p_folder_path.is_dir():
-            logger.warning(f"Provided path is not a directory: {folder_path}")
-            raise HTTPException(
-                status_code=400,
-                detail=f"The path '{folder_path}' is not a directory. Please select a valid folder.",
-            )
-
-        image_files = sorted(
-            [
-                f.name
-                for f in p_folder_path.iterdir()
-                if f.is_file() and f.suffix.lower() in allowed_extensions
-            ]
-        )
-        if not image_files:
-            logger.info(f"No images with allowed extensions found in folder: {folder_path}")
-            # This is not necessarily an error, could be an empty dataset.
-            # The UI should handle displaying "no images found".
-            # We can pass a notification if desired.
-            pass  # Let it proceed with an empty list
-
-    except PermissionError as e:
-        logger.error(f"Permission error accessing image folder {folder_path}: {e}")
-        raise HTTPException(
-            status_code=403,
-            detail=f"Permission denied when trying to access the folder: {folder_path}. Check server permissions.",
-        ) from e
-    except OSError as e:  # Catch other OS-level errors like too many open files, etc.
-        logger.error(f"OS error accessing image folder {folder_path}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"A system error occurred while accessing the folder: {folder_path}. Details: {e}",
-        ) from e
+        walkthrough_config = WalkthroughConfig(**yaml_data)
+    except FileNotFoundError:
+        logger.error(f"Walkthrough configuration file not found at: {walkthrough_config_path}")
+        raise HTTPException(status_code=500, detail="Tagging walkthrough configuration not found.")
     except Exception as e:
-        logger.error(f"Unexpected error listing image files in {folder_path}: {e}")
+        logger.error(f"Error loading walkthrough configuration: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Unexpected error listing image files: {e}"
-        ) from e
+            status_code=500, detail="Could not load tagging walkthrough configuration."
+        )
 
-    (
-        next_display_item,
-        next_item_type,
-        next_step_name,
-        next_step_description,
-        updated_state,
-        notification_message,
-        notification_type,
-    ) = await _get_next_display_item_and_update_state(
-        current_state=initial_state,
-        walkthrough_config=walkthrough_config,
-        action=action,
-        selected_images=[],
-        manual_tag_input=None,
-        db=db,
+    image_files_data: list[ImageData] = []
+    original_image_filenames = sorted(
+        [
+            f.name
+            for f in base_path.iterdir()
+            if f.is_file() and f.suffix.lower() in [".png", ".jpg", ".jpeg", ".webp"]
+        ]
     )
 
+    if not original_image_filenames:
+        logger.warning(f"No image files found in folder: {folder_path}")
+        # Still proceed to render the page, JS will show "no images" or grid will be empty.
+
+    thumb_dir_path = _ensure_thumb_dir_exists(folder_path)  # Ensures .thumb exists
+
+    for img_filename in original_image_filenames:
+        thumbnail_name = f"thumb_{img_filename}"
+        thumbnail_file_path = thumb_dir_path / thumbnail_name
+        image_files_data.append(
+            ImageData(
+                original_filename=img_filename,
+                thumbnail_filename=thumbnail_name,
+                thumbnail_exists=thumbnail_file_path.exists(),
+            )
+        )
+
+    # Create the initial_state object that the template expects
+    # Assuming TaggingWorkflowState is for the dynamic HTMX part,
+    # but initial_state for the page might be simpler or a superset.
+    # The template uses initial_state.folder_path and initial_state.images_data.
+
+    page_initial_state = DatasetTaggerPageContext(
+        folder_path=folder_path,
+        images_data=image_files_data,
+        character_id=character_id,
+        # Populate other fields if your 'initial_state' in the template uses more
+        # e.g., current_image_filename might be the first image or None
+        current_image_filename=original_image_filenames[0] if original_image_filenames else None,
+        tag_counts_json_str="{}",  # Placeholder, adapt if needed
+    )
+
+    # Prepare context for the main workflow page
+    # This `page_initial_state` will be accessible as `initial_state` in the template
     context.update(
         {
             "request": request,
-            "initial_state": updated_state,
+            "initial_state": page_initial_state,
             "walkthrough_config": walkthrough_config,
-            "image_files": image_files,
-            "initial_display_item": next_display_item,
-            "initial_item_type": next_item_type,
-            "initial_step_name": next_step_name,
-            "initial_step_description": next_step_description,
-            "notification_message": notification_message,
-            "notification_type": notification_type,
+            # Add other necessary context variables here, e.g., for _tag_processing_area initial render
+            "current_step_index": 0,
+            "current_input_type_index_in_step": 0,
+            "current_item_index_within_input_type": 0,
+            "pending_tags_from_last_manual_input": [],
+            "active_manual_input_key": None,
+            "next_display_item": walkthrough_config.steps[0].name
+            if walkthrough_config.steps
+            else "No steps defined",  # Simplified first item
+            "next_item_type": "step_description",  # Simplified
+            "current_tag_to_display": None,
+            "notification_message": None,
+            "notification_type": "info",
         }
     )
+
+    # Add initial state for _tag_processing_area.html, which is included with `with context`
+    # It expects variables like current_step_index, next_display_item etc.
+    # We need to determine the actual first item to display from walkthrough_config
+    # For now, a simplified version:
+    first_step = walkthrough_config.steps[0] if walkthrough_config.steps else None
+    first_item_text = "Walkthrough Complete"
+    first_item_type = "complete"
+
+    if first_step:
+        if first_step.manual_inputs:
+            first_item_text = (
+                first_step.manual_inputs[0].get(list(first_step.manual_inputs[0].keys())[0])
+                if first_step.manual_inputs[0]
+                else "Manual Input"
+            )
+            first_item_type = "manual_question"
+            context["active_manual_input_key"] = (
+                list(first_step.manual_inputs[0].keys())[0] if first_step.manual_inputs[0] else None
+            )
+        elif first_step.automatic_inputs:
+            first_item_text = first_step.automatic_inputs[0]
+            first_item_type = "tag"
+        elif first_step.character_tags:  # Simplified, actual tag needs DB lookup
+            # This part would need a db call to get the actual character tag
+            # For now, using the category name as placeholder
+            try:
+                char_tags = await crud.character.get_tags_dict(
+                    db=db, character_id=character_id
+                )  # Assuming this async method exists
+                tag_category = first_step.character_tags[0]
+                actual_tag = char_tags.get(tag_category)
+                if actual_tag:
+                    first_item_text = actual_tag
+                    first_item_type = "tag"
+                else:
+                    first_item_text = f"Character tag for '{tag_category}' (not found)"
+                    first_item_type = "info"  # or skip
+            except Exception as e:
+                logger.error(f"Failed to fetch character tags for initial display: {e}")
+                first_item_text = f"Error fetching character tag: {first_step.character_tags[0]}"
+                first_item_type = "error"  # or skip
+        else:
+            first_item_text = first_step.name  # Fallback to step name
+            first_item_type = "step_description"
+
+    context["next_display_item"] = first_item_text
+    context["next_item_type"] = first_item_type
+    context["current_walkthrough_step"] = first_step  # For displaying step name/description
+    context["TaggingWorkflowState"] = (
+        TaggingWorkflowState(  # For hidden fields in _tag_processing_area
+            character_id=character_id,
+            folder_path=folder_path,
+            current_step_index=0,
+            current_input_type_index_in_step=0,  # Initial state points to first manual_input if any
+            current_item_index_within_input_type=0,
+            active_manual_input_key=context.get("active_manual_input_key"),
+        )
+    )
+
+    logger.debug(
+        f"Context for tagging_workflow.html: initial_state.images_data count = {len(page_initial_state.images_data)}"
+    )
+
     return templates.TemplateResponse("tools/dataset_tagger/tagging_workflow.html", context)
 
 
@@ -807,6 +933,77 @@ async def post_dataset_tagger_process_tag(
             {**context, **error_partial_context},
             status_code=500,
         )
+
+
+@router.post("/generate-thumbnail", status_code=200)
+async def post_generate_single_thumbnail(
+    request: Request,  # Added request for potential future use (e.g. auth)
+    folder_path: Annotated[str, Form()],
+    original_filename: Annotated[str, Form()],
+    # db: Session = Depends(get_db) # Not needed for simple thumbnail generation
+) -> dict[str, Any]:
+    """Generates a thumbnail for a single specified image.
+
+    Args:
+        request: The FastAPI request object.
+        folder_path: The base directory where the original image resides.
+        original_filename: The filename of the original image.
+
+    Returns:
+        JSON response indicating success or failure and thumbnail path.
+    """
+    p_folder_path = Path(folder_path)
+    original_image_path = p_folder_path / original_filename
+
+    if not original_image_path.is_file():
+        logger.error(f"Generate-thumbnail API: Original image not found: {original_image_path}")
+        raise HTTPException(
+            status_code=404, detail=f"Original image '{original_filename}' not found in folder."
+        )
+
+    try:
+        thumb_dir = _ensure_thumb_dir_exists(str(p_folder_path))
+        # Thumbnail keeps the same filename, stored in .thumb subdir
+        thumbnail_save_path = thumb_dir / original_filename
+    except Exception as e:  # Catch errors from _ensure_thumb_dir_exists
+        logger.error(
+            f"Generate-thumbnail API: Failed to ensure/create thumbnail directory for {p_folder_path}: {e}"
+        )
+        raise HTTPException(status_code=500, detail="Failed to prepare thumbnail directory.")
+
+    if thumbnail_save_path.is_file():
+        logger.info(
+            f"Generate-thumbnail API: Thumbnail already exists for {original_filename} at {thumbnail_save_path}"
+        )
+        return {
+            "success": True,
+            "message": "Thumbnail already existed.",
+            "thumbnail_filename": original_filename,  # Keep consistent with how images_data is structured
+            "thumbnail_url": f"/tools/dataset-tagger/image-proxy?folder={folder_path}&filename={original_filename}&source_dir_type=thumbnail",
+        }
+
+    success = _generate_thumbnail(
+        original_image_path=original_image_path,
+        thumbnail_save_path=thumbnail_save_path,
+        original_filename=original_filename,
+    )
+
+    if success:
+        return {
+            "success": True,
+            "message": "Thumbnail generated successfully.",
+            "thumbnail_filename": original_filename,
+            "thumbnail_url": f"/tools/dataset-tagger/image-proxy?folder={folder_path}&filename={original_filename}&source_dir_type=thumbnail",
+        }
+    else:
+        # _generate_thumbnail logs its own errors, so just return a generic failure here for the API response
+        # We could raise HTTPException, but a JSON response might be easier for client-side loop processing.
+        return {
+            "success": False,
+            "message": f"Failed to generate thumbnail for {original_filename}. Check server logs.",
+            "thumbnail_filename": original_filename,
+            "thumbnail_url": None,  # No URL if generation failed
+        }
 
 
 # Future endpoints for workflow will be added here

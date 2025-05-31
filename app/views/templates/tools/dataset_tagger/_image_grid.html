@@ -1,22 +1,30 @@
 {# Image Grid Partial #}
-{% if image_files %}
-    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-2 mb-3" id="image-grid-container">
-        {% for image_filename in image_files %}
-            {% set filename_no_ext = image_filename.split('.') | first %}
+{% if grid_images_data %}
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-2">
+        {% for image_data in grid_images_data %}
             <div class="col">
-                {# Wrapper for aspect ratio and selection outline #}
-                <div class="image-aspect-ratio-wrapper">
-                    <img src="/tools/dataset-tagger/image-proxy?folder={{ initial_state.folder_path }}&filename={{ image_filename }}"
-                         class="img-fluid image-grid-item" {# img-fluid for basic responsiveness, object-fit will handle containment #}
-                         alt="{{ image_filename }}"
-                         id="image-{{ filename_no_ext }}"
-                         data-filename="{{ image_filename }}"
-                         loading="lazy">
+                <div class="image-aspect-ratio-wrapper bg-dark rounded position-relative" 
+                     data-original-filename="{{ image_data.original_filename }}"
+                     data-thumbnail-exists="{{ 'true' if image_data.thumbnail_exists else 'false' }}">
+                    {% if image_data.thumbnail_exists %}
+                        <img src="/tools/dataset-tagger/image-proxy?folder={{ grid_folder_path }}&filename={{ image_data.thumbnail_filename }}&source_dir_type=thumbnail" 
+                             alt="{{ image_data.original_filename }}" 
+                             class="img-fluid image-grid-item object-fit-contain rounded"
+                             data-filename="{{ image_data.original_filename }}" 
+                             id="image-{{ image_data.original_filename.split('.')[0] }}" {# Ensure ID is valid #}
+                             loading="lazy">
+                    {% else %}
+                        <div class="thumbnail-placeholder d-flex align-items-center justify-content-center w-100 h-100">
+                            <div class="spinner-border text-light spinner-border-sm" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         {% else %}
             <div class="col-12">
-                <p class="text-muted fst-italic">No images found in the folder '{{ initial_state.folder_path }}'. Please check the path or add images.</p>
+                <p class="text-muted text-center">No images found in the specified folder or an error occurred.</p>
             </div>
         {% endfor %}
     </div>

@@ -86,4 +86,99 @@ document.addEventListener('DOMContentLoaded', () => {
             updateSelectedImagesInput();
         }
     });
+
+    // New: Thumbnail Generation Logic
+    const imageGridContainerForThumbs = document.getElementById('image-grid-container');
+    const thumbnailProgressArea = document.getElementById('thumbnail-progress-area');
+    const thumbnailProgressBar = document.getElementById('thumbnail-progress-bar');
+    const thumbnailProgressStatus = document.getElementById('thumbnail-progress-status');
+
+    if (imageGridContainerForThumbs && thumbnailProgressArea && thumbnailProgressBar && thumbnailProgressStatus) {
+        const folderPath = imageGridContainerForThumbs.dataset.folderPath || document.body.dataset.folderPath; // Get folder_path
+        if (!folderPath) {
+            console.error("Thumbnail Generation: folder_path not found in data attributes.");
+            return;
+        }
+
+        const imagesToGenerateThumbsFor = Array.from(imageGridContainerForThumbs.querySelectorAll('[data-thumbnail-exists="false"]'));
+
+        if (imagesToGenerateThumbsFor.length > 0) {
+            thumbnailProgressArea.style.display = 'block';
+            let processedCount = 0;
+            const totalToProcess = imagesToGenerateThumbsFor.length;
+            thumbnailProgressStatus.textContent = `Preparing to generate ${totalToProcess} thumbnail(s)...`;
+
+            async function processNextThumbnail() {
+                if (imagesToGenerateThumbsFor.length === 0) {
+                    thumbnailProgressStatus.textContent = `All ${totalToProcess} thumbnails processed.`;
+                    thumbnailProgressBar.style.width = '100%';
+                    thumbnailProgressBar.textContent = '100%';
+                    // Hide progress area after a short delay (e.g., 1.5 seconds)
+                    setTimeout(() => {
+                        if (thumbnailProgressArea) { // Double check it still exists
+                            thumbnailProgressArea.style.display = 'none';
+                        }
+                    }, 1500);
+                    return;
+                }
+
+                const imageContainer = imagesToGenerateThumbsFor.shift(); // Process one by one
+                const originalFilename = imageContainer.dataset.originalFilename;
+
+                thumbnailProgressStatus.textContent = `Generating thumbnail for ${originalFilename} (${processedCount + 1} of ${totalToProcess})...`;
+
+                const formData = new FormData();
+                formData.append('folder_path', folderPath);
+                formData.append('original_filename', originalFilename);
+
+                try {
+                    const response = await fetch('/tools/dataset-tagger/generate-thumbnail', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            // FastAPI typically uses 'X-CSRF-Token' if CSRF protection is enabled for forms
+                            // However, if this is a simple POST and CSRF is handled via cookies for session, it might not be needed here.
+                            // For now, assuming basic POST works. Add CSRF if required by your setup.
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success && result.thumbnail_url) {
+                        const newImg = document.createElement('img');
+                        newImg.src = result.thumbnail_url;
+                        newImg.alt = originalFilename;
+                        newImg.classList.add('img-fluid', 'image-grid-item');
+                        newImg.dataset.filename = originalFilename; // Crucial for selection logic
+                        const filenameNoExt = originalFilename.split('.').slice(0, -1).join('.') || originalFilename;
+                        newImg.id = `image-${filenameNoExt}`;
+                        newImg.loading = 'lazy';
+
+                        imageContainer.innerHTML = ''; // Clear placeholder
+                        imageContainer.appendChild(newImg);
+                        imageContainer.dataset.thumbnailExists = 'true'; // Mark as generated
+                    } else {
+                        console.error(`Failed to generate thumbnail for ${originalFilename}: ${result.message || 'Unknown error'}`);
+                        const placeholder = imageContainer.querySelector('.thumbnail-placeholder');
+                        if (placeholder) placeholder.innerHTML = `<small class="text-danger">Error</small>`;
+                    }
+                } catch (error) {
+                    console.error(`Error fetching/generating thumbnail for ${originalFilename}:`, error);
+                    const placeholder = imageContainer.querySelector('.thumbnail-placeholder');
+                    if (placeholder) placeholder.innerHTML = `<small class="text-danger">Network Error</small>`;
+                }
+
+                processedCount++;
+                const progressPercentage = Math.round((processedCount / totalToProcess) * 100);
+                thumbnailProgressBar.style.width = `${progressPercentage}%`;
+                thumbnailProgressBar.textContent = `${progressPercentage}%`;
+
+                // Process next image
+                // Using a small timeout to allow UI to update and prevent blocking
+                setTimeout(processNextThumbnail, 50);
+            }
+
+            processNextThumbnail(); // Start the generation chain
+        }
+    }
 }); 

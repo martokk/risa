@@ -6,6 +6,15 @@
 <div class="mt-4"> {# Use container-fluid for full width #}
     <h2>Dataset Tagger - Workflow</h2>
     
+    {# Thumbnail Generation Progress Area - Initially Hidden #}
+    <div id="thumbnail-progress-area" class="mb-3" style="display: none;">
+        <h5>Generating Thumbnails...</h5>
+        <div class="progress" role="progressbar" aria-label="Thumbnail generation progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" id="thumbnail-progress-bar" style="width: 0%">0%</div>
+        </div>
+        <p id="thumbnail-progress-status" class="mt-1 text-muted small"></p>
+    </div>
+
     {# Tag Processing Area - HTMX Target #}
     {# This will be initially populated by the main GET /workflow, then updated by HTMX #}
     <div id="tag-processor" class="card">
@@ -17,15 +26,39 @@
         </div>
     </div>
 
-
-    {# Image Grid - Include the partial #}
-    <div id="image-grid-container" class="mb-3">
-        {% include "tools/dataset_tagger/_image_grid.html" %}
+    {# Image Grid Area #}
+    <div id="image-grid-container" 
+         class="image-grid-container mt-3" 
+         data-folder-path="{{ initial_state.folder_path }}"
+         {# If imageGridUpdated from:body trigger is needed for refreshes, #}
+         {# it would require a valid hx-get target pointing to an existing endpoint. #}
+         {# For now, removing hx-get and hx-trigger="load" to fix initial NoMatchFound. #}
+         {% if 'imageGridUpdated from:body' in 'load, imageGridUpdated from:body' and False %} {# Retain for future if needed with a valid endpoint #}
+             hx-trigger="imageGridUpdated from:body"
+             hx-swap="innerHTML"
+             hx-get="{{ url_for('ACTUAL_GRID_REFRESH_ENDPOINT_NAME_HERE') }}" 
+         {% endif %}
+         >
+        {% if initial_state and initial_state.images_data %}
+            {% with grid_images_data=initial_state.images_data, grid_folder_path=initial_state.folder_path %}
+                {% include "tools/dataset_tagger/_image_grid.html" %}
+            {% endwith %}
+        {% else %}
+            <div class="text-center p-3">
+                {# This message will show if images_data is empty or not provided, #}
+                {# which could happen before thumbnails are processed by JS if not careful #}
+                {# Or if there truly are no images. #}
+                <p class="text-muted">Image grid is loading or no images found.</p>
+                 <div class="spinner-border text-primary mt-2" role="status">
+                    <span class="visually-hidden">Loading images...</span>
+                </div>
+            </div>
+        {% endif %}
     </div>
 
     {# Display Tagging Notes #}
     {% if walkthrough_config and walkthrough_config.tagging_notes %}
-    <div class="alert alert-info" role="alert">
+    <div class="alert alert-info mt-3" role="alert">
         <h4 class="alert-heading">Tagging Guidelines</h4>
         <pre style="white-space: pre-wrap; font-family: inherit;"
             class="text-light">{{ walkthrough_config.tagging_notes | markdown | safe }}</pre>
@@ -36,6 +69,6 @@
 {% endblock %}
 
 {% block js_scripts %}
-    {# Link to dataset_tagger.js - will be created in Phase 5 #}
+    {# Link to dataset_tagger.js #}
     <script src="/static/js/tools/dataset_tagger.js" defer></script>
 {% endblock %}
