@@ -1,0 +1,53 @@
+{# HTMX Tag Processing Area Partial - Initial Static Version for Phase 2 #}
+
+{# Display current step information if available #}
+{% if initial_step_name or initial_step_description %}
+    <h5>
+        Step: {{ initial_step_name | default('N/A') }}
+        {% if initial_step_description %}
+            <small class="text-muted">- {{ initial_step_description }}</small>
+        {% endif %}
+    </h5>
+    <hr>
+{% endif %}
+
+{# Display the initial item (tag or manual question prompt) #}
+<div class="mb-3">
+    {% if initial_item_type == "manual_question" %}
+        <label for="manual_tag_input_static" class="form-label"><strong>Question:</strong> {{ initial_display_item }}</label>
+        <input type="text" class="form-control" id="manual_tag_input_static" name="manual_tag_input" placeholder="Enter comma-separated tags here..." readonly disabled>
+        <div class="form-text">Tag input will be enabled in a later phase.</div>
+    {% elif initial_item_type == "tag" %}
+        <p><strong>Current Tag:</strong> {{ initial_display_item }}</p>
+    {% elif initial_item_type == "complete" %}
+        <div class="alert alert-success">{{ initial_display_item }}</div>
+    {% elif initial_item_type == "info" %}
+        <div class="alert alert-info">{{ initial_display_item }}</div>
+    {% else %}
+        <p>{{ initial_display_item | default("Loading...") }}</p>
+    {% endif %}
+</div>
+
+{# Static action buttons (will be made dynamic with HTMX in Phase 3) #}
+<div class="mt-3">
+    <button type="button" class="btn btn-primary me-2" disabled>Add Tag to Selected</button>
+    <button type="button" class="btn btn-secondary me-2" disabled>Skip Tag</button>
+    <button type="button" class="btn btn-info" disabled>Select All Images</button>
+</div>
+
+{# Hidden fields for TaggingWorkflowState - Values from initial_state context #}
+{# These will be crucial for HTMX submissions in later phases #}
+<input type="hidden" name="character_id" value="{{ initial_state.character_id }}">
+<input type="hidden" name="folder_path" value="{{ initial_state.folder_path }}">
+<input type="hidden" name="current_step_index" value="{{ initial_state.current_step_index }}">
+<input type="hidden" name="current_input_type_index_in_step" value="{{ initial_state.current_input_type_index_in_step }}">
+<input type="hidden" name="current_item_index_within_input_type" value="{{ initial_state.current_item_index_within_input_type }}">
+<input type="hidden" name="pending_tags_from_last_manual_input" value="{{ initial_state.pending_tags_from_last_manual_input | join(',') }}">
+<input type="hidden" name="active_manual_input_key" value="{{ initial_state.active_manual_input_key | default('') }}">
+
+{# Hidden input for selected images (will be populated by JS in Phase 5) #}
+<input type="hidden" name="selected_images_input" id="selectedImagesInput" value="">
+
+<div class="mt-2 form-text text-muted">
+    Phase 2: Initial static display. Full interactivity will be enabled in later phases.
+</div>

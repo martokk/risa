@@ -6,6 +6,7 @@ from app import paths, settings
 from app.utils.datetime import format_datetime, utc_to_local
 from app.views.templates.filters import (
     filter_humanize,
+    filter_markdown,
     filter_nl2br,
     format_date,
 )
@@ -27,6 +28,7 @@ def get_templates() -> Jinja2Templates:
     templates.env.filters["utc_to_local"] = utc_to_local
     templates.env.filters["nl2br"] = filter_nl2br
     templates.env.filters["format_date"] = format_date
+    templates.env.filters["markdown"] = filter_markdown
 
     # Add global variables to templates
     templates.env.globals["PROJECT_NAME"] = settings.PROJECT_NAME

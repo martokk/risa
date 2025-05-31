@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
 
+import markdown
+
 
 def filter_nl2br(value: str) -> str:
     """
@@ -58,3 +60,10 @@ def format_date(value: datetime | None) -> str:
     if value is None:
         return ""
     return value.strftime("%Y-%m-%d")
+
+
+def filter_markdown(text: str) -> str:
+    """
+    Jinja Filter to convert markdown to html.
+    """
+    return str(markdown.markdown(text, extensions=["nl2br"]))

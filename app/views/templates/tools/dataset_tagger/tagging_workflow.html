@@ -1,0 +1,39 @@
+{% extends 'base/base.html' %} {# Adjust base template if different #}
+
+{% block title %}Dataset Tagger - Workflow{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4"> {# Use container-fluid for full width #}
+    <h2>Dataset Tagger - Workflow</h2>
+    
+    {# Display Tagging Notes #}
+    {% if walkthrough_config and walkthrough_config.tagging_notes %}
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">Tagging Guidelines</h4>
+            <pre style="white-space: pre-wrap; font-family: inherit;" class="text-light">{{ walkthrough_config.tagging_notes | markdown | safe }}</pre>
+        </div>
+    {% endif %}
+
+    {# Image Grid - Include the partial #}
+    <div id="image-grid-container" class="mb-3">
+        {% include "tools/dataset_tagger/_image_grid.html" %}
+    </div>
+
+    {# Tag Processing Area - HTMX Target #}
+    {# This will be initially populated by the main GET /workflow, then updated by HTMX #}
+    <div id="tag-processor" class="card">
+        <div class="card-header">
+            Current Action / Tag
+        </div>
+        <div class="card-body">
+            {% include "tools/dataset_tagger/_tag_processing_area.html" with context %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+    {# Link to dataset_tagger.js - will be created in Phase 5 #}
+    <script src="/js/tools/dataset_tagger.js" defer></script>
+{% endblock %}
