@@ -158,17 +158,13 @@ async def get_dataset_tagger_workflow_page(
     folder_path: str = Query(...),
     db: Session = Depends(get_db),
     action: str = Query(default="initial_load"),
-    # db: Session = Depends(get_db) # Will be needed later for character tags
     context: dict[str, Any] = Depends(get_template_context),
 ) -> _TemplateResponse:
-    # 1. Initialize TaggingWorkflowState (using data from query params)
     initial_state = TaggingWorkflowState(
         character_id=character_id,
         folder_path=folder_path,
-        # Other fields will use Pydantic defaults (0, [], None)
     )
 
-    # 2. Load walkthrough.yaml
     walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
     walkthrough_config: WalkthroughConfig | None = None
     if walkthrough_config_path.is_file():
@@ -177,22 +173,19 @@ async def get_dataset_tagger_workflow_page(
                 yaml_data = yaml.safe_load(f)
                 walkthrough_config = WalkthroughConfig(**yaml_data)
             except yaml.YAMLError as e:
-                # Handle YAML parsing error - render page with error
-                # For now, raise HTTPException, but ideally render error in template
                 raise HTTPException(
                     status_code=500, detail=f"Error parsing walkthrough.yaml: {e}"
                 ) from e
-            except Exception as e:  # Catches Pydantic validation errors too
+            except Exception as e:
                 raise HTTPException(
                     status_code=500, detail=f"Error loading walkthrough config: {e}"
                 ) from e
     else:
         raise HTTPException(status_code=500, detail="walkthrough.yaml not found.")
 
-    if not walkthrough_config:  # Should be caught above, but as a safeguard
+    if not walkthrough_config:
         raise HTTPException(status_code=500, detail="Failed to load walkthrough configuration.")
 
-    # 3. List image files
     image_files: list[str] = []
     allowed_extensions = (".png", ".jpg", ".jpeg", ".webp")
     try:
@@ -206,46 +199,108 @@ async def get_dataset_tagger_workflow_page(
                 ]
             )
         else:
-            # Handle case where folder_path is not a dir (should be caught in setup, but good practice)
-            # Render page with error or raise
             raise HTTPException(
                 status_code=400, detail=f"Provided path is not a directory: {folder_path}"
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error listing image files: {e}") from e
 
-    # If no images found, still proceed but image grid will be empty
-    # A message could be added to context if image_files is empty.
-
-    # 4. Simplified First Item Display Logic for Phase 2 - This will now use the new helper
     (
         next_display_item,
         next_item_type,
         next_step_name,
         next_step_description,
         updated_state,
+        notification_message,
+        notification_type,
     ) = await _get_next_display_item_and_update_state(
-        current_state=initial_state,  # initial_state is effectively the "current state" before any actions
+        current_state=initial_state,
         walkthrough_config=walkthrough_config,
-        action=action,  # Special action to signify initial page load
-        selected_images=[],  # No selected images on initial load
-        manual_tag_input=None,  # No manual input on initial load
-        db=db,  # No DB session needed for initial load if not hitting character tags first
+        action=action,
+        selected_images=[],
+        manual_tag_input=None,
+        db=db,
     )
 
     context.update(
         {
             "request": request,
-            "initial_state": updated_state,  # Use the state potentially updated by the helper
+            "initial_state": updated_state,
             "walkthrough_config": walkthrough_config,
             "image_files": image_files,
             "initial_display_item": next_display_item,
             "initial_item_type": next_item_type,
             "initial_step_name": next_step_name,
             "initial_step_description": next_step_description,
+            "notification_message": notification_message,
+            "notification_type": notification_type,
         }
     )
     return templates.TemplateResponse("tools/dataset_tagger/tagging_workflow.html", context)
+
+
+def _get_current_tag_for_action(
+    current_state: TaggingWorkflowState,
+    walkthrough_config: WalkthroughConfig,
+    db: Session | None = None,  # For character tags in future
+) -> str | None:
+    """Determines the tag that was displayed when an action (like add_tag) was taken."""
+    # This function uses the state *as it was when the action was performed*,
+    # i.e., before current_item_index_within_input_type was incremented by skip/add logic.
+
+    if not walkthrough_config.steps or current_state.current_step_index >= len(
+        walkthrough_config.steps
+    ):
+        return None
+
+    current_walkthrough_step = walkthrough_config.steps[current_state.current_step_index]
+
+    # Check based on input type index at the moment of action
+    input_type = current_state.current_input_type_index_in_step
+    item_index = current_state.current_item_index_within_input_type
+
+    if input_type == 1:  # pending_tags_from_last_manual_input
+        if item_index < len(current_state.pending_tags_from_last_manual_input):
+            return current_state.pending_tags_from_last_manual_input[item_index]
+    elif input_type == 2:  # automatic_inputs
+        if current_walkthrough_step.automatic_inputs and item_index < len(
+            current_walkthrough_step.automatic_inputs
+        ):
+            return current_walkthrough_step.automatic_inputs[item_index]
+    elif input_type == 3:  # character_tags
+        if current_walkthrough_step.character_tags and item_index < len(
+            current_walkthrough_step.character_tags
+        ):
+            char_tag_category = current_walkthrough_step.character_tags[item_index]
+            if db:  # In Phase 6, this will fetch from DB
+                # character_specific_tags = await crud.character.get_tags_dict(db, character_id=current_state.character_id)
+                # return character_specific_tags.get(char_tag_category)
+                return f"Mocked_DB: {char_tag_category} for {current_state.character_id}"  # Placeholder
+            return f"Mocked: {char_tag_category} for {current_state.character_id}"  # Placeholder
+    return None
+
+
+def _write_tag_to_file(folder_path: str, filename: str, tag: str) -> bool:
+    """Appends a tag to a .txt file for the given image filename."""
+    try:
+        base_filename, _ = os.path.splitext(filename)
+        txt_filepath = Path(folder_path) / f"{base_filename}.txt"
+
+        current_tags = []
+        if txt_filepath.exists():
+            with open(txt_filepath, encoding="utf-8") as f:
+                current_tags = [t.strip() for t in f.read().split(",") if t.strip()]
+
+        if tag not in current_tags:  # Basic de-duplication for this single add
+            current_tags.append(tag)
+
+        with open(txt_filepath, "w", encoding="utf-8") as f:
+            f.write(", ".join(current_tags))
+        logger.info(f"Successfully wrote tag '{tag}' to {txt_filepath}")
+        return True
+    except Exception as e:
+        logger.error(f"Error writing tag '{tag}' to file for {filename}: {e}")
+        return False
 
 
 async def _get_next_display_item_and_update_state(
@@ -254,37 +309,78 @@ async def _get_next_display_item_and_update_state(
     selected_images: list[str],
     action: str,
     manual_tag_input: str | None,
-    db: Session = Depends(get_db),
-) -> tuple[str, str, str | None, str | None, TaggingWorkflowState]:
+    db: Session,  # Now required due to _get_current_tag_for_action possibly needing it
+) -> tuple[
+    str, str, str | None, str | None, TaggingWorkflowState, str | None, str | None
+]:  # Added notification msg & type
     state = current_state.model_copy(deep=True)
     original_action = action
+    notification_message: str | None = None
+    notification_type: str | None = None  # e.g., "success", "error", "info"
+
+    # Handle file writing for "add_tag" before advancing state for display
+    if original_action == "add_tag":
+        # Determine the tag that was just displayed and is being added.
+        # We need to use the state *before* any index increments for the current display item.
+        tag_to_add = _get_current_tag_for_action(current_state, walkthrough_config, db)
+
+        if tag_to_add and selected_images:
+            num_successful_writes = 0
+            for img_filename in selected_images:
+                if _write_tag_to_file(state.folder_path, img_filename, tag_to_add):
+                    num_successful_writes += 1
+            if num_successful_writes > 0:
+                notification_message = (
+                    f"Tag '{tag_to_add}' added to {num_successful_writes} image(s)."
+                )
+                notification_type = "success"
+            else:
+                notification_message = f"Failed to add tag '{tag_to_add}' to any selected images."
+                notification_type = "warning"
+        elif not selected_images and tag_to_add:
+            notification_message = f"No images selected to add tag '{tag_to_add}'."
+            notification_type = "info"
+        elif not tag_to_add:
+            notification_message = "Could not determine tag to add."
+            notification_type = "error"
 
     if original_action == "submit_manual_input" and manual_tag_input:
         state.pending_tags_from_last_manual_input = [
             t.strip() for t in manual_tag_input.split(",") if t.strip()
         ]
         state.current_input_type_index_in_step = 1
-        state.current_item_index_within_input_type = 0  # Start at the beginning of new pending list
+        state.current_item_index_within_input_type = 0
         state.active_manual_input_key = None
-        # No change to original_action, let the loop find the first pending tag naturally
-
-    # REMOVED global pre-increment: state.current_item_index_within_input_type += 1 for skip/add
+        # If tags were submitted, let the loop find the first one.
+        # No specific notification for just submitting, success is showing the first tag.
 
     while True:
         if not walkthrough_config.steps or state.current_step_index >= len(
             walkthrough_config.steps
         ):
-            return "Tagging Complete!", "complete", None, None, state
+            return (
+                "Tagging Complete!",
+                "complete",
+                None,
+                None,
+                state,
+                notification_message,
+                notification_type,
+            )
 
         current_walkthrough_step = walkthrough_config.steps[state.current_step_index]
         step_name = current_walkthrough_step.name
         step_description = current_walkthrough_step.description
 
+        # Actions that consume the current item and advance the index for that type
+        advancing_actions = ["skip_tag", "add_tag"]
+        if original_action == "submit_manual_input" and state.current_input_type_index_in_step == 0:
+            # If we submitted manual input for a question, we are done with *that question*
+            advancing_actions.append("submit_manual_input")
+
         # Case 0: manual_inputs questions
         if state.current_input_type_index_in_step == 0:
-            if (
-                original_action == "skip_tag" or original_action == "add_tag_to_question"
-            ):  # Consuming actions for this type
+            if original_action in advancing_actions:
                 state.current_item_index_within_input_type += 1
 
             if (
@@ -297,17 +393,29 @@ async def _get_next_display_item_and_update_state(
                 ]
                 state.active_manual_input_key = list(question_dict.keys())[0]
                 next_display_item = question_dict[state.active_manual_input_key]
-                return next_display_item, "manual_question", step_name, step_description, state
+                return (
+                    next_display_item,
+                    "manual_question",
+                    step_name,
+                    step_description,
+                    state,
+                    notification_message,
+                    notification_type,
+                )
             else:
                 state.current_input_type_index_in_step = 1
                 state.current_item_index_within_input_type = 0
                 state.active_manual_input_key = None
-
+                # If we just submitted manual input, pending_tags might now have items. Restart loop.
+                if original_action == "submit_manual_input":
+                    original_action = (
+                        "initial_load"  # Reset action to avoid re-processing submission logic
+                    )
                 continue
 
         # Case 1: pending_tags_from_last_manual_input
         elif state.current_input_type_index_in_step == 1:
-            if original_action == "skip_tag" or original_action == "add_tag":
+            if original_action in advancing_actions:
                 state.current_item_index_within_input_type += 1
 
             if state.current_item_index_within_input_type < len(
@@ -316,7 +424,15 @@ async def _get_next_display_item_and_update_state(
                 next_display_item = state.pending_tags_from_last_manual_input[
                     state.current_item_index_within_input_type
                 ]
-                return next_display_item, "tag", step_name, step_description, state
+                return (
+                    next_display_item,
+                    "tag",
+                    step_name,
+                    step_description,
+                    state,
+                    notification_message,
+                    notification_type,
+                )
             else:
                 state.pending_tags_from_last_manual_input = []
                 state.current_input_type_index_in_step = 2
@@ -325,7 +441,7 @@ async def _get_next_display_item_and_update_state(
 
         # Case 2: automatic_inputs
         elif state.current_input_type_index_in_step == 2:
-            if original_action == "skip_tag" or original_action == "add_tag":
+            if original_action in advancing_actions:
                 state.current_item_index_within_input_type += 1
 
             if (
@@ -336,7 +452,15 @@ async def _get_next_display_item_and_update_state(
                 next_display_item = current_walkthrough_step.automatic_inputs[
                     state.current_item_index_within_input_type
                 ]
-                return next_display_item, "tag", step_name, step_description, state
+                return (
+                    next_display_item,
+                    "tag",
+                    step_name,
+                    step_description,
+                    state,
+                    notification_message,
+                    notification_type,
+                )
             else:
                 state.current_input_type_index_in_step = 3
                 state.current_item_index_within_input_type = 0
@@ -344,7 +468,7 @@ async def _get_next_display_item_and_update_state(
 
         # Case 3: character_tags
         elif state.current_input_type_index_in_step == 3:
-            if original_action == "skip_tag" or original_action == "add_tag":
+            if original_action in advancing_actions:
                 state.current_item_index_within_input_type += 1
 
             if (
@@ -355,18 +479,29 @@ async def _get_next_display_item_and_update_state(
                 char_tag_category = current_walkthrough_step.character_tags[
                     state.current_item_index_within_input_type
                 ]
-                tag_value = f"Mocked: {char_tag_category} for {state.character_id}"
+                # In Phase 6, this will fetch from DB
+                # For now, mock it. Ensure db is passed if you uncomment DB logic.
+                if db:  # Phase 6 example
+                    # character_specific_tags = await crud.character.get_tags_dict(db, character_id=state.character_id)
+                    # tag_value = character_specific_tags.get(char_tag_category)
+                    tag_value = f"Mocked_DB: {char_tag_category} for {state.character_id}"
+                else:
+                    tag_value = f"Mocked: {char_tag_category} for {state.character_id}"
 
                 if tag_value:
-                    return tag_value, "tag", step_name, step_description, state
+                    return (
+                        tag_value,
+                        "tag",
+                        step_name,
+                        step_description,
+                        state,
+                        notification_message,
+                        notification_type,
+                    )
                 else:
-                    # This 'else' for an empty tag_value means we auto-skip to the next char_tag item
-                    # No need to increment again if skip already did, so this path is mainly for non-skip that finds empty tag
-                    if not (
-                        original_action == "skip_tag" or original_action == "add_tag"
-                    ):  # Avoid double increment
-                        state.current_item_index_within_input_type += 1
-
+                    # Auto-skip if char_tag_category resolves to no value
+                    # No need to increment item_index_within_input_type again here, as the loop will continue,
+                    # and if original_action was skip/add, it was already incremented.
                     continue
             else:
                 state.current_step_index += 1
@@ -374,10 +509,17 @@ async def _get_next_display_item_and_update_state(
                 state.current_item_index_within_input_type = 0
                 state.active_manual_input_key = None
                 state.pending_tags_from_last_manual_input = []
-
                 continue
 
-        return "Error: Could not determine next step.", "info", None, None, state
+        return (
+            "Error: Could not determine next step.",
+            "info",
+            None,
+            None,
+            state,
+            "An unexpected error occurred.",
+            "error",
+        )
 
 
 @router.post("/workflow/process-tag", response_class=HTMLResponse)
@@ -390,7 +532,7 @@ async def post_dataset_tagger_process_tag(
     current_input_type_index_in_step: Annotated[int, Form()],
     current_item_index_within_input_type: Annotated[int, Form()],
     # --- Action (required) --- #
-    action: Annotated[str, Form()],  # e.g., "skip_tag", "add_tag", "submit_manual_input"
+    action: Annotated[str, Form()],
     # --- Optional form inputs --- #
     pending_tags_from_last_manual_input_str: Annotated[
         str, Form(alias="pending_tags_from_last_manual_input")
@@ -415,12 +557,13 @@ async def post_dataset_tagger_process_tag(
         ),
         active_manual_input_key=active_manual_input_key,
     )
-    logger.info(f"DEBUG: State BEFORE calling helper: {current_state.model_dump_json(indent=2)}")
-    logger.info(f"DEBUG: Action received: {action}")
+    logger.info(
+        f"Phase 4 DEBUG: State BEFORE calling helper: {current_state.model_dump_json(indent=2)}"
+    )
+    logger.info(f"Phase 4 DEBUG: Action received: {action}, Manual Input: {manual_tag_input}")
 
     selected_images = [img.strip() for img in selected_images_input.split(",") if img.strip()]
 
-    # Load walkthrough_config (similar to GET /workflow)
     walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
     walkthrough_config: WalkthroughConfig | None = None
     if walkthrough_config_path.is_file():
@@ -428,7 +571,7 @@ async def post_dataset_tagger_process_tag(
             try:
                 yaml_data = yaml.safe_load(f)
                 walkthrough_config = WalkthroughConfig(**yaml_data)
-            except Exception as e:  # Catch YAML and Pydantic errors
+            except Exception as e:
                 raise HTTPException(
                     status_code=500, detail=f"Error loading walkthrough config: {e}"
                 )
@@ -446,6 +589,8 @@ async def post_dataset_tagger_process_tag(
         next_step_name,
         next_step_description,
         updated_state,
+        notification_message,
+        notification_type,
     ) = await _get_next_display_item_and_update_state(
         current_state=current_state,
         walkthrough_config=walkthrough_config,
@@ -455,9 +600,11 @@ async def post_dataset_tagger_process_tag(
         db=db,
     )
     logger.info(
-        f"DEBUG: State AFTER calling helper (updated_state): {updated_state.model_dump_json(indent=2)}"
+        f"Phase 4 DEBUG: State AFTER calling helper (updated_state): {updated_state.model_dump_json(indent=2)}"
     )
-    logger.info(f"DEBUG: Next display item: {next_display_item}, Type: {next_item_type}")
+    logger.info(
+        f"Phase 4 DEBUG: Next display item: {next_display_item}, Type: {next_item_type}, Notification: {notification_message}"
+    )
 
     partial_context = {
         "request": request,
@@ -466,6 +613,8 @@ async def post_dataset_tagger_process_tag(
         "initial_item_type": next_item_type,
         "initial_step_name": next_step_name,
         "initial_step_description": next_step_description,
+        "notification_message": notification_message,
+        "notification_type": notification_type,
     }
     context.update(partial_context)
 
