@@ -10,11 +10,11 @@ tagging_notes: |
 steps:
   - name: "Unique Trigger Tags"
     description: "Set the unique trigger tags for the character."
-    manual_inputs:
-      - unique_trigger_tag: "What are the unique trigger tags for the character?"
     automatic_inputs:
       - 1girl
       - female
+    manual_inputs:
+      - unique_trigger_tag: "What are the unique trigger tags for the character?"
     character_tags:
       - race
       - skin_color

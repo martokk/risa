@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session
 from starlette.templating import _TemplateResponse
 
-from app import crud
+from app import crud, logger
 from app.core.db import get_db
 from app.paths import DATASET_TAGGER_WALKTHROUGH_PATH
 from app.views.templates import templates
@@ -156,6 +156,8 @@ async def get_dataset_tagger_workflow_page(
     request: Request,
     character_id: str = Query(...),
     folder_path: str = Query(...),
+    db: Session = Depends(get_db),
+    action: str = Query(default="initial_load"),
     # db: Session = Depends(get_db) # Will be needed later for character tags
     context: dict[str, Any] = Depends(get_template_context),
 ) -> _TemplateResponse:
@@ -215,49 +217,260 @@ async def get_dataset_tagger_workflow_page(
     # If no images found, still proceed but image grid will be empty
     # A message could be added to context if image_files is empty.
 
-    # 4. Simplified First Item Display Logic for Phase 2
-    initial_display_item: str = "Walkthrough loaded. Ready to start (full logic pending)."
-    initial_item_type: str = "info"  # Placeholder type
-    initial_step_name: str | None = None
-    initial_step_description: str | None = None
-
-    if walkthrough_config.steps:
-        first_step = walkthrough_config.steps[0]
-        initial_step_name = first_step.name
-        initial_step_description = first_step.description
-
-        if first_step.manual_inputs and first_step.manual_inputs[0]:
-            # Get the question from the first manual_input dictionary
-            initial_display_item = list(first_step.manual_inputs[0].values())[0]
-            initial_item_type = "manual_question"
-        elif first_step.automatic_inputs and first_step.automatic_inputs[0]:
-            initial_display_item = first_step.automatic_inputs[0]
-            initial_item_type = "tag"
-        elif first_step.character_tags and first_step.character_tags[0]:
-            # For Phase 2, we just show the category name, not the resolved tag yet
-            initial_display_item = f"Character Tag Category: {first_step.character_tags[0]}"
-            initial_item_type = "tag"  # Treat as a tag for display purposes for now
-        elif len(walkthrough_config.steps) == 1:  # Only one step, might be empty
-            initial_display_item = "First step is defined but has no processable items."
-            initial_item_type = "info"
-    else:
-        initial_display_item = "Walkthrough has no steps defined."
-        initial_item_type = "complete"  # Or "error", or "info"
+    # 4. Simplified First Item Display Logic for Phase 2 - This will now use the new helper
+    (
+        next_display_item,
+        next_item_type,
+        next_step_name,
+        next_step_description,
+        updated_state,
+    ) = await _get_next_display_item_and_update_state(
+        current_state=initial_state,  # initial_state is effectively the "current state" before any actions
+        walkthrough_config=walkthrough_config,
+        action=action,  # Special action to signify initial page load
+        selected_images=[],  # No selected images on initial load
+        manual_tag_input=None,  # No manual input on initial load
+        db=db,  # No DB session needed for initial load if not hitting character tags first
+    )
 
     context.update(
         {
             "request": request,
-            "initial_state": initial_state,
-            "walkthrough_config": walkthrough_config,  # For tagging_notes
+            "initial_state": updated_state,  # Use the state potentially updated by the helper
+            "walkthrough_config": walkthrough_config,
             "image_files": image_files,
-            "initial_display_item": initial_display_item,
-            "initial_item_type": initial_item_type,
-            "initial_step_name": initial_step_name,
-            "initial_step_description": initial_step_description,
-            # Add other necessary context variables here based on what tagging_workflow.html needs
+            "initial_display_item": next_display_item,
+            "initial_item_type": next_item_type,
+            "initial_step_name": next_step_name,
+            "initial_step_description": next_step_description,
         }
     )
     return templates.TemplateResponse("tools/dataset_tagger/tagging_workflow.html", context)
 
 
+async def _get_next_display_item_and_update_state(
+    current_state: TaggingWorkflowState,
+    walkthrough_config: WalkthroughConfig,
+    selected_images: list[str],
+    action: str,
+    manual_tag_input: str | None,
+    db: Session = Depends(get_db),
+) -> tuple[str, str, str | None, str | None, TaggingWorkflowState]:
+    state = current_state.model_copy(deep=True)
+    original_action = action
+
+    if original_action == "submit_manual_input" and manual_tag_input:
+        state.pending_tags_from_last_manual_input = [
+            t.strip() for t in manual_tag_input.split(",") if t.strip()
+        ]
+        state.current_input_type_index_in_step = 1
+        state.current_item_index_within_input_type = 0  # Start at the beginning of new pending list
+        state.active_manual_input_key = None
+        # No change to original_action, let the loop find the first pending tag naturally
+
+    # REMOVED global pre-increment: state.current_item_index_within_input_type += 1 for skip/add
+
+    while True:
+        if not walkthrough_config.steps or state.current_step_index >= len(
+            walkthrough_config.steps
+        ):
+            return "Tagging Complete!", "complete", None, None, state
+
+        current_walkthrough_step = walkthrough_config.steps[state.current_step_index]
+        step_name = current_walkthrough_step.name
+        step_description = current_walkthrough_step.description
+
+        # Case 0: manual_inputs questions
+        if state.current_input_type_index_in_step == 0:
+            if (
+                original_action == "skip_tag" or original_action == "add_tag_to_question"
+            ):  # Consuming actions for this type
+                state.current_item_index_within_input_type += 1
+
+            if (
+                current_walkthrough_step.manual_inputs
+                and state.current_item_index_within_input_type
+                < len(current_walkthrough_step.manual_inputs)
+            ):
+                question_dict = current_walkthrough_step.manual_inputs[
+                    state.current_item_index_within_input_type
+                ]
+                state.active_manual_input_key = list(question_dict.keys())[0]
+                next_display_item = question_dict[state.active_manual_input_key]
+                return next_display_item, "manual_question", step_name, step_description, state
+            else:
+                state.current_input_type_index_in_step = 1
+                state.current_item_index_within_input_type = 0
+                state.active_manual_input_key = None
+
+                continue
+
+        # Case 1: pending_tags_from_last_manual_input
+        elif state.current_input_type_index_in_step == 1:
+            if original_action == "skip_tag" or original_action == "add_tag":
+                state.current_item_index_within_input_type += 1
+
+            if state.current_item_index_within_input_type < len(
+                state.pending_tags_from_last_manual_input
+            ):
+                next_display_item = state.pending_tags_from_last_manual_input[
+                    state.current_item_index_within_input_type
+                ]
+                return next_display_item, "tag", step_name, step_description, state
+            else:
+                state.pending_tags_from_last_manual_input = []
+                state.current_input_type_index_in_step = 2
+                state.current_item_index_within_input_type = 0
+                continue
+
+        # Case 2: automatic_inputs
+        elif state.current_input_type_index_in_step == 2:
+            if original_action == "skip_tag" or original_action == "add_tag":
+                state.current_item_index_within_input_type += 1
+
+            if (
+                current_walkthrough_step.automatic_inputs
+                and state.current_item_index_within_input_type
+                < len(current_walkthrough_step.automatic_inputs)
+            ):
+                next_display_item = current_walkthrough_step.automatic_inputs[
+                    state.current_item_index_within_input_type
+                ]
+                return next_display_item, "tag", step_name, step_description, state
+            else:
+                state.current_input_type_index_in_step = 3
+                state.current_item_index_within_input_type = 0
+                continue
+
+        # Case 3: character_tags
+        elif state.current_input_type_index_in_step == 3:
+            if original_action == "skip_tag" or original_action == "add_tag":
+                state.current_item_index_within_input_type += 1
+
+            if (
+                current_walkthrough_step.character_tags
+                and state.current_item_index_within_input_type
+                < len(current_walkthrough_step.character_tags)
+            ):
+                char_tag_category = current_walkthrough_step.character_tags[
+                    state.current_item_index_within_input_type
+                ]
+                tag_value = f"Mocked: {char_tag_category} for {state.character_id}"
+
+                if tag_value:
+                    return tag_value, "tag", step_name, step_description, state
+                else:
+                    # This 'else' for an empty tag_value means we auto-skip to the next char_tag item
+                    # No need to increment again if skip already did, so this path is mainly for non-skip that finds empty tag
+                    if not (
+                        original_action == "skip_tag" or original_action == "add_tag"
+                    ):  # Avoid double increment
+                        state.current_item_index_within_input_type += 1
+
+                    continue
+            else:
+                state.current_step_index += 1
+                state.current_input_type_index_in_step = 0
+                state.current_item_index_within_input_type = 0
+                state.active_manual_input_key = None
+                state.pending_tags_from_last_manual_input = []
+
+                continue
+
+        return "Error: Could not determine next step.", "info", None, None, state
+
+
+@router.post("/workflow/process-tag", response_class=HTMLResponse)
+async def post_dataset_tagger_process_tag(
+    request: Request,
+    # --- TaggingWorkflowState fields --- #
+    character_id: Annotated[str, Form()],
+    folder_path: Annotated[str, Form()],
+    current_step_index: Annotated[int, Form()],
+    current_input_type_index_in_step: Annotated[int, Form()],
+    current_item_index_within_input_type: Annotated[int, Form()],
+    # --- Action (required) --- #
+    action: Annotated[str, Form()],  # e.g., "skip_tag", "add_tag", "submit_manual_input"
+    # --- Optional form inputs --- #
+    pending_tags_from_last_manual_input_str: Annotated[
+        str, Form(alias="pending_tags_from_last_manual_input")
+    ] = "",
+    active_manual_input_key: Annotated[str | None, Form()] = None,
+    selected_images_input: Annotated[str, Form()] = "",
+    manual_tag_input: Annotated[str | None, Form()] = None,
+    # --- Dependencies --- #
+    db: Session = Depends(get_db),
+    context: dict[str, Any] = Depends(get_template_context),
+) -> _TemplateResponse:
+    current_state = TaggingWorkflowState(
+        character_id=character_id,
+        folder_path=folder_path,
+        current_step_index=current_step_index,
+        current_input_type_index_in_step=current_input_type_index_in_step,
+        current_item_index_within_input_type=current_item_index_within_input_type,
+        pending_tags_from_last_manual_input=(
+            [t.strip() for t in pending_tags_from_last_manual_input_str.split(",") if t.strip()]
+            if pending_tags_from_last_manual_input_str
+            else []
+        ),
+        active_manual_input_key=active_manual_input_key,
+    )
+    logger.info(f"DEBUG: State BEFORE calling helper: {current_state.model_dump_json(indent=2)}")
+    logger.info(f"DEBUG: Action received: {action}")
+
+    selected_images = [img.strip() for img in selected_images_input.split(",") if img.strip()]
+
+    # Load walkthrough_config (similar to GET /workflow)
+    walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
+    walkthrough_config: WalkthroughConfig | None = None
+    if walkthrough_config_path.is_file():
+        with open(walkthrough_config_path) as f:
+            try:
+                yaml_data = yaml.safe_load(f)
+                walkthrough_config = WalkthroughConfig(**yaml_data)
+            except Exception as e:  # Catch YAML and Pydantic errors
+                raise HTTPException(
+                    status_code=500, detail=f"Error loading walkthrough config: {e}"
+                )
+    else:
+        raise HTTPException(status_code=500, detail="walkthrough.yaml not found.")
+
+    if not walkthrough_config:
+        raise HTTPException(
+            status_code=500, detail="Failed to load walkthrough configuration for POST."
+        )
+
+    (
+        next_display_item,
+        next_item_type,
+        next_step_name,
+        next_step_description,
+        updated_state,
+    ) = await _get_next_display_item_and_update_state(
+        current_state=current_state,
+        walkthrough_config=walkthrough_config,
+        action=action,
+        selected_images=selected_images,
+        manual_tag_input=manual_tag_input,
+        db=db,
+    )
+    logger.info(
+        f"DEBUG: State AFTER calling helper (updated_state): {updated_state.model_dump_json(indent=2)}"
+    )
+    logger.info(f"DEBUG: Next display item: {next_display_item}, Type: {next_item_type}")
+
+    partial_context = {
+        "request": request,
+        "initial_state": updated_state,
+        "initial_display_item": next_display_item,
+        "initial_item_type": next_item_type,
+        "initial_step_name": next_step_name,
+        "initial_step_description": next_step_description,
+    }
+    context.update(partial_context)
+
+    return templates.TemplateResponse("tools/dataset_tagger/_tag_processing_area.html", context)
+
+
 # Future endpoints for workflow will be added here
+# The new POST endpoint will go below this line
