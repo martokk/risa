@@ -130,8 +130,6 @@ document.body.addEventListener('htmx:afterSwap', function (event) {
     }
 });
 
-
-
 document.addEventListener('DOMContentLoaded', () => {
     const imageGridContainer = document.getElementById('image-grid-container');
     let selectedImagesInput = document.getElementById('selectedImagesInput'); // Make it `let` so it can be reassigned
@@ -259,6 +257,31 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clickedElement.tagName === 'IMG' && clickedElement.hasAttribute('data-filename') && imageGridContainer.contains(clickedElement)) {
             clickedElement.classList.toggle('selected-image-outline');
             updateSelectedImagesInput();
+        }
+    });
+
+    // HTMX event listener for tagsUpdated
+    document.body.addEventListener('tagsUpdated', function (event) {
+        console.log('[tagsUpdated] Event received:', event.detail);
+        // Access the actual array from event.detail.value
+        const updates = event.detail && event.detail.value ? event.detail.value : null;
+
+        if (updates && Array.isArray(updates)) {
+            updates.forEach(update => {
+                if (update.filename && Array.isArray(update.tags)) {
+                    const imageItem = imageGridContainer.querySelector(`.dynamic-image-grid-item[data-original-filename="${update.filename}"]`);
+                    if (imageItem) {
+                        imageItem.dataset.tags = update.tags.join(',');
+                        console.log(`[tagsUpdated] Updated data-tags for ${update.filename} to: ${imageItem.dataset.tags}`);
+                    } else {
+                        console.warn(`[tagsUpdated] Could not find image item for filename: ${update.filename}`);
+                    }
+                } else {
+                    console.warn('[tagsUpdated] Invalid update object received:', update);
+                }
+            });
+        } else {
+            console.warn('[tagsUpdated] Event detail.value is not an array or is missing.', event.detail);
         }
     });
 

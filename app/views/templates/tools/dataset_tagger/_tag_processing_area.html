@@ -84,7 +84,8 @@
                     </div>
                     {# Right: Add/Skip Buttons #}
                     <div class="d-flex gap-1">
-                        <button type="submit" name="action" value="add_tag" class="btn btn-success btn-sm"><i class="fas fa-plus-circle me-1"></i>Add ({{ selected_images|length if selected_images else 0 }})</button>
+                        <button type="submit" name="action" value="add_tag" class="btn btn-success btn-sm"><i class="fas fa-plus-circle me-1"></i>Add To Selected ({{ selected_images|length if selected_images else 0 }})</button>
+                        <button type="submit" name="action" value="remove_tag" class="btn btn-danger btn-sm"><i class="fas fa-minus-circle me-1"></i>Remove From Selected ({{ selected_images|length if selected_images else 0 }})</button>
                         <button type="submit" name="action" value="skip_tag" class="btn btn-secondary btn-sm"><i class="fas fa-forward me-1"></i>Next</button>
                     </div>
                 </div>

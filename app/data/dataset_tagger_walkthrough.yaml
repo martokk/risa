@@ -75,6 +75,8 @@ steps:
       - pussy
       - legs
       - feet
+      - armpit hair
+      - pubic hair
 
   - name: "Clothing"
     description: "Set the clothing (or lack thereof) on the character"

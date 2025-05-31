@@ -61,7 +61,7 @@ class ImageData(BaseModel):
 
 class DatasetTaggerPageContext(BaseModel):  # This will be our 'initial_state'
     folder_path: str
-    images_data: list[ImageData] = Field(default_factory=list)  # type: ignore
+    images_data: list[ImageData] = Field(default_factory=list)
     character_id: str | None = None  # Add other fields if initial_state uses them
     current_image_filename: str | None = None  # Example
     tag_counts_json_str: str | None = None  # Example
@@ -541,7 +541,7 @@ async def _get_current_tag_for_action(
     return None
 
 
-def _write_tag_to_file(folder_path: str, filename: str, tag: str) -> bool:
+def _write_tag_to_file(folder_path: str, filename: str, tag: str) -> list[str] | None:
     """Appends a tag to a .txt file for the given image filename."""
     try:
         base_filename, _ = os.path.splitext(filename)
@@ -563,23 +563,81 @@ def _write_tag_to_file(folder_path: str, filename: str, tag: str) -> bool:
                 logger.error(f"Unexpected error reading tag file {txt_filepath}: {e}")
                 pass  # Or return False
 
-        if tag not in current_tags:  # Basic de-duplication for this single add
+        # Ensure tag is not duplicated before appending
+        if tag not in current_tags:
             current_tags.append(tag)
 
+        # Write the potentially updated list of tags back to the file
         with open(txt_filepath, "w", encoding="utf-8") as f:
             f.write(", ".join(current_tags))
-        logger.info(f"Successfully wrote tag '{tag}' to {txt_filepath}")
-        return True
+        logger.info(f"Successfully wrote/updated tags in {txt_filepath}")
+        return current_tags  # Return the final list of tags for this file
     except OSError as e:  # More specific exceptions for file I/O
         logger.error(
             f"I/O or OS error writing tag '{tag}' to file for {filename} in {folder_path}: {e}"
         )
-        return False
+        return None
+
+
+def _remove_tag_from_file(folder_path: str, filename: str, tag_to_remove: str) -> list[str] | None:
+    """Removes a specific tag from a .txt file for the given image filename."""
+    try:
+        base_filename, _ = os.path.splitext(filename)
+        txt_filepath = Path(folder_path) / f"{base_filename}.txt"
+
+        current_tags = []
+        if txt_filepath.exists():
+            try:
+                with open(txt_filepath, encoding="utf-8") as f:
+                    current_tags = [t.strip() for t in f.read().split(",") if t.strip()]
+            except OSError as e:
+                logger.error(f"Error reading existing tag file {txt_filepath} for removal: {e}")
+                return None  # Cannot proceed if file can't be read
+            except Exception as e:
+                logger.error(f"Unexpected error reading tag file {txt_filepath} for removal: {e}")
+                return None
+
+        if tag_to_remove in current_tags:
+            current_tags.remove(tag_to_remove)
+            try:
+                with open(txt_filepath, "w", encoding="utf-8") as f:
+                    f.write(", ".join(current_tags))
+                logger.info(f"Successfully removed tag '{tag_to_remove}' from {txt_filepath}")
+                return current_tags  # Return the updated list of tags
+            except OSError as e:
+                logger.error(f"I/O error writing updated tags to {txt_filepath} after removal: {e}")
+                return None
+            except Exception as e:
+                logger.error(
+                    f"Unexpected error writing updated tags to {txt_filepath} after removal: {e}"
+                )
+                return None
+        else:
+            # If the tag to remove is not in the list, it's already effectively removed.
+            # This can be considered a success for the operation's intent.
+            logger.info(f"Tag '{tag_to_remove}' not found in {txt_filepath}, no changes made.")
+            return current_tags  # Return the existing tags as they are effectively the new state
+
     except Exception as e:
         logger.error(
-            f"Unexpected error writing tag '{tag}' to file for {filename} in {folder_path}: {e}"
+            f"Unexpected error in _remove_tag_from_file for {filename} in {folder_path}: {e}"
         )
-        return False
+        return None
+
+
+def _read_tags_from_file(txt_filepath: Path) -> list[str]:
+    """Reads tags from a .txt file, expecting comma-separated values."""
+    if not txt_filepath.exists() or not txt_filepath.is_file():
+        return []
+    try:
+        with open(txt_filepath, encoding="utf-8") as f:
+            tags_content = f.read()
+        # Split by comma, strip whitespace from each tag, and filter out empty strings
+        tags = [tag.strip() for tag in tags_content.split(",") if tag.strip()]
+        return tags
+    except Exception as e:
+        logger.error(f"Error reading or parsing tag file {txt_filepath}: {e}")
+        return []
 
 
 async def _get_next_display_item_and_update_state(
@@ -589,36 +647,76 @@ async def _get_next_display_item_and_update_state(
     action: str,
     manual_tag_input: str | None,
     db: Session,
-) -> tuple[str, str, str | None, str | None, TaggingWorkflowState, str | None, str | None]:
+) -> tuple[
+    str,
+    str,
+    str | None,
+    str | None,
+    TaggingWorkflowState,
+    str | None,
+    str | None,
+    list[dict[str, Any]],
+]:
     state = current_state.model_copy(deep=True)
     original_action = action
     notification_message: str | None = None
     notification_type: str | None = None  # e.g., "success", "error", "info"
+    updated_image_tag_data: list[dict[str, Any]] = []  # For HX-Trigger
 
     # Handle file writing for "add_tag" before advancing state for display
     if original_action == "add_tag":
         # Determine the tag that was just displayed and is being added.
         # We need to use the state *before* any index increments for the current display item.
-        tag_to_add = await _get_current_tag_for_action(current_state, walkthrough_config, db)
+        tag_to_action = await _get_current_tag_for_action(current_state, walkthrough_config, db)
 
-        if tag_to_add and selected_images:
+        if tag_to_action and selected_images:
             num_successful_writes = 0
             for img_filename in selected_images:
-                if _write_tag_to_file(state.folder_path, img_filename, tag_to_add):
+                new_tags = _write_tag_to_file(state.folder_path, img_filename, tag_to_action)
+                if new_tags is not None:
                     num_successful_writes += 1
+                    updated_image_tag_data.append({"filename": img_filename, "tags": new_tags})
             if num_successful_writes > 0:
                 notification_message = (
-                    f"Tag '{tag_to_add}' added to {num_successful_writes} image(s)."
+                    f"Tag '{tag_to_action}' added to {num_successful_writes} image(s)."
                 )
                 notification_type = "success"
             else:
-                notification_message = f"Failed to add tag '{tag_to_add}' to any selected images."
+                notification_message = (
+                    f"Failed to add tag '{tag_to_action}' to any selected images."
+                )
                 notification_type = "warning"
-        elif not selected_images and tag_to_add:
-            notification_message = f"No images selected to add tag '{tag_to_add}'."
+        elif not selected_images and tag_to_action:
+            notification_message = f"No images selected to add tag '{tag_to_action}'."
             notification_type = "info"
-        elif not tag_to_add:
+        elif not tag_to_action:
             notification_message = "Could not determine tag to add."
+            notification_type = "error"
+
+    # Handle file writing for "remove_tag" before advancing state for display
+    elif original_action == "remove_tag":
+        tag_to_action = await _get_current_tag_for_action(current_state, walkthrough_config, db)
+        if tag_to_action and selected_images:
+            num_successful_removals = 0
+            for img_filename in selected_images:
+                new_tags = _remove_tag_from_file(state.folder_path, img_filename, tag_to_action)
+                if new_tags is not None:
+                    num_successful_removals += 1
+                    updated_image_tag_data.append({"filename": img_filename, "tags": new_tags})
+            if num_successful_removals > 0:
+                notification_message = (
+                    f"Tag '{tag_to_action}' removed from {num_successful_removals} image(s)."
+                )
+                notification_type = "success"
+            else:
+                # This case might mean the tag wasn't present or file I/O failed
+                notification_message = f"Tag '{tag_to_action}' not found on selected image(s) or failed to update files."
+                notification_type = "warning"  # Or "info" if not finding it is not an error
+        elif not selected_images and tag_to_action:
+            notification_message = f"No images selected to remove tag '{tag_to_action}'."
+            notification_type = "info"
+        elif not tag_to_action:
+            notification_message = "Could not determine tag to remove."
             notification_type = "error"
 
     if original_action == "submit_manual_input" and manual_tag_input:
@@ -643,6 +741,7 @@ async def _get_next_display_item_and_update_state(
                 state,
                 notification_message,
                 notification_type,
+                updated_image_tag_data,
             )
 
         current_walkthrough_step = walkthrough_config.steps[state.current_step_index]
@@ -678,6 +777,7 @@ async def _get_next_display_item_and_update_state(
                     state,
                     notification_message,
                     notification_type,
+                    updated_image_tag_data,
                 )
             else:
                 state.current_input_type_index_in_step = 1
@@ -709,6 +809,7 @@ async def _get_next_display_item_and_update_state(
                     state,
                     notification_message,
                     notification_type,
+                    updated_image_tag_data,
                 )
             else:
                 state.pending_tags_from_last_manual_input = []
@@ -737,6 +838,7 @@ async def _get_next_display_item_and_update_state(
                     state,
                     notification_message,
                     notification_type,
+                    updated_image_tag_data,
                 )
             else:
                 state.current_input_type_index_in_step = 3
@@ -770,6 +872,7 @@ async def _get_next_display_item_and_update_state(
                         state,
                         notification_message,
                         notification_type,
+                        updated_image_tag_data,
                     )
                 else:
                     # Auto-skip if char_tag_category resolves to no value
@@ -792,6 +895,7 @@ async def _get_next_display_item_and_update_state(
             state,
             "An unexpected error occurred.",
             "error",
+            updated_image_tag_data,  # Pass empty list on error
         )
 
 
@@ -876,13 +980,6 @@ async def post_dataset_tagger_process_tag(
                 status_code=500,
                 detail=f"Error loading walkthrough configuration: {e}. Ensure the structure matches models.",
             ) from e
-        if walkthrough_config is None:  # Should be caught by earlier checks, but as a safeguard
-            logger.error(
-                f"Process-tag POST: walkthrough_config is None after loading attempt from {walkthrough_config_path}"
-            )
-            raise HTTPException(
-                status_code=500, detail="Critical Error: Failed to load walkthrough configuration."
-            )
 
         (
             next_display_item,
@@ -892,6 +989,7 @@ async def post_dataset_tagger_process_tag(
             updated_state,
             notification_message,
             notification_type,
+            updated_image_tag_data_list,
         ) = await _get_next_display_item_and_update_state(
             current_state=current_state,
             walkthrough_config=walkthrough_config,
@@ -906,6 +1004,7 @@ async def post_dataset_tagger_process_tag(
         logger.info(
             f"Phase 4 DEBUG: Next display item: {next_display_item}, Type: {next_item_type}, Notification: {notification_message}"
         )
+        logger.info(f"Updated image tag data for HX-Trigger: {updated_image_tag_data_list}")
 
         partial_context = {
             "request": request,
@@ -918,8 +1017,20 @@ async def post_dataset_tagger_process_tag(
             "notification_type": notification_type,
             "selected_images": selected_images,
         }
+
+        response_headers = {}
+        if updated_image_tag_data_list:
+            # Serialize the list of dicts to a JSON string for the header
+            import json
+
+            response_headers["HX-Trigger"] = json.dumps(
+                {"tagsUpdated": updated_image_tag_data_list}
+            )
+
         return templates.TemplateResponse(
-            "tools/dataset_tagger/_tag_processing_area.html", {**context, **partial_context}
+            "tools/dataset_tagger/_tag_processing_area.html",
+            {**context, **partial_context},
+            headers=response_headers,
         )
 
     except HTTPException:  # Re-raise HTTPExceptions so FastAPI handles them
@@ -1017,21 +1128,6 @@ async def post_generate_single_thumbnail(
             "thumbnail_filename": original_filename,
             "thumbnail_url": None,  # No URL if generation failed
         }
-
-
-def _read_tags_from_file(txt_filepath: Path) -> list[str]:
-    """Reads tags from a .txt file, expecting comma-separated values."""
-    if not txt_filepath.exists() or not txt_filepath.is_file():
-        return []
-    try:
-        with open(txt_filepath, encoding="utf-8") as f:
-            tags_content = f.read()
-        # Split by comma, strip whitespace from each tag, and filter out empty strings
-        tags = [tag.strip() for tag in tags_content.split(",") if tag.strip()]
-        return tags
-    except Exception as e:
-        logger.error(f"Error reading or parsing tag file {txt_filepath}: {e}")
-        return []
 
 
 # Future endpoints for workflow will be added here
