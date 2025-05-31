@@ -1,19 +1,22 @@
 {# Image Grid Partial #}
 {% if image_files %}
-    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-2 image-grid"> {# Added .image-grid class for JS targeting #}
-        {% for img_file in image_files %}
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-2 mb-3" id="image-grid-container">
+        {% for image_filename in image_files %}
+            {% set filename_no_ext = image_filename.split('.') | first %}
             <div class="col">
-                <div class="card h-100">
-                    <img src="/tools/dataset-tagger/image-proxy?folder={{ initial_state.folder_path }}&filename={{ img_file }}" 
-                         class="card-img-top img-fluid" 
-                         alt="{{ img_file }}" 
-                         data-filename="{{ img_file }}" 
-                         id="image-{{ loop.index0 }}" 
-                         style="object-fit: cover; height: 200px; cursor: pointer;" {# Basic styling for consistency #}>
-                    <div class="card-footer text-muted small p-1">
-                        {{ img_file }}
-                    </div>
+                {# Wrapper for aspect ratio and selection outline #}
+                <div class="image-aspect-ratio-wrapper">
+                    <img src="/tools/dataset-tagger/image-proxy?folder={{ initial_state.folder_path }}&filename={{ image_filename }}"
+                         class="img-fluid image-grid-item" {# img-fluid for basic responsiveness, object-fit will handle containment #}
+                         alt="{{ image_filename }}"
+                         id="image-{{ filename_no_ext }}"
+                         data-filename="{{ image_filename }}"
+                         loading="lazy">
                 </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <p class="text-muted fst-italic">No images found in the folder '{{ initial_state.folder_path }}'. Please check the path or add images.</p>
             </div>
         {% endfor %}
     </div>

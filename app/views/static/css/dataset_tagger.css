@@ -6,3 +6,42 @@
     box-shadow: 0 0 10px rgba(60, 255, 0, 0.5);
     /* Optional: soft glow */
 }
+
+
+/* For Dataset Tagger Image Grid */
+.image-aspect-ratio-wrapper {
+    position: relative;
+    width: 100%;
+    /* 2:3 aspect ratio (3 / 2 * 100%) */
+    padding-bottom: 150%;
+    /* This creates the height relative to the width */
+    background-color: #343a40;
+    /* A slightly darker background for the image area */
+    overflow: hidden;
+    /* Ensure nothing spills out if image tries to be bigger */
+    border-radius: 0.25rem;
+    /* Optional: match Bootstrap card rounding */
+}
+
+.image-aspect-ratio-wrapper img.image-grid-item {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* This ensures the whole image is shown, scaled down to fit */
+    object-position: center;
+    /* Center the image within the container */
+    cursor: pointer;
+    /* Keep the pointer cursor */
+}
+
+/* Ensure Bootstrap's img-fluid doesn't conflict too much with absolute positioning needed for aspect ratio.
+   It's mainly for max-width: 100% and height: auto, but our height: 100% on the image will override.
+*/
+.image-aspect-ratio-wrapper .img-fluid {
+    max-width: 100%;
+    height: 100%;
+    /* Important to fill the wrapper */
+}
