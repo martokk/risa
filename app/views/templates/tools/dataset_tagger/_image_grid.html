@@ -1,35 +1,67 @@
-{# Image Grid Partial #}
+{# Image Grid Partial - Revised for non-scrolling, dynamic sizing #}
+<style>
+    .dynamic-image-grid {
+        display: grid;
+        gap: 0.5rem; /* Or var(--bs-gutter-x, 0.5rem) if you prefer Bootstrap var */
+        width: 100% !important;
+        height: 100%; /* Make grid take full height of its container */
+        overflow: hidden; /* Should already be on parent, but good practice */
+    }
+    .dynamic-image-grid-item {
+        position: relative;
+        background-color: var(--bs-dark); /* Or #343a40 */
+        border-radius: var(--bs-border-radius); /* Bootstrap's default border radius */
+        overflow: hidden; /* Ensure content like images don't break out */
+        aspect-ratio: 2 / 3; /* Changed to 2:3 for width:height */
+        /* We will try to control size via grid-template-columns and parent height */
+    }
+    .dynamic-image-grid-item img,
+    .dynamic-image-grid-item .thumbnail-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* 'contain' will ensure whole image is visible, 'cover' might crop */
+        border-radius: var(--bs-border-radius);
+    }
+    .dynamic-image-grid-item.selected {
+        border: 3px solid var(--bs-primary); /* Example selection highlight */
+        box-shadow: 0 0 0.5rem var(--bs-primary);
+    }
+</style>
+
 {% if grid_images_data %}
-    <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-2">
+    {# The --image-count CSS variable can be used by JS if needed, or by advanced CSS #}
+    <div class="dynamic-image-grid w-100" style="--image-count: {{ grid_images_data|length }};">
         {% for image_data in grid_images_data %}
-            <div class="col">
-                <div class="image-aspect-ratio-wrapper bg-dark rounded position-relative" 
-                     data-original-filename="{{ image_data.original_filename }}"
-                     data-thumbnail-exists="{{ 'true' if image_data.thumbnail_exists else 'false' }}">
-                    {% if image_data.thumbnail_exists %}
-                        <img src="/tools/dataset-tagger/image-proxy?folder={{ grid_folder_path }}&filename={{ image_data.thumbnail_filename }}&source_dir_type=thumbnail" 
-                             alt="{{ image_data.original_filename }}" 
-                             class="img-fluid image-grid-item object-fit-contain rounded"
-                             data-filename="{{ image_data.original_filename }}" 
-                             id="image-{{ image_data.original_filename.split('.')[0] }}" {# Ensure ID is valid #}
-                             loading="lazy">
-                    {% else %}
-                        <div class="thumbnail-placeholder d-flex align-items-center justify-content-center w-100 h-100">
-                            <div class="spinner-border text-light spinner-border-sm" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
+            <div class="dynamic-image-grid-item" 
+                 data-original-filename="{{ image_data.original_filename }}"
+                 data-thumbnail-exists="{{ 'true' if image_data.thumbnail_exists else 'false' }}">
+                {% if image_data.thumbnail_exists %}
+                    <img src="/tools/dataset-tagger/image-proxy?folder={{ grid_folder_path }}&filename={{ image_data.thumbnail_filename }}&source_dir_type=thumbnail" 
+                         alt="{{ image_data.original_filename }}" 
+                         data-filename="{{ image_data.original_filename }}" 
+                         id="image-{{ image_data.original_filename.split('.')[0] }}" {# Ensure ID is valid #}
+                         loading="lazy">
+                {% else %}
+                    <div class="thumbnail-placeholder d-flex align-items-center justify-content-center">
+                        <div class="spinner-border text-light spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading...</span>
                         </div>
-                    {% endif %}
-                </div>
+                    </div>
+                {% endif %}
             </div>
         {% else %}
+            {# This part might not be reached if grid_images_data is empty, outer if handles it #}
             <div class="col-12">
                 <p class="text-muted text-center">No images found in the specified folder or an error occurred.</p>
             </div>
         {% endfor %}
     </div>
 {% else %}
-    <div class="alert alert-warning" role="alert">
+    {# This alert is for when grid_images_data is empty from the start #}
+    <div class="alert alert-warning h-100 d-flex align-items-center justify-content-center" role="alert">
         No images found in the specified folder, or the folder is not accessible.
     </div>
 {% endif %} 

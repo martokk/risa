@@ -375,13 +375,14 @@ async def get_dataset_tagger_workflow_page(
     thumb_dir_path = _ensure_thumb_dir_exists(folder_path)  # Ensures .thumb exists
 
     for img_filename in original_image_filenames:
-        thumbnail_name = f"thumb_{img_filename}"
+        thumbnail_name = f"{img_filename}"
         thumbnail_file_path = thumb_dir_path / thumbnail_name
+        thumbnail_exists = thumbnail_file_path.exists()
         image_files_data.append(
             ImageData(
                 original_filename=img_filename,
                 thumbnail_filename=thumbnail_name,
-                thumbnail_exists=thumbnail_file_path.exists(),
+                thumbnail_exists=thumbnail_exists,
             )
         )
 

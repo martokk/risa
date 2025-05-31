@@ -1,3 +1,137 @@
+function adjustGridItemLayout() {
+    console.log('[adjustGridItemLayout] Called');
+    const gridContainer = document.getElementById('image-grid-container');
+    const grid = gridContainer ? gridContainer.querySelector('.dynamic-image-grid') : null;
+    if (!gridContainer || !grid) {
+        console.warn('[adjustGridItemLayout] Grid container or grid not found.');
+        return;
+    }
+
+    const items = grid.querySelectorAll('.dynamic-image-grid-item');
+    const itemCount = items.length;
+    if (itemCount === 0) {
+        console.log('[adjustGridItemLayout] No items to adjust.');
+        return;
+    }
+    console.log(`[adjustGridItemLayout] Item count: ${itemCount}`);
+
+    const containerWidth = gridContainer.clientWidth;
+    const containerHeight = gridContainer.clientHeight;
+    console.log(`[adjustGridItemLayout] Container dimensions: width=${containerWidth}px, height=${containerHeight}px`);
+
+    if (containerHeight <= 0 || containerWidth <= 0) {
+        console.warn('[adjustGridItemLayout] Container has zero or negative dimensions. Aborting.');
+        return;
+    }
+
+    const gapStyle = getComputedStyle(grid).gap;
+    const gap = parseFloat(gapStyle) || 0.3;
+    console.log(`[adjustGridItemLayout] Calculated gap: ${gap}px`);
+
+    const itemAspectRatioWbyH = 2 / 3; // Width divided by Height
+
+    let bestFit = {
+        cols: 0,
+        rows: 0,
+        itemWidth: 0,
+        itemHeight: 0,
+        maximizedArea: 0
+    };
+    console.log('[adjustGridItemLayout] Initial bestFit:', JSON.parse(JSON.stringify(bestFit)));
+
+    const maxColsToTest = Math.min(itemCount, 40);
+    console.log(`[adjustGridItemLayout] Max columns to test: ${maxColsToTest}`);
+
+    for (let currentCols = 1; currentCols <= maxColsToTest; currentCols++) {
+        const currentRows = Math.ceil(itemCount / currentCols);
+
+        let calculatedItemWidth = (containerWidth - (currentCols - 1) * gap) / currentCols;
+        let calculatedItemHeight = calculatedItemWidth / itemAspectRatioWbyH;
+        // console.log(`[adjustGridItemLayout] Testing ${currentCols} cols, ${currentRows} rows: Initial calc W=${calculatedItemWidth.toFixed(2)}, H=${calculatedItemHeight.toFixed(2)}`);
+
+        let totalPredictedHeight = currentRows * calculatedItemHeight + (currentRows - 1) * gap;
+
+        if (totalPredictedHeight > containerHeight) {
+            // console.log(`[adjustGridItemLayout] Overflow for ${currentCols} cols. Initial totalH=${totalPredictedHeight.toFixed(2)}. Shrinking items to fit containerH=${containerHeight}`);
+            calculatedItemHeight = (containerHeight - (currentRows - 1) * gap) / currentRows;
+            calculatedItemWidth = calculatedItemHeight * itemAspectRatioWbyH;
+            // console.log(`[adjustGridItemLayout] Shrunk to: W=${calculatedItemWidth.toFixed(2)}, H=${calculatedItemHeight.toFixed(2)}`);
+        }
+
+        if (calculatedItemWidth <= 1 || calculatedItemHeight <= 1) {
+            // console.log(`[adjustGridItemLayout] Items too small for ${currentCols} cols. Skipping.`);
+            continue;
+        }
+
+        const totalPredictedWidth = currentCols * calculatedItemWidth + (currentCols - 1) * gap;
+        if (totalPredictedWidth > (containerWidth + 1.5)) { // Increased tolerance slightly
+            // console.log(`[adjustGridItemLayout] Width overflow for ${currentCols} cols after height adjust. totalW=${totalPredictedWidth.toFixed(2)}, containerW=${containerWidth}. Skipping.`);
+            continue;
+        }
+
+        const currentItemArea = calculatedItemWidth * calculatedItemHeight;
+        // console.log(`[adjustGridItemLayout] For ${currentCols} cols: Area=${currentItemArea.toFixed(2)}, currentBestArea=${bestFit.maximizedArea.toFixed(2)}`);
+        if (currentItemArea > bestFit.maximizedArea) {
+            bestFit.cols = currentCols;
+            bestFit.rows = currentRows;
+            bestFit.itemWidth = calculatedItemWidth;
+            bestFit.itemHeight = calculatedItemHeight;
+            bestFit.maximizedArea = currentItemArea;
+            console.log('[adjustGridItemLayout] Updated bestFit:', JSON.parse(JSON.stringify(bestFit)));
+        }
+    }
+
+    console.log('[adjustGridItemLayout] Final bestFit calculated:', JSON.parse(JSON.stringify(bestFit)));
+
+    if (bestFit.cols > 0 && bestFit.itemWidth > 1 && bestFit.itemHeight > 1) {
+        console.log(`[adjustGridItemLayout] Applying styles: ${bestFit.cols} cols, itemW=${bestFit.itemWidth.toFixed(2)}px, itemH=${bestFit.itemHeight.toFixed(2)}px`);
+        grid.style.gridTemplateColumns = `repeat(${bestFit.cols}, ${bestFit.itemWidth.toFixed(2)}px)`;
+
+        items.forEach(item => {
+            item.style.width = `${bestFit.itemWidth.toFixed(2)}px`;
+            item.style.height = `${bestFit.itemHeight.toFixed(2)}px`;
+        });
+    } else {
+        console.warn('[adjustGridItemLayout] No suitable layout found. Applying fallback styles.');
+        const fallbackCols = Math.max(1, Math.floor(Math.sqrt(itemCount)));
+        grid.style.gridTemplateColumns = `repeat(${fallbackCols}, 1fr)`;
+        items.forEach(item => {
+            item.style.width = '';
+            item.style.height = '';
+        });
+    }
+    console.log('[adjustGridItemLayout] Finished');
+}
+
+// Call it on initial load (after HTMX content is loaded if grid is part of it)
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DOMContentLoaded] Fired. Calling adjustGridItemLayout.');
+    // Ensure grid is actually in DOM. For complex pages, a small delay or MutationObserver might be needed
+    // if gridContainer is populated dynamically *after* DOMContentLoaded but before images load.
+    setTimeout(adjustGridItemLayout, 100); // Small delay to ensure layout is somewhat stable
+});
+
+// And on window resize (debounced)
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    // console.log('[resize] Event fired');
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        console.log('[resize] Debounced. Calling adjustGridItemLayout.');
+        adjustGridItemLayout();
+    }, 250); // Increased debounce delay slightly
+});
+
+// If you have specific HTMX events that load/update the grid, listen to them too:
+document.body.addEventListener('htmx:afterSwap', function (event) {
+    if (event.detail.target.id === 'image-grid-container' || event.detail.target.querySelector('.dynamic-image-grid')) {
+        console.log('[htmx:afterSwap] Event fired. Calling adjustGridItemLayout.');
+        adjustGridItemLayout();
+    }
+});
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const imageGridContainer = document.getElementById('image-grid-container');
     let selectedImagesInput = document.getElementById('selectedImagesInput'); // Make it `let` so it can be reassigned
@@ -117,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => {
                         if (thumbnailProgressArea) { // Double check it still exists
                             thumbnailProgressArea.style.display = 'none';
+                            adjustGridItemLayout();
                         }
                     }, 1500);
                     return;
@@ -175,10 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Process next image
                 // Using a small timeout to allow UI to update and prevent blocking
-                setTimeout(processNextThumbnail, 50);
+                setTimeout(processNextThumbnail, 25);
             }
 
             processNextThumbnail(); // Start the generation chain
         }
     }
-}); 
+});
+
+
