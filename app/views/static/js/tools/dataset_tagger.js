@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedImagesInput = document.getElementById('selectedImagesInput'); // Make it `let` so it can be reassigned
     let selectAllButton = document.getElementById('selectAllImagesBtn'); // Make 'let'
     let deselectAllButton = document.getElementById('deselectAllImagesBtn'); // Make 'let'
+    let selectTaggedButton = document.getElementById('selectTaggedBtn'); // Make 'let'
 
     if (!imageGridContainer) {
         console.error('Dataset Tagger JS: Image grid container (#image-grid-container) not found.');
@@ -171,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function initializeSelectButtons() {
         selectAllButton = document.getElementById('selectAllImagesBtn');
         deselectAllButton = document.getElementById('deselectAllImagesBtn');
+        selectTaggedButton = document.getElementById('selectTaggedBtn');
 
         if (selectAllButton) {
             selectAllButton.replaceWith(selectAllButton.cloneNode(true)); // Remove old listeners
@@ -196,6 +198,45 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } else {
             console.warn('Dataset Tagger JS: Deselect All button (#deselectAllImagesBtn) not found during init.');
+        }
+
+        if (selectTaggedButton) {
+            selectTaggedButton.replaceWith(selectTaggedButton.cloneNode(true)); // Remove old listeners
+            selectTaggedButton = document.getElementById('selectTaggedBtn'); // Re-fetch after clone
+            selectTaggedButton.addEventListener('click', () => {
+                const currentTagElement = document.getElementById('currentDisplayedTagContent');
+                const currentTag = currentTagElement ? currentTagElement.textContent.trim() : null;
+
+                if (!currentTag) {
+                    console.warn('Dataset Tagger JS: No current tag displayed to select by.');
+                    // Optionally, provide user feedback e.g., a small alert or console message
+                    return;
+                }
+
+                // It's good practice to also check if the displayed item is actually a tag.
+                // This requires knowing the 'initial_item_type' from the HTML. 
+                // For now, we assume if currentDisplayedTagContent has text, it's the tag.
+                // A more robust way would be to have initial_item_type in a data attribute of a parent element.
+
+                const allImageItems = imageGridContainer.querySelectorAll('.dynamic-image-grid-item[data-tags]');
+                if (allImageItems.length === 0) return;
+
+                allImageItems.forEach(item => {
+                    const tagsAttribute = item.dataset.tags;
+                    const imageTags = tagsAttribute ? tagsAttribute.split(',') : [];
+                    const imgElement = item.querySelector('img[data-filename]');
+
+                    if (imgElement && imageTags.includes(currentTag)) {
+                        imgElement.classList.add('selected-image-outline');
+                    } else if (imgElement) {
+                        // Optional: deselect if not tagged with the current tag if that's desired behavior.
+                        imgElement.classList.remove('selected-image-outline');
+                    }
+                });
+                updateSelectedImagesInput();
+            });
+        } else {
+            console.warn('Dataset Tagger JS: Select Tagged button (#selectTaggedBtn) not found during init.');
         }
     }
 

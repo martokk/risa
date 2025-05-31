@@ -30,9 +30,9 @@ THUMBNAIL_JPEG_QUALITY = 85
 class WalkthroughStep(BaseModel):
     name: str
     description: str
-    manual_inputs: list[dict[str, str]] | None = Field(default_factory=list)
-    automatic_inputs: list[str] | None = Field(default_factory=list)
-    character_tags: list[str] | None = Field(default_factory=list)
+    manual_inputs: list[dict[str, str]] = Field(default_factory=list)
+    automatic_inputs: list[str] = Field(default_factory=list)
+    character_tags: list[str] = Field(default_factory=list)
 
 
 class WalkthroughConfig(BaseModel):
@@ -55,12 +55,13 @@ class ImageData(BaseModel):
     original_filename: str
     thumbnail_filename: str
     thumbnail_exists: bool
+    tags: list[str] = Field(default_factory=list)
     # thumbnail_url: Optional[str] = None # Can be generated in template or here
 
 
 class DatasetTaggerPageContext(BaseModel):  # This will be our 'initial_state'
     folder_path: str
-    images_data: list[ImageData] = Field(default_factory=list)
+    images_data: list[ImageData] = Field(default_factory=list)  # type: ignore
     character_id: str | None = None  # Add other fields if initial_state uses them
     current_image_filename: str | None = None  # Example
     tag_counts_json_str: str | None = None  # Example
@@ -216,7 +217,7 @@ def _generate_thumbnail(
             )
             return None
 
-        img = Image.open(original_image_path)
+        img: Image.Image = Image.open(original_image_path)
 
         # Calculate new height to maintain aspect ratio
         original_width, original_height = img.size
@@ -378,11 +379,18 @@ async def get_dataset_tagger_workflow_page(
         thumbnail_name = f"{img_filename}"
         thumbnail_file_path = thumb_dir_path / thumbnail_name
         thumbnail_exists = thumbnail_file_path.exists()
+
+        # Load tags for the image
+        base_img_filename, _ = os.path.splitext(img_filename)
+        tag_file_path = base_path / f"{base_img_filename}.txt"
+        image_tags = _read_tags_from_file(tag_file_path)
+
         image_files_data.append(
             ImageData(
                 original_filename=img_filename,
                 thumbnail_filename=thumbnail_name,
                 thumbnail_exists=thumbnail_exists,
+                tags=image_tags,
             )
         )
 
@@ -642,7 +650,7 @@ async def _get_next_display_item_and_update_state(
         step_description = current_walkthrough_step.description
 
         # Actions that consume the current item and advance the index for that type
-        advancing_actions = ["skip_tag", "add_tag"]
+        advancing_actions = ["skip_tag"]
         if original_action == "submit_manual_input" and state.current_input_type_index_in_step == 0:
             # If we submitted manual input for a question, we are done with *that question*
             advancing_actions.append("submit_manual_input")
@@ -868,6 +876,13 @@ async def post_dataset_tagger_process_tag(
                 status_code=500,
                 detail=f"Error loading walkthrough configuration: {e}. Ensure the structure matches models.",
             ) from e
+        if walkthrough_config is None:  # Should be caught by earlier checks, but as a safeguard
+            logger.error(
+                f"Process-tag POST: walkthrough_config is None after loading attempt from {walkthrough_config_path}"
+            )
+            raise HTTPException(
+                status_code=500, detail="Critical Error: Failed to load walkthrough configuration."
+            )
 
         (
             next_display_item,
@@ -1002,6 +1017,21 @@ async def post_generate_single_thumbnail(
             "thumbnail_filename": original_filename,
             "thumbnail_url": None,  # No URL if generation failed
         }
+
+
+def _read_tags_from_file(txt_filepath: Path) -> list[str]:
+    """Reads tags from a .txt file, expecting comma-separated values."""
+    if not txt_filepath.exists() or not txt_filepath.is_file():
+        return []
+    try:
+        with open(txt_filepath, encoding="utf-8") as f:
+            tags_content = f.read()
+        # Split by comma, strip whitespace from each tag, and filter out empty strings
+        tags = [tag.strip() for tag in tags_content.split(",") if tag.strip()]
+        return tags
+    except Exception as e:
+        logger.error(f"Error reading or parsing tag file {txt_filepath}: {e}")
+        return []
 
 
 # Future endpoints for workflow will be added here

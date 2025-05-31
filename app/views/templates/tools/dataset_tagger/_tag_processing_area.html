@@ -15,7 +15,7 @@
 
         {# Header for Step Information #}
         {% if initial_step_name %}
-            <div class="topbar-step-header w-100 mb-0 pb-0 text-center">
+            <div class="topbar-step-header w-100 mb-2 text-start">
                 <small class="fw-bold">Step: {{ initial_step_name }}</small>
                 {% if initial_step_description %}
                     <small class="text-muted fst-italic ms-1">- {{ initial_step_description }}</small>
@@ -23,54 +23,89 @@
             </div>
         {% endif %}
 
-        {# Main Content Row - this div will contain all other elements in a row #}
-        <div class="d-flex flex-wrap align-items-center w-75 align-self-center">
-            {# Notification Message #}
-            {% if notification_message %}
-                <div class="alert alert-{{ notification_type | default('info') }} alert-dismissible fade show p-1 px-2 me-2 mb-0 d-inline-flex align-items-center" role="alert" style="font-size: 0.8rem; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    <span class="flex-grow-1" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ notification_message }}</span>
-                    <button type="button" class="btn-close btn-sm p-0 ms-2" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.65rem; line-height: 1; padding: 0.2rem 0.4rem !important;"></button>
-                </div>
-            {% endif %}
-            
-            {# Display the initial item (tag or manual question prompt) #}
-            <div class="me-2 mb-md-0 mb-1 d-flex align-items-center flex-grow-1" style="min-width: 600px;">
-                {% if initial_item_type == "manual_question" %}
-                    <label for="manual_tag_input" class="form-label fw-bold small mb-0 me-1">Q:</label>
-                    <span class="text-primary small me-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;" title="{{ initial_display_item }}">{{ initial_display_item }}</span>
-                    <input type="text" class="form-control form-control-sm flex-grow-1" id="manual_tag_input" name="manual_tag_input" placeholder="Tags...">
-                {% elif initial_item_type == "tag" %}
-                    <div class="d-flex align-items-center justify-content-center w-100">
-                        <span class="fw-bold fs-6 me-1">Tag:</span> <span class="badge bg-success fs-6 me-2">{{ initial_display_item }}</span>
-                    </div>
-                {% elif initial_item_type == "complete" %}
-                    <span class="badge bg-success me-2">{{ initial_display_item }}</span>
-                {% elif initial_item_type == "info" %}
-                    <span class="badge bg-info me-2">{{ initial_display_item }}</span>
-                {% elif initial_item_type == "step_description" %}
-                    <span class="text-muted small fst-italic me-2">{{ initial_display_item }}</span>
-                {% else %}
-                    <span class="text-muted small me-2">{{ initial_display_item | default("Loading...") }}</span>
-                {% endif %}
+        {# Notification Message on its own centered line #}
+        {% if notification_message %}
+        <div class="w-100 d-flex justify-content-center mb-2">
+            <div class="alert alert-{{ notification_type | default('info') }} alert-dismissible fade show p-1 px-2 d-inline-flex align-items-center" role="alert" style="font-size: 0.8rem; max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <span class="flex-grow-1" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ notification_message }}</span>
+                <button type="button" class="btn-close btn-sm p-0 ms-2" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.65rem; line-height: 1; padding: 0.2rem 0.4rem !important;"></button>
             </div>
+        </div>
+        {% endif %}
 
-            {# Action buttons #}
-            {% if initial_item_type != 'complete' %}
-                <div class="d-flex align-items-center ms-auto">
-                    {% if initial_item_type == "manual_question" %}
-                        <button type="submit" name="action" value="submit_manual_input" class="btn btn-success btn-sm me-1">Submit</button>
-                        <button type="submit" name="action" value="skip_tag" class="btn btn-secondary btn-sm me-1">Skip</button>
-                        <button type="button" class="btn btn-outline-info btn-sm me-1" id="selectAllImagesBtn"><i class="fas fa-check-double"></i>All</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="deselectAllImagesBtn"><i class="fas fa-times-circle"></i>None</button>
-                    {% elif initial_item_type == "tag" %}
-                        <button type="submit" name="action" value="add_tag" class="btn btn-success btn-sm me-1"><i class="fas fa-plus-circle me-1"></i>Add ({{ selected_images|length if selected_images else 0 }})</button>
-                        <button type="submit" name="action" value="skip_tag" class="btn btn-warning btn-sm me-1"><i class="fas fa-forward me-1"></i>Skip</button>
-                        <button type="button" class="btn btn-outline-info btn-sm me-1" id="selectAllImagesBtn"><i class="fas fa-check-double"></i>All</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="deselectAllImagesBtn"><i class="fas fa-times-circle"></i>None</button>
+        {# Main Controls Container - centered with max-width #}
+        <div class="main-controls-wrapper w-100 align-self-center">
+            {% if initial_item_type == "manual_question" %}
+               
+
+                {# New three-part layout for tag #}
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    {# Left: Select/Deselect All #}
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-outline-info btn-sm" id="selectAllImagesBtn">Select_All</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="deselectAllImagesBtn">Deselect_All</button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="selectTaggedBtn">Select_Tagged</button>
+                    </div>
+                    {# Center: Tag Display #}
+                    <div class="d-flex align-items-center gap-2">
+                        {# Line 1: Question #}
+                        <div class="d-flex align-items-center w-100 mb-1">
+                            <label for="manual_tag_input" class="form-label fw-bold mb-0 me-1">Q:</label>
+                            <span class="text-primary flex-grow-1" title="{{ initial_display_item }}">{{ initial_display_item }}</span>
+                        </div>
+                        {# Line 2: Textbox and its specific buttons #}
+                        <div class="d-flex align-items-center w-100 gap-2">
+                            <input type="text" class="form-control form-control-sm flex-grow-1" id="manual_tag_input" name="manual_tag_input"
+                                placeholder="Enter tags...">
+                            <button type="submit" name="action" value="submit_manual_input" class="btn btn-success btn-sm">Submit</button>
+
+                        </div>
+                    </div>
+                    {# Right: Add/Skip Buttons #}
+                    <div class="d-flex gap-1">
+                    
+                        <button type="submit" name="action" value="skip_tag" class="btn btn-secondary btn-sm"><i
+                                class="fas fa-forward me-1"></i>Next</button>
+                    </div>
+                </div>
+            {% elif initial_item_type == "tag" %}
+                {# New three-part layout for tag #}
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    {# Left: Select/Deselect All #}
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-outline-info btn-sm" id="selectAllImagesBtn">Select_All</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="deselectAllImagesBtn">Deselect_All</button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="selectTaggedBtn">Select_Tagged</button>
+                    </div>
+                    {# Center: Tag Display #}
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold">Tag:</span>
+                        <span class="badge bg-success fs-5" id="currentDisplayedTagContent">{{ initial_display_item }}</span>
+                    </div>
+                    {# Right: Add/Skip Buttons #}
+                    <div class="d-flex gap-1">
+                        <button type="submit" name="action" value="add_tag" class="btn btn-success btn-sm"><i class="fas fa-plus-circle me-1"></i>Add ({{ selected_images|length if selected_images else 0 }})</button>
+                        <button type="submit" name="action" value="skip_tag" class="btn btn-secondary btn-sm"><i class="fas fa-forward me-1"></i>Next</button>
+                    </div>
+                </div>
+            {% elif initial_item_type == "complete" or initial_item_type == "info" or initial_item_type == "step_description" %}
+                {# Centered display for these types #}
+                <div class="d-flex justify-content-center align-items-center w-100">
+                    {% if initial_item_type == "complete" %}
+                        <span class="badge bg-success fs-5">{{ initial_display_item }}</span>
+                    {% elif initial_item_type == "info" %}
+                        <span class="badge bg-info fs-5">{{ initial_display_item }}</span>
+                    {% elif initial_item_type == "step_description" %}
+                        <span class="text-muted fst-italic">{{ initial_display_item }}</span>
                     {% endif %}
                 </div>
+            {% else %}
+                {# Default centered display for loading or unknown #}
+                <div class="d-flex justify-content-center align-items-center w-100">
+                    <span class="text-muted">{{ initial_display_item | default("Loading...") }}</span>
+                </div>
             {% endif %}
-        </div> {# End Main Content Row #}
+        </div>
     </form>
 
     {# Phase/Status Message - outside form, below topbar visually if needed, or integrated #}

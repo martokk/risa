@@ -37,7 +37,8 @@
         {% for image_data in grid_images_data %}
             <div class="dynamic-image-grid-item" 
                  data-original-filename="{{ image_data.original_filename }}"
-                 data-thumbnail-exists="{{ 'true' if image_data.thumbnail_exists else 'false' }}">
+                 data-thumbnail-exists="{{ 'true' if image_data.thumbnail_exists else 'false' }}"
+                 data-tags="{{ image_data.tags | join(',') if image_data.tags else '' }}">
                 {% if image_data.thumbnail_exists %}
                     <img src="/tools/dataset-tagger/image-proxy?folder={{ grid_folder_path }}&filename={{ image_data.thumbnail_filename }}&source_dir_type=thumbnail" 
                          alt="{{ image_data.original_filename }}" 
