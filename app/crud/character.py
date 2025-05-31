@@ -14,7 +14,7 @@ class CharacterCRUD(
 ):
     """CRUD operations for Character."""
 
-    def add_extra_network(
+    async def add_extra_network(
         self,
         db: Session,
         id: str,
@@ -26,7 +26,7 @@ class CharacterCRUD(
         only_checkpoints: list[str] = [],
         exclude_checkpoints: list[str] = [],
     ) -> models.Character:
-        db_character = self.get_or_none(db, id=id)
+        db_character = await self.get_or_none(db, id=id)
         if not db_character:
             raise ValueError(f"Character with id '{id}' not found")
 
@@ -62,6 +62,13 @@ class CharacterCRUD(
         db.refresh(actual_extra_network)
 
         return db_character
+
+    async def get_dataset_tagger_tags(self, db: Session, character_id: str) -> dict:
+        db_character = await self.get_or_none(db, id=character_id)
+        if not db_character:
+            raise ValueError(f"Character with id '{character_id}' not found")
+
+        return db_character.model_dump()
 
 
 character = CharacterCRUD(model=models.Character)

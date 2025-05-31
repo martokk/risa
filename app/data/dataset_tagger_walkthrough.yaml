@@ -24,17 +24,17 @@ steps:
     description: "Set the character tags, when visible in the image."
     character_tags:
       - face_type
-      - eyes
-      - makeup
+      - eye_color
+      - makeup_type
       - body_type
-      - breast_type
-      - breast_size
-      - hands
-      - hips
-      - ass
-      - pussy
-      - legs
-      - feet
+      - breasts_type
+      - breasts_size
+      - hands_type
+      - hips_type
+      - ass_type
+      - pussy_type
+      - legs_type
+      - feet_type
 
   - name: "Shot Tags"
     description: "Set the shot tags for the image"
@@ -80,8 +80,8 @@ steps:
     description: "Set the clothing (or lack thereof) on the character"
     character_tags:
       - clothing_head
-      - clothing_upperbody
-      - clothing_lowerbody
+      - clothing_upper_body
+      - clothing_lower_body
       - clothing_feet
     automatic_inputs:
       - shirt

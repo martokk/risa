@@ -80,9 +80,13 @@ async def post_dataset_tagger_setup(
         or folder_path
         == "/media/martokk/FILES/AI/datasets/CHARACTER_FOLDER/training_images/x_woman"
     ):
-        context["characters"] = await crud.character.get_all(db)
+        logger.warning(
+            f"Setup POST: Folder path was empty or default. User provided: '{folder_path}'"
+        )
+        context["characters"] = await crud.character.get_all(db=db)
         context["error_message"] = "Folder path cannot be empty or the default path."
         context["selected_character_id"] = character_id
+        context["folder_path_value"] = folder_path
 
         # Re-render the form with an error message
         return templates.TemplateResponse(
@@ -91,16 +95,70 @@ async def post_dataset_tagger_setup(
             status_code=400,
         )
 
-    # Path validation (as per feature doc: optional to skip for LLM first pass, but good to include)
-    path_obj = Path(folder_path)
-    if not path_obj.is_dir():
-        context["characters"] = await crud.character.get_all(db)
-        context["error_message"] = f"Folder not found or is not a directory: {folder_path}"
+    try:
+        path_obj = Path(folder_path)
+        if not path_obj.exists():
+            logger.warning(f"Setup POST: Provided folder path does not exist: {folder_path}")
+            context["characters"] = await crud.character.get_all(db=db)
+            context["error_message"] = f"Folder not found: '{folder_path}'. Please verify the path."
+            context["selected_character_id"] = character_id
+            context["folder_path_value"] = folder_path
+            return templates.TemplateResponse(
+                "tools/dataset_tagger/setup_form.html",
+                context,
+                status_code=400,
+            )
+        if not path_obj.is_dir():
+            logger.warning(f"Setup POST: Provided folder path is not a directory: {folder_path}")
+            context["characters"] = await crud.character.get_all(db=db)
+            context["error_message"] = (
+                f"The path '{folder_path}' is not a directory. Please select a valid folder."
+            )
+            context["selected_character_id"] = character_id
+            context["folder_path_value"] = folder_path
+            return templates.TemplateResponse(
+                "tools/dataset_tagger/setup_form.html",
+                context,
+                status_code=400,
+            )
+    except PermissionError as e:
+        logger.error(f"Setup POST: Permission error accessing folder path '{folder_path}': {e}")
+        context["characters"] = await crud.character.get_all(db=db)
+        context["error_message"] = (
+            f"Permission denied when trying to access folder '{folder_path}'. Check server permissions."
+        )
         context["selected_character_id"] = character_id
+        context["folder_path_value"] = folder_path
         return templates.TemplateResponse(
             "tools/dataset_tagger/setup_form.html",
             context,
-            status_code=400,
+            status_code=403,
+        )
+    except OSError as e:
+        logger.error(f"Setup POST: OS error checking folder path '{folder_path}': {e}")
+        context["characters"] = await crud.character.get_all(db=db)
+        context["error_message"] = (
+            f"A system error occurred while checking the folder path '{folder_path}'. Details: {e}"
+        )
+        context["selected_character_id"] = character_id
+        context["folder_path_value"] = folder_path
+        return templates.TemplateResponse(
+            "tools/dataset_tagger/setup_form.html",
+            context,
+            status_code=500,
+        )
+    except Exception as e:
+        logger.error(f"Setup POST: Unexpected error validating folder path '{folder_path}': {e}")
+        context["characters"] = await crud.character.get_all(db=db)
+        context["error_message"] = (
+            f"An unexpected error occurred while validating the folder path '{folder_path}'."
+        )
+        context["selected_character_id"] = character_id
+        context["folder_path_value"] = folder_path
+        return templates.TemplateResponse(
+            "tools/dataset_tagger/setup_form.html",
+            context,
+            status_code=500,
         )
 
     redirect_url = (
@@ -117,38 +175,61 @@ async def get_image_proxy(
     # Ensure the requested folder is absolute and a directory.
     # The base_path should be the user-provided folder_path from the workflow state.
     # For this proxy, we directly use the 'folder' query parameter which should be the validated folder_path.
+    try:
+        base_dir = Path(folder).resolve()
+        requested_path = (base_dir / filename).resolve()
 
-    base_dir = Path(folder).resolve()
-    requested_path = (base_dir / filename).resolve()
+        # Check if the resolved path is within the resolved base_dir
+        if not base_dir.is_dir():
+            logger.warning(
+                f"Image proxy: Base folder path is not a directory or doesn't exist: {base_dir}"
+            )
+            raise HTTPException(status_code=400, detail="Invalid base folder path provided.")
 
-    # Check if the resolved path is within the resolved base_dir
-    if not base_dir.is_dir():
-        raise HTTPException(status_code=400, detail="Invalid base folder path provided.")
+        if not requested_path.is_file():
+            logger.warning(
+                f"Image proxy: Requested image not found or is not a file: {requested_path}"
+            )
+            raise HTTPException(status_code=404, detail=f"Image not found: {filename}")
 
-    if not requested_path.is_file():
+        # Ensure the requested path is actually within the base_dir to prevent traversal
+        # A more robust check for path traversal:
+        # After resolving both, the requested_path must start with the base_dir path string.
+        if os.path.commonprefix([str(requested_path), str(base_dir)]) != str(base_dir):
+            logger.error(
+                f"Image proxy: Path traversal attempt detected. Base: {base_dir}, Requested: {requested_path}"
+            )
+            raise HTTPException(
+                status_code=403, detail="Forbidden: Path traversal attempt detected."
+            )
+
+        # Check for allowed image types if necessary (optional, for added security)
+        allowed_extensions = [".png", ".jpg", ".jpeg", ".webp"]
+        if requested_path.suffix.lower() not in allowed_extensions:
+            logger.warning(
+                f"Image proxy: Invalid image type requested: {requested_path.suffix.lower()}"
+            )
+            raise HTTPException(status_code=400, detail="Invalid image type.")
+
+        return FileResponse(str(requested_path))
+
+    except FileNotFoundError:
+        logger.error(
+            f"Image proxy: FileNotFoundError for {filename} in {folder}. This might happen if file is deleted after initial checks."
+        )
         raise HTTPException(
-            status_code=404, detail=f"Image not found: {filename}"
-        )  # Changed from 400 to 404
-
-    # Ensure the requested path is actually within the base_dir to prevent traversal
-    if (
-        base_dir not in requested_path.parents and requested_path != base_dir
-    ):  # Check if base_dir is a parent of requested_path
-        # This secondary check might be too strict if filename itself contains '..' but resolves within.
-        # A better check is to see if requested_path starts with base_dir string representation after resolving both.
-        pass  # Primary check is below with commonprefix
-
-    # A more robust check for path traversal:
-    # After resolving both, the requested_path must start with the base_dir path string.
-    if os.path.commonprefix([str(requested_path), str(base_dir)]) != str(base_dir):
-        raise HTTPException(status_code=403, detail="Forbidden: Path traversal attempt detected.")
-
-    # Check for allowed image types if necessary (optional, for added security)
-    allowed_extensions = [".png", ".jpg", ".jpeg", ".webp"]
-    if requested_path.suffix.lower() not in allowed_extensions:
-        raise HTTPException(status_code=400, detail="Invalid image type.")
-
-    return FileResponse(str(requested_path))
+            status_code=404, detail=f"Image file {filename} disappeared before it could be served."
+        )
+    except PermissionError:
+        logger.error(f"Image proxy: PermissionError serving {filename} from {folder}.")
+        raise HTTPException(
+            status_code=403, detail=f"Permission denied while trying to serve the image {filename}."
+        )
+    except Exception as e:
+        logger.error(f"Image proxy: Unexpected error serving image {filename} from {folder}: {e}")
+        raise HTTPException(
+            status_code=500, detail="An unexpected server error occurred while serving the image."
+        )
 
 
 @router.get("/workflow", response_class=HTMLResponse)
@@ -167,43 +248,86 @@ async def get_dataset_tagger_workflow_page(
 
     walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
     walkthrough_config: WalkthroughConfig | None = None
-    if walkthrough_config_path.is_file():
-        with open(walkthrough_config_path) as f:
-            try:
-                yaml_data = yaml.safe_load(f)
-                walkthrough_config = WalkthroughConfig(**yaml_data)
-            except yaml.YAMLError as e:
-                raise HTTPException(
-                    status_code=500, detail=f"Error parsing walkthrough.yaml: {e}"
-                ) from e
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500, detail=f"Error loading walkthrough config: {e}"
-                ) from e
-    else:
-        raise HTTPException(status_code=500, detail="walkthrough.yaml not found.")
 
-    if not walkthrough_config:
-        raise HTTPException(status_code=500, detail="Failed to load walkthrough configuration.")
+    if not walkthrough_config_path.is_file():
+        logger.error(f"Walkthrough configuration file not found at: {walkthrough_config_path}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Critical Error: Dataset tagger walkthrough configuration file not found at {walkthrough_config_path}. Please check server setup.",
+        )
+
+    try:
+        with open(walkthrough_config_path, encoding="utf-8") as f:  # Added encoding
+            yaml_data = yaml.safe_load(f)
+            if not yaml_data:
+                logger.error(
+                    f"Walkthrough configuration file is empty or invalid: {walkthrough_config_path}"
+                )
+                raise HTTPException(
+                    status_code=500,
+                    detail="Critical Error: Walkthrough configuration file is empty or invalid.",
+                )
+            walkthrough_config = WalkthroughConfig(**yaml_data)
+    except yaml.YAMLError as e:
+        logger.error(f"Error parsing YAML from {walkthrough_config_path}: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error parsing walkthrough.yaml: {e}. Check for syntax errors."
+        ) from e
+    except Exception as e:  # Catches Pydantic validation errors too
+        logger.error(f"Error loading walkthrough configuration from {walkthrough_config_path}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error loading walkthrough configuration: {e}. Ensure the structure matches the Pydantic models.",
+        ) from e
 
     image_files: list[str] = []
     allowed_extensions = (".png", ".jpg", ".jpeg", ".webp")
     try:
         p_folder_path = Path(folder_path)
-        if p_folder_path.is_dir():
-            image_files = sorted(
-                [
-                    f.name
-                    for f in p_folder_path.iterdir()
-                    if f.is_file() and f.suffix.lower() in allowed_extensions
-                ]
-            )
-        else:
+        if not p_folder_path.exists():
+            logger.warning(f"Image folder does not exist: {folder_path}")
             raise HTTPException(
-                status_code=400, detail=f"Provided path is not a directory: {folder_path}"
+                status_code=400,
+                detail=f"Image folder not found: {folder_path}. Please check the path provided in setup.",
             )
+        if not p_folder_path.is_dir():
+            logger.warning(f"Provided path is not a directory: {folder_path}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"The path '{folder_path}' is not a directory. Please select a valid folder.",
+            )
+
+        image_files = sorted(
+            [
+                f.name
+                for f in p_folder_path.iterdir()
+                if f.is_file() and f.suffix.lower() in allowed_extensions
+            ]
+        )
+        if not image_files:
+            logger.info(f"No images with allowed extensions found in folder: {folder_path}")
+            # This is not necessarily an error, could be an empty dataset.
+            # The UI should handle displaying "no images found".
+            # We can pass a notification if desired.
+            pass  # Let it proceed with an empty list
+
+    except PermissionError as e:
+        logger.error(f"Permission error accessing image folder {folder_path}: {e}")
+        raise HTTPException(
+            status_code=403,
+            detail=f"Permission denied when trying to access the folder: {folder_path}. Check server permissions.",
+        ) from e
+    except OSError as e:  # Catch other OS-level errors like too many open files, etc.
+        logger.error(f"OS error accessing image folder {folder_path}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"A system error occurred while accessing the folder: {folder_path}. Details: {e}",
+        ) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error listing image files: {e}") from e
+        logger.error(f"Unexpected error listing image files in {folder_path}: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Unexpected error listing image files: {e}"
+        ) from e
 
     (
         next_display_item,
@@ -239,10 +363,10 @@ async def get_dataset_tagger_workflow_page(
     return templates.TemplateResponse("tools/dataset_tagger/tagging_workflow.html", context)
 
 
-def _get_current_tag_for_action(
+async def _get_current_tag_for_action(
     current_state: TaggingWorkflowState,
     walkthrough_config: WalkthroughConfig,
-    db: Session | None = None,  # For character tags in future
+    db: Session | None = None,
 ) -> str | None:
     """Determines the tag that was displayed when an action (like add_tag) was taken."""
     # This function uses the state *as it was when the action was performed*,
@@ -272,11 +396,16 @@ def _get_current_tag_for_action(
             current_walkthrough_step.character_tags
         ):
             char_tag_category = current_walkthrough_step.character_tags[item_index]
-            if db:  # In Phase 6, this will fetch from DB
-                # character_specific_tags = await crud.character.get_tags_dict(db, character_id=current_state.character_id)
-                # return character_specific_tags.get(char_tag_category)
-                return f"Mocked_DB: {char_tag_category} for {current_state.character_id}"  # Placeholder
-            return f"Mocked: {char_tag_category} for {current_state.character_id}"  # Placeholder
+            if db:
+                character_specific_tags = await crud.character.get_dataset_tagger_tags(
+                    db=db, character_id=current_state.character_id
+                )
+                tag_value = character_specific_tags.get(char_tag_category)
+                return tag_value
+            logger.warning(
+                "Database session not available in _get_current_tag_for_action for character_tags"
+            )
+            return f"Error: DB not available for {char_tag_category}"
     return None
 
 
@@ -288,8 +417,19 @@ def _write_tag_to_file(folder_path: str, filename: str, tag: str) -> bool:
 
         current_tags = []
         if txt_filepath.exists():
-            with open(txt_filepath, encoding="utf-8") as f:
-                current_tags = [t.strip() for t in f.read().split(",") if t.strip()]
+            # Ensure reading with encoding and handle potential errors during read
+            try:
+                with open(txt_filepath, encoding="utf-8") as f:  # Specify 'r' for reading
+                    current_tags = [t.strip() for t in f.read().split(",") if t.strip()]
+            except OSError as e:
+                logger.error(f"Error reading existing tag file {txt_filepath}: {e}")
+                # Depending on desired behavior, could return False or raise an error
+                # For now, we'll attempt to overwrite if reading fails, which might not be ideal.
+                # Consider if failing to read should prevent writing.
+                pass  # Or return False if read failure should halt operation
+            except Exception as e:  # Catch any other unexpected error during read
+                logger.error(f"Unexpected error reading tag file {txt_filepath}: {e}")
+                pass  # Or return False
 
         if tag not in current_tags:  # Basic de-duplication for this single add
             current_tags.append(tag)
@@ -298,8 +438,15 @@ def _write_tag_to_file(folder_path: str, filename: str, tag: str) -> bool:
             f.write(", ".join(current_tags))
         logger.info(f"Successfully wrote tag '{tag}' to {txt_filepath}")
         return True
+    except OSError as e:  # More specific exceptions for file I/O
+        logger.error(
+            f"I/O or OS error writing tag '{tag}' to file for {filename} in {folder_path}: {e}"
+        )
+        return False
     except Exception as e:
-        logger.error(f"Error writing tag '{tag}' to file for {filename}: {e}")
+        logger.error(
+            f"Unexpected error writing tag '{tag}' to file for {filename} in {folder_path}: {e}"
+        )
         return False
 
 
@@ -309,10 +456,8 @@ async def _get_next_display_item_and_update_state(
     selected_images: list[str],
     action: str,
     manual_tag_input: str | None,
-    db: Session,  # Now required due to _get_current_tag_for_action possibly needing it
-) -> tuple[
-    str, str, str | None, str | None, TaggingWorkflowState, str | None, str | None
-]:  # Added notification msg & type
+    db: Session,
+) -> tuple[str, str, str | None, str | None, TaggingWorkflowState, str | None, str | None]:
     state = current_state.model_copy(deep=True)
     original_action = action
     notification_message: str | None = None
@@ -322,7 +467,7 @@ async def _get_next_display_item_and_update_state(
     if original_action == "add_tag":
         # Determine the tag that was just displayed and is being added.
         # We need to use the state *before* any index increments for the current display item.
-        tag_to_add = _get_current_tag_for_action(current_state, walkthrough_config, db)
+        tag_to_add = await _get_current_tag_for_action(current_state, walkthrough_config, db)
 
         if tag_to_add and selected_images:
             num_successful_writes = 0
@@ -479,14 +624,10 @@ async def _get_next_display_item_and_update_state(
                 char_tag_category = current_walkthrough_step.character_tags[
                     state.current_item_index_within_input_type
                 ]
-                # In Phase 6, this will fetch from DB
-                # For now, mock it. Ensure db is passed if you uncomment DB logic.
-                if db:  # Phase 6 example
-                    # character_specific_tags = await crud.character.get_tags_dict(db, character_id=state.character_id)
-                    # tag_value = character_specific_tags.get(char_tag_category)
-                    tag_value = f"Mocked_DB: {char_tag_category} for {state.character_id}"
-                else:
-                    tag_value = f"Mocked: {char_tag_category} for {state.character_id}"
+                character_specific_tags = await crud.character.get_dataset_tagger_tags(
+                    db=db, character_id=state.character_id
+                )
+                tag_value = character_specific_tags.get(char_tag_category)
 
                 if tag_value:
                     return (
@@ -544,82 +685,128 @@ async def post_dataset_tagger_process_tag(
     db: Session = Depends(get_db),
     context: dict[str, Any] = Depends(get_template_context),
 ) -> _TemplateResponse:
-    current_state = TaggingWorkflowState(
-        character_id=character_id,
-        folder_path=folder_path,
-        current_step_index=current_step_index,
-        current_input_type_index_in_step=current_input_type_index_in_step,
-        current_item_index_within_input_type=current_item_index_within_input_type,
-        pending_tags_from_last_manual_input=(
-            [t.strip() for t in pending_tags_from_last_manual_input_str.split(",") if t.strip()]
-            if pending_tags_from_last_manual_input_str
-            else []
-        ),
-        active_manual_input_key=active_manual_input_key,
-    )
-    logger.info(
-        f"Phase 4 DEBUG: State BEFORE calling helper: {current_state.model_dump_json(indent=2)}"
-    )
-    logger.info(f"Phase 4 DEBUG: Action received: {action}, Manual Input: {manual_tag_input}")
+    try:
+        current_state = TaggingWorkflowState(
+            character_id=character_id,
+            folder_path=folder_path,
+            current_step_index=current_step_index,
+            current_input_type_index_in_step=current_input_type_index_in_step,
+            current_item_index_within_input_type=current_item_index_within_input_type,
+            pending_tags_from_last_manual_input=(
+                [t.strip() for t in pending_tags_from_last_manual_input_str.split(",") if t.strip()]
+                if pending_tags_from_last_manual_input_str
+                else []
+            ),
+            active_manual_input_key=active_manual_input_key,
+        )
+        logger.info(
+            f"Phase 4 DEBUG: State BEFORE calling helper: {current_state.model_dump_json(indent=2)}"
+        )
+        logger.info(f"Phase 4 DEBUG: Action received: {action}, Manual Input: {manual_tag_input}")
 
-    selected_images = [img.strip() for img in selected_images_input.split(",") if img.strip()]
+        selected_images = [img.strip() for img in selected_images_input.split(",") if img.strip()]
 
-    walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
-    walkthrough_config: WalkthroughConfig | None = None
-    if walkthrough_config_path.is_file():
-        with open(walkthrough_config_path) as f:
-            try:
+        walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
+        walkthrough_config: WalkthroughConfig | None = None
+        if not walkthrough_config_path.is_file():
+            logger.error(
+                f"Process-tag POST: Walkthrough configuration file not found: {walkthrough_config_path}"
+            )
+            raise HTTPException(
+                status_code=500, detail="Critical Error: Walkthrough configuration file not found."
+            )
+
+        try:
+            with open(walkthrough_config_path, encoding="utf-8") as f:
                 yaml_data = yaml.safe_load(f)
+                if not yaml_data:
+                    logger.error(
+                        f"Process-tag POST: Walkthrough configuration file is empty or invalid: {walkthrough_config_path}"
+                    )
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Critical Error: Walkthrough configuration file is empty or invalid.",
+                    )
                 walkthrough_config = WalkthroughConfig(**yaml_data)
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500, detail=f"Error loading walkthrough config: {e}"
-                )
-    else:
-        raise HTTPException(status_code=500, detail="walkthrough.yaml not found.")
+        except yaml.YAMLError as e:
+            logger.error(
+                f"Process-tag POST: Error parsing YAML from {walkthrough_config_path}: {e}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error parsing walkthrough.yaml: {e}. Check for syntax errors.",
+            ) from e
+        except Exception as e:  # Catches Pydantic validation errors too
+            logger.error(
+                f"Process-tag POST: Error loading walkthrough configuration from {walkthrough_config_path}: {e}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error loading walkthrough configuration: {e}. Ensure the structure matches models.",
+            ) from e
 
-    if not walkthrough_config:
-        raise HTTPException(
-            status_code=500, detail="Failed to load walkthrough configuration for POST."
+        (
+            next_display_item,
+            next_item_type,
+            next_step_name,
+            next_step_description,
+            updated_state,
+            notification_message,
+            notification_type,
+        ) = await _get_next_display_item_and_update_state(
+            current_state=current_state,
+            walkthrough_config=walkthrough_config,
+            action=action,
+            selected_images=selected_images,
+            manual_tag_input=manual_tag_input,
+            db=db,
+        )
+        logger.info(
+            f"Phase 4 DEBUG: State AFTER calling helper (updated_state): {updated_state.model_dump_json(indent=2)}"
+        )
+        logger.info(
+            f"Phase 4 DEBUG: Next display item: {next_display_item}, Type: {next_item_type}, Notification: {notification_message}"
         )
 
-    (
-        next_display_item,
-        next_item_type,
-        next_step_name,
-        next_step_description,
-        updated_state,
-        notification_message,
-        notification_type,
-    ) = await _get_next_display_item_and_update_state(
-        current_state=current_state,
-        walkthrough_config=walkthrough_config,
-        action=action,
-        selected_images=selected_images,
-        manual_tag_input=manual_tag_input,
-        db=db,
-    )
-    logger.info(
-        f"Phase 4 DEBUG: State AFTER calling helper (updated_state): {updated_state.model_dump_json(indent=2)}"
-    )
-    logger.info(
-        f"Phase 4 DEBUG: Next display item: {next_display_item}, Type: {next_item_type}, Notification: {notification_message}"
-    )
+        partial_context = {
+            "request": request,
+            "initial_state": updated_state,
+            "initial_display_item": next_display_item,
+            "initial_item_type": next_item_type,
+            "initial_step_name": next_step_name,
+            "initial_step_description": next_step_description,
+            "notification_message": notification_message,
+            "notification_type": notification_type,
+            "selected_images": selected_images,
+        }
+        return templates.TemplateResponse(
+            "tools/dataset_tagger/_tag_processing_area.html", {**context, **partial_context}
+        )
 
-    partial_context = {
-        "request": request,
-        "initial_state": updated_state,
-        "initial_display_item": next_display_item,
-        "initial_item_type": next_item_type,
-        "initial_step_name": next_step_name,
-        "initial_step_description": next_step_description,
-        "notification_message": notification_message,
-        "notification_type": notification_type,
-        "selected_images": selected_images,
-    }
-    context.update(partial_context)
-
-    return templates.TemplateResponse("tools/dataset_tagger/_tag_processing_area.html", context)
+    except HTTPException:  # Re-raise HTTPExceptions so FastAPI handles them
+        raise
+    except Exception as e:
+        logger.error(f"Critical error in post_dataset_tagger_process_tag: {e}", exc_info=True)
+        # Attempt to return an error message within the HTMX partial
+        error_partial_context = {
+            "request": request,
+            "initial_state": current_state
+            if "current_state" in locals()
+            else None,  # Pass last known state if available
+            "initial_display_item": "An unexpected server error occurred.",
+            "initial_item_type": "error",  # Custom type for template to display error style
+            "initial_step_name": "Error",
+            "initial_step_description": "Please try again or contact support if the issue persists.",
+            "notification_message": "Server Error: Could not process your request.",
+            "notification_type": "danger",
+            "selected_images": selected_images_input.split(",") if selected_images_input else [],
+        }
+        # Merge with a minimal base context if necessary, or ensure _tag_processing_area.html can handle this state.
+        return templates.TemplateResponse(
+            "tools/dataset_tagger/_tag_processing_area.html",
+            {**context, **error_partial_context},
+            status_code=500,
+        )
 
 
 # Future endpoints for workflow will be added here
