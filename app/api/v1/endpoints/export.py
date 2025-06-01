@@ -34,7 +34,7 @@ async def get_api_key(api_key_header: Annotated[str | None, Security(api_key_hea
             detail="Export API key not configured",
         )
 
-    logger.debug(f"Received API key: {api_key_header}")
+    # logger.debug(f"Received API key: {api_key_header}")
     if api_key_header == settings.EXPORT_API_KEY:
         return api_key_header
 
@@ -48,7 +48,7 @@ async def get_api_key(api_key_header: Annotated[str | None, Security(api_key_hea
 async def export_data(
     db: Annotated[Session, Depends(get_db)],
     api_key: Annotated[str, Security(get_api_key)],
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict[str, Any]:
     """Export all data from the database.
 
     Args:
@@ -63,6 +63,12 @@ async def export_data(
     sd_checkpoints = await crud.sd_checkpoint.get_all(db=db)
     sd_extra_networks = await crud.sd_extra_network.get_all(db=db)
     characters = await crud.character.get_all(db=db)
+
+    character_ids_for_sd_base_models = {}
+    for sd_base_model in sd_base_models:
+        character_ids_for_sd_base_models[
+            sd_base_model.id
+        ] = await crud.sd_base_model.get_character_ids_for_base_model(db=db, id=sd_base_model.id)
 
     # Convert to dictionary format
     return {
@@ -79,4 +85,5 @@ async def export_data(
         "characters": [
             models.CharacterRead.model_validate(model).model_dump() for model in characters
         ],
+        "character_ids_for_sd_base_models": [character_ids_for_sd_base_models],
     }

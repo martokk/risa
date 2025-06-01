@@ -181,7 +181,7 @@ def get_all_hub_models() -> list[HubBaseModel]:
 router = APIRouter()
 
 
-@router.get("/safetensor-import-helper", response_class=HTMLResponse)
+@router.get("/tools/safetensor-import-helper", response_class=HTMLResponse)
 async def safetensor_import_helper_page(
     request: Request,
     db: Session = Depends(get_db),
@@ -219,7 +219,7 @@ class DeleteSafetensorRequest(BaseModel):
     file_path: str
 
 
-@router.post("/delete_safetensor")
+@router.post("/tools/delete_safetensor")
 async def delete_safetensor(request: DeleteSafetensorRequest) -> dict[str, Any]:
     """Delete a safetensor file and its associated JSON file.
 

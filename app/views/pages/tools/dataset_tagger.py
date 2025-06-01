@@ -749,26 +749,74 @@ async def _get_next_display_item_and_update_state(
         step_description = current_walkthrough_step.description
 
         # Actions that consume the current item and advance the index for that type
-        advancing_actions = ["skip_tag"]
+        advancing_actions = ["skip_tag"]  # Only skip_tag generally advances
         if original_action == "submit_manual_input" and state.current_input_type_index_in_step == 0:
             # If we submitted manual input for a question, we are done with *that question*
             advancing_actions.append("submit_manual_input")
 
         # Case 0: manual_inputs questions
         if state.current_input_type_index_in_step == 0:
-            if original_action in advancing_actions:
-                state.current_item_index_within_input_type += 1
+            logger.debug(
+                f"MANUAL_INPUTS_DEBUG: Case 0 Start. Index: {state.current_item_index_within_input_type}, Action: {original_action}"
+            )
 
+            # 1. If current action is meant to advance *past* the current/previous manual question
+            action_did_advance_index = False
             if (
-                current_walkthrough_step.manual_inputs
-                and state.current_item_index_within_input_type
-                < len(current_walkthrough_step.manual_inputs)
-            ):
+                original_action in advancing_actions
+            ):  # advancing_actions includes skip_tag and submit_manual_input (if type is 0)
+                state.current_item_index_within_input_type += 1
+                action_did_advance_index = True
+                logger.debug(
+                    f"MANUAL_INPUTS_DEBUG: Action '{original_action}' advanced index to {state.current_item_index_within_input_type}"
+                )
+
+            # Inner loop to find the next valid, displayable manual question, skipping any empty ones
+            while True:
+                # 2. Check if there's a manual question to display at the current (possibly advanced or empty-skipped) index
+                if not (
+                    current_walkthrough_step.manual_inputs
+                    and state.current_item_index_within_input_type
+                    < len(current_walkthrough_step.manual_inputs)
+                ):
+                    # No more manual inputs in this step (index out of bounds, list is empty, or all remaining were empty)
+                    logger.debug(
+                        f"MANUAL_INPUTS_DEBUG: No more manual inputs to display/process at index {state.current_item_index_within_input_type}. Transitioning to input type 1."
+                    )
+                    state.current_input_type_index_in_step = 1
+                    state.current_item_index_within_input_type = 0  # Reset for next input type
+                    state.active_manual_input_key = None
+                    # If 'submit_manual_input' was the action that caused us to finish all manual inputs for this step
+                    if original_action == "submit_manual_input" and action_did_advance_index:
+                        original_action = (
+                            "initial_load"  # Prepare for processing pending_tags if any
+                        )
+                    elif (
+                        original_action == "skip_tag"
+                    ):  # If skip_tag exhausted manual_inputs (and it wasn't submit)
+                        original_action = (
+                            "initial_load"  # Neutralize action for the next input type
+                        )
+                    break  # Exit inner while loop, will hit outer 'continue' below
+
                 question_dict = current_walkthrough_step.manual_inputs[
                     state.current_item_index_within_input_type
                 ]
+
+                if not question_dict:  # Handle malformed/empty question entry in YAML
+                    logger.warning(
+                        f"MANUAL_INPUTS_DEBUG: Empty question_dict found at Step {state.current_step_index}, Item Index {state.current_item_index_within_input_type}. Skipping this entry."
+                    )
+                    state.current_item_index_within_input_type += 1  # Skip the empty dict
+                    # action_did_advance_index status is preserved from the initial action processing
+                    continue  # Continue inner while loop to check the next index
+
+                # Valid question found, display it
                 state.active_manual_input_key = list(question_dict.keys())[0]
                 next_display_item = question_dict[state.active_manual_input_key]
+                logger.debug(
+                    f"MANUAL_INPUTS_DEBUG: Displaying manual question: '{next_display_item}' at index {state.current_item_index_within_input_type}"
+                )
                 return (
                     next_display_item,
                     "manual_question",
@@ -779,21 +827,18 @@ async def _get_next_display_item_and_update_state(
                     notification_type,
                     updated_image_tag_data,
                 )
-            else:
-                state.current_input_type_index_in_step = 1
-                state.current_item_index_within_input_type = 0
-                state.active_manual_input_key = None
-                # If we just submitted manual input, pending_tags might now have items. Restart loop.
-                if original_action == "submit_manual_input":
-                    original_action = (
-                        "initial_load"  # Reset action to avoid re-processing submission logic
-                    )
-                continue
+            # End of inner while loop. If we broke from it, it means we are transitioning input type.
+            continue  # Restart the main while loop (for _get_next_display_item_and_update_state)
 
         # Case 1: pending_tags_from_last_manual_input
         elif state.current_input_type_index_in_step == 1:
-            if original_action in advancing_actions:
+            if (
+                original_action in advancing_actions
+            ):  # advancing_actions for Case 1 should primarily be skip_tag and add_tag
                 state.current_item_index_within_input_type += 1
+                logger.debug(
+                    f"PENDING_TAGS_DEBUG: Action '{original_action}' advanced index to {state.current_item_index_within_input_type}"
+                )
 
             if state.current_item_index_within_input_type < len(
                 state.pending_tags_from_last_manual_input
@@ -815,12 +860,20 @@ async def _get_next_display_item_and_update_state(
                 state.pending_tags_from_last_manual_input = []
                 state.current_input_type_index_in_step = 2
                 state.current_item_index_within_input_type = 0
+                # Neutralize advancing action if it exhausted this input type
+                if original_action in advancing_actions:
+                    original_action = "initial_load"
                 continue
 
         # Case 2: automatic_inputs
         elif state.current_input_type_index_in_step == 2:
-            if original_action in advancing_actions:
+            if (
+                original_action in advancing_actions
+            ):  # advancing_actions for Case 2: skip_tag, add_tag
                 state.current_item_index_within_input_type += 1
+                logger.debug(
+                    f"AUTOMATIC_INPUTS_DEBUG: Action '{original_action}' advanced index to {state.current_item_index_within_input_type}"
+                )
 
             if (
                 current_walkthrough_step.automatic_inputs
@@ -843,12 +896,20 @@ async def _get_next_display_item_and_update_state(
             else:
                 state.current_input_type_index_in_step = 3
                 state.current_item_index_within_input_type = 0
+                # Neutralize advancing action if it exhausted this input type
+                if original_action in advancing_actions:
+                    original_action = "initial_load"
                 continue
 
         # Case 3: character_tags
         elif state.current_input_type_index_in_step == 3:
-            if original_action in advancing_actions:
+            if (
+                original_action in advancing_actions
+            ):  # advancing_actions for Case 3: skip_tag, add_tag
                 state.current_item_index_within_input_type += 1
+                logger.debug(
+                    f"CHARACTER_TAGS_DEBUG: Action '{original_action}' advanced index to {state.current_item_index_within_input_type}"
+                )
 
             if (
                 current_walkthrough_step.character_tags
@@ -876,8 +937,13 @@ async def _get_next_display_item_and_update_state(
                     )
                 else:
                     # Auto-skip if char_tag_category resolves to no value
-                    # No need to increment item_index_within_input_type again here, as the loop will continue,
-                    # and if original_action was skip/add, it was already incremented.
+                    logger.info(
+                        f"CHARACTER_TAGS_DEBUG: No value for char_tag_category '{char_tag_category}'. Advancing to next character_tag if available."
+                    )
+                    state.current_item_index_within_input_type += (
+                        1  # Explicitly advance past this category
+                    )
+                    original_action = "initial_load"  # Treat next iteration as a fresh check for the new index or transition
                     continue
             else:
                 state.current_step_index += 1
@@ -885,6 +951,8 @@ async def _get_next_display_item_and_update_state(
                 state.current_item_index_within_input_type = 0
                 state.active_manual_input_key = None
                 state.pending_tags_from_last_manual_input = []
+                # When moving to a new step, always treat as initial_load for that step
+                original_action = "initial_load"
                 continue
 
         return (

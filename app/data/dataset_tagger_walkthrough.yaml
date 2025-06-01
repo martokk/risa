@@ -22,6 +22,8 @@ steps:
 
   - name: "Character Tags"
     description: "Set the character tags, when visible in the image."
+    manual_inputs:
+      - unique_trigger_tags: "Do you want to manually add any tags to the queue?"
     character_tags:
       - face_type
       - eye_color
@@ -51,6 +53,8 @@ steps:
       - from below
       - close-up
       - head out of frame
+    manual_inputs:
+      - add_tags_to_queue: "Do you want to manually add any tags to the queue?"
 
   - name: "Positional Tags"
     description: "Set positional tags the character is in"
@@ -63,6 +67,8 @@ steps:
       - bent over
       - lying down
       - on back
+    manual_inputs:
+      - add_tags_to_queue: "Do you want to manually add any tags to the queue?"
 
   - name: "Body Parts Seen"
     description: "Set the body parts seen in the image"
@@ -77,6 +83,8 @@ steps:
       - feet
       - armpit hair
       - pubic hair
+    manual_inputs:
+      - add_tags_to_queue: "Do you want to manually add any tags to the queue?"
 
   - name: "Clothing"
     description: "Set the clothing (or lack thereof) on the character"
@@ -86,6 +94,7 @@ steps:
       - clothing_lower_body
       - clothing_feet
     automatic_inputs:
+      - glasses
       - shirt
       - bra
       - swimsuit
@@ -97,6 +106,8 @@ steps:
       - thighhighs
       - nude, completely naked, naked
       - topless, exposed breasts
+    manual_inputs:
+      - add_tags_to_queue: "Do you want to manually add any tags to the queue?"
 
   - name: "Facial Expressions"
     description: "Facial Expressions"
@@ -110,6 +121,8 @@ steps:
       - mouth open tongue out
       - winking
       - orgasm
+    manual_inputs:
+      - add_tags_to_queue: "Do you want to manually add any tags to the queue?"
 
   - name: "Character's Actions"
     description: "Set the character's actions"
@@ -118,6 +131,8 @@ steps:
       - flashing breasts
       - shirt lift
       - flashing pussy
+    manual_inputs:
+      - add_tags_to_queue: "Do you want to manually add any tags to the queue?"
 
   - name: "Environment"
     description: "Set the environment tags for the image"
@@ -126,6 +141,8 @@ steps:
       - outdoors
       - bedroom
       - bathroom
+    manual_inputs:
+      - add_tags_to_queue: "Do you want to manually add any tags to the queue?"
 
   - name: "Hair Style"
     description: "Set the hair style tags"
@@ -136,8 +153,11 @@ steps:
     automatic_inputs:
       - ponytail
       - updo
+    manual_inputs:
+      - add_tags_to_queue: "Do you want to manually add any tags to the queue?"
 
   - name: "Miscellaneous"
     description: "Set the miscellaneous tags for the image"
     manual_inputs:
       - repeating_patterns: "anything that is repeated a lot (lights, background items, clothing) that should not be part of the model"
+      - add_tags_to_queue: "Do you want to manually add any tags to the queue?"

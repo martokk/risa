@@ -102,5 +102,17 @@ class SDBaseModelCRUD(
 
         return db_base_model
 
+    async def get_character_ids_for_base_model(self, db: Session, id: str) -> list[str]:
+        db_base_model = await self.get_or_none(db, id=id)
+        if not db_base_model:
+            raise ValueError(f"SDBaseModel with id '{id}' not found")
+
+        character_ids = []
+        for extra_network in db_base_model.sd_extra_networks:
+            if extra_network.character_id not in character_ids:
+                character_ids.append(extra_network.character_id)
+
+        return character_ids
+
 
 sd_base_model = SDBaseModelCRUD(model=models.SDBaseModel)

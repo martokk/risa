@@ -15,7 +15,7 @@
 
         {# Header for Step Information #}
         {% if initial_step_name %}
-            <div class="topbar-step-header w-100 mb-2 text-start">
+            <div class="topbar-step-header w-100 mb-2 text-center text-warning">
                 <small class="fw-bold">Step: {{ initial_step_name }}</small>
                 {% if initial_step_description %}
                     <small class="text-muted fst-italic ms-1">- {{ initial_step_description }}</small>
@@ -36,7 +36,6 @@
         {# Main Controls Container - centered with max-width #}
         <div class="main-controls-wrapper w-100 align-self-center">
             {% if initial_item_type == "manual_question" %}
-               
 
                 {# New three-part layout for tag #}
                 <div class="d-flex justify-content-between align-items-center w-100">
@@ -47,11 +46,11 @@
                         <button type="button" class="btn btn-outline-warning btn-sm" id="selectTaggedBtn">Select_Tagged</button>
                     </div>
                     {# Center: Tag Display #}
-                    <div class="d-flex align-items-center gap-2">
+                    <div class=" align-items-center gap-2 w-auto">
                         {# Line 1: Question #}
-                        <div class="d-flex align-items-center w-100 mb-1">
+                        <div class=" align-items-center w-100 mb-1">
                             <label for="manual_tag_input" class="form-label fw-bold mb-0 me-1">Q:</label>
-                            <span class="text-primary flex-grow-1" title="{{ initial_display_item }}">{{ initial_display_item }}</span>
+                            <span class="text-light flex-grow-1" title="{{ initial_display_item }}">{{ initial_display_item }}</span>
                         </div>
                         {# Line 2: Textbox and its specific buttons #}
                         <div class="d-flex align-items-center w-100 gap-2">
