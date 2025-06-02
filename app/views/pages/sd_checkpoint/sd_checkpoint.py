@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from sqlmodel import Session
 
@@ -42,6 +42,13 @@ async def list_sd_checkpoints_page(
 async def create_sd_checkpoint_page(
     request: Request,
     context: Annotated[dict[str, Any], Depends(get_template_context)],
+    id: str = Query(None),
+    name: str = Query(None),
+    local_file_path: str = Query(None),
+    remote_file_path: str = Query(None),
+    is_realistic: bool = Query(False),
+    sd_base_model_id: str = Query(None),
+    redirect_url: str = Query(None),
 ) -> HTMLResponse:
     """Serves the page for creating a new SD Checkpoint.
 
@@ -58,6 +65,13 @@ async def create_sd_checkpoint_page(
     context["sd_base_models"] = sd_base_models
     db_session_for_base_models.close()
 
+    context["name"] = name
+    context["id"] = id
+    context["local_file_path"] = local_file_path
+    context["remote_file_path"] = remote_file_path
+    context["is_realistic"] = is_realistic
+    context["sd_base_model_id"] = sd_base_model_id
+    context["redirect_url"] = redirect_url
     return templates.TemplateResponse(
         request=request,
         name="sd_checkpoint/sd_checkpoint_create.html",

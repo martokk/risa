@@ -16,11 +16,19 @@
             <div class="card-body">
                 <div class="form-group">
                     <label for="sdCheckpointIdInput">ID</label>
-                    <input type="text" class="form-control" id="sdCheckpointIdInput" name="id" value="{{ sd_checkpoint.id }}" placeholder="Enter ID" required>
+                    <input type="text" class="form-control" id="sdCheckpointIdInput" name="id" value="{{ sd_checkpoint.id }}" required>
                 </div>
                 <div class="form-group">
                     <label for="sdCheckpointName">Name</label>
-                    <input type="text" class="form-control" id="sdCheckpointName" name="name" value="{{ sd_checkpoint.name }}" placeholder="Enter Name" required>
+                    <input type="text" class="form-control" id="sdCheckpointName" name="name" value="{{ sd_checkpoint.name }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="sdCheckpointLocalFilePath">Local File Path</label>
+                    <input type="text" class="form-control" id="sdCheckpointLocalFilePath" name="local_file_path" value="{{ sd_checkpoint.local_file_path if sd_checkpoint.local_file_path else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="sdCheckpointRemoteFilePath">Remote File Path</label>
+                    <input type="text" class="form-control" id="sdCheckpointRemoteFilePath" name="remote_file_path" value="{{ sd_checkpoint.remote_file_path if sd_checkpoint.remote_file_path else '' }}">
                 </div>
                 <div class="form-group">
                     <label for="sdBaseModelId">Base Model</label>

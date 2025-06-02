@@ -22,7 +22,7 @@ async def get_sd_checkpoints(
     Retrieve SD Checkpoints.
     """
     logger.info(f"User {current_user.id} retrieving SD Checkpoints.")
-    sd_checkpoints = await crud.sd_checkpoint.get_all(db=db, skip=skip, limit=limit)
+    sd_checkpoints = await crud.sd_checkpoint.get_all(db)
     return sd_checkpoints
 
 

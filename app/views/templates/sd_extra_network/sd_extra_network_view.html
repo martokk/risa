@@ -31,6 +31,12 @@
                     {% endif %}
                 </dd>
 
+                <dt class="col-sm-3">Local File Path:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.local_file_path if sd_extra_network.local_file_path else '' }}</dd>
+
+                <dt class="col-sm-3">Remote File Path:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.remote_file_path if sd_extra_network.remote_file_path else '' }}</dd>
+
                 <dt class="col-sm-3">Base Model:</dt>
                 <dd class="col-sm-9">
                     {% if sd_extra_network.sd_base_model.id %}

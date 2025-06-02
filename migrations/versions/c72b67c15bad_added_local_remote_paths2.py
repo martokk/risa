@@ -1,8 +1,8 @@
-"""added lora_path
+"""added local/remote paths2
 
-Revision ID: bba3c04d129f
-Revises: 1ab37aca2a4c
-Create Date: 2025-05-29 17:46:41.589687
+Revision ID: c72b67c15bad
+Revises: fbbf6d226b7a
+Create Date: 2025-06-01 17:55:16.048937
 
 """
 from alembic import op
@@ -11,8 +11,8 @@ import sqlmodel # added
 
 
 # revision identifiers, used by Alembic.
-revision = 'bba3c04d129f'
-down_revision = '1ab37aca2a4c'
+revision = 'c72b67c15bad'
+down_revision = 'fbbf6d226b7a'
 branch_labels = None
 depends_on = None
 

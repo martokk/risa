@@ -1,8 +1,6 @@
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pydantic import root_validator
-from safetensors import safe_open
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
 
@@ -16,7 +14,8 @@ class SDExtraNetworkBase(SQLModel):
     id: str | None = Field(default=None, primary_key=True, index=True)
     sd_base_model_id: str = Field(foreign_key="sdbasemodel.id")
     character_id: str = Field(foreign_key="character.id")
-    lora_path: str | None = Field(default=None, description="The path to the LORA file")
+    local_file_path: str | None = Field(default=None)
+    remote_file_path: str | None = Field(default=None)
     lora_tag: str | None = Field(default=None, description="The LORA tag (ie. '<lora:XXXX:1>')")
     lora_sha256: str | None = Field(default=None, description="The SHA256 hash of the LORA file")
     trigger: str | None = Field(default=None, description="The trigger words for the lora")

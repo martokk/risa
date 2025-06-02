@@ -15,23 +15,44 @@
             <div class="card-body">
                 <div class="form-group">
                     <label for="sdCheckpointId">ID</label>
-                    <input type="text" class="form-control" id="sdCheckpointId" name="id" placeholder="Enter ID (e.g., realistic_vision_v5.1)" required>
+                    <input type="text" class="form-control" id="sdCheckpointId" name="id" value="{{ id if id else '' }}" required>
                 </div>
                 <div class="form-group">
                     <label for="sdCheckpointName">Name</label>
-                    <input type="text" class="form-control" id="sdCheckpointName" name="name" placeholder="Enter Name (e.g., Realistic Vision V5.1)" required>
+                    <input type="text" class="form-control" id="sdCheckpointName" name="name" value="{{ name if name else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="sdCheckpointLocalFilePath">Local File Path</label>
+                    <input type="text" class="form-control" id="sdCheckpointLocalFilePath" name="local_file_path" value="{{ local_file_path if local_file_path else '' }}">
+                </div>
+                <div class="form-group">
+                    <label for="sdCheckpointRemoteFilePath">Remote File Path</label>
+                    <input type="text" class="form-control" id="sdCheckpointRemoteFilePath" name="remote_file_path" value="{{ remote_file_path if remote_file_path else '' }}">
                 </div>
                 <div class="form-group">
                     <label for="sdBaseModelId">Base Model</label>
                     <select class="form-control" id="sdBaseModelId" name="sd_base_model_id" required>
                         <option value="" disabled selected>Select Base Model</option>
                         {% for base_model in sd_base_models %}
-                            <option value="{{ base_model.id }}">{{ base_model.name }} ({{base_model.id}})</option>
+                            {% set is_selected = false %}
+                            {% if name is not none %}
+                                {% if base_model.id in name %}
+                                    {% set is_selected = true %}
+                                {% endif %}
+                            {% endif %}
+
+                            {% if sd_base_model_id is not none %}
+                                {% if base_model.id == sd_base_model_id %}
+                                    {% set is_selected = true %}
+                                {% endif %}
+                            {% endif %}
+
+                            <option value="{{ base_model.id }}" {{ 'selected' if is_selected else '' }}>{{ base_model.name }} ({{base_model.id}})</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="isRealistic" name="is_realistic">
+                    <input type="checkbox" class="form-check-input" id="isRealistic" name="is_realistic" {{ 'checked' if is_realistic else '' }}>
                     <label class="form-check-label" for="isRealistic">Is Realistic</label>
                 </div>
             </div>
@@ -73,8 +94,8 @@
 
                 uiHelpers.showToast('SD Checkpoint created successfully!', 'success');
                 setTimeout(() => {
-                    window.location.href = "{{ url_for('list_sd_checkpoints_page') }}";
-                }, 1500);
+                    window.location.href = "{{ redirect_url if redirect_url else url_for('list_sd_checkpoints_page') }}";
+                }, 300);
 
             } catch (error) {
                 console.error('Failed to create SD Checkpoint:', error);

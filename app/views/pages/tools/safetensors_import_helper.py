@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from safetensors import safe_open
@@ -30,10 +30,22 @@ class Safetensor(BaseModel):
         return self.path.stem
 
     @property
+    def id(self) -> str:
+        return self.name.lower().replace(" ", "_")
+
+    @property
     def json_file(self) -> Path | None:
         json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
         if json_file_path.exists():
             return json_file_path
+        return None
+
+    @property
+    def activation_text(self) -> str | None:
+        if self.json_file:
+            with open(self.json_file) as f:
+                json_data = json.load(f)
+            return str(json_data.get("activation_text"))
         return None
 
     @property
@@ -87,19 +99,20 @@ class Safetensor(BaseModel):
 class HubBaseModel(BaseModel):
     name: str
     path: Path
-    base_models_path: Path | None
+    checkpoints_path: Path | None
     lora_path: Path | None
-    safetensors_base_models: list[Safetensor] = []
+    safetensors_checkpoints: list[Safetensor] = []
     safetensors_loras: list[Safetensor] = []
+    sd_base_model_id: str | None = None
 
     model_config = {"arbitrary_types_allowed": True}
 
     def import_safetensors(self) -> None:
-        if self.base_models_path:
-            base_models_paths = list(self.base_models_path.rglob("*.safetensors"))
-            for base_model_path in base_models_paths:
-                base_model_safetensor = Safetensor(path=base_model_path)
-                self.safetensors_base_models.append(base_model_safetensor)
+        if self.checkpoints_path:
+            checkpoints_paths = list(self.checkpoints_path.rglob("*.safetensors"))
+            for checkpoint_path in checkpoints_paths:
+                checkpoint_safetensor = Safetensor(path=checkpoint_path)
+                self.safetensors_checkpoints.append(checkpoint_safetensor)
         if self.lora_path:
             lora_paths = list(self.lora_path.rglob("**/characters/**/*.safetensors"))
             for lora_path in lora_paths:
@@ -116,8 +129,9 @@ def get_all_hub_models() -> list[HubBaseModel]:
     hub_flux = HubBaseModel(
         name="FLUX",
         path=flux_path,
-        base_models_path=flux_path / "Stable-diffusion",
+        checkpoints_path=flux_path / "Stable-diffusion",
         lora_path=flux_path / "Lora",
+        sd_base_model_id="flux",
     )
     hub_models.append(hub_flux)
 
@@ -126,8 +140,9 @@ def get_all_hub_models() -> list[HubBaseModel]:
     hub_hunyuan = HubBaseModel(
         name="Hunyuan",
         path=hunyuan_path,
-        base_models_path=None,
+        checkpoints_path=None,
         lora_path=hunyuan_path / "Lora",
+        sd_base_model_id="hunyuan",
     )
     hub_models.append(hub_hunyuan)
 
@@ -136,8 +151,9 @@ def get_all_hub_models() -> list[HubBaseModel]:
     hub_sdxl_sdxl = HubBaseModel(
         name="SDXL: SDXL",
         path=sdxl_path,
-        base_models_path=sdxl_path / "base_models" / "sdxl",
+        checkpoints_path=sdxl_path / "base_models" / "sdxl",
         lora_path=sdxl_path / "loras" / "sdxl",
+        sd_base_model_id="sdxl",
     )
     hub_models.append(hub_sdxl_sdxl)
 
@@ -146,18 +162,20 @@ def get_all_hub_models() -> list[HubBaseModel]:
     hub_sdxl_pony = HubBaseModel(
         name="SDXL: Pony",
         path=sdxl_path,
-        base_models_path=sdxl_path / "base_models" / "pony",
+        checkpoints_path=sdxl_path / "base_models" / "pony",
         lora_path=sdxl_path / "loras" / "pony",
+        sd_base_model_id="pony",
     )
     hub_models.append(hub_sdxl_pony)
 
     # SDXL: Illustrious
     sdxl_path = HUB_MODELS_PATH / "SDXL"
     hub_sdxl_illustrious = HubBaseModel(
-        name="SDXL: Illustrious",
+        name="Illustrious",
         path=sdxl_path,
-        base_models_path=sdxl_path / "base_models" / "illustrious",
+        checkpoints_path=sdxl_path / "base_models" / "illustrious",
         lora_path=sdxl_path / "loras" / "illustrious",
+        sd_base_model_id="illustrious",
     )
     hub_models.append(hub_sdxl_illustrious)
 
@@ -166,8 +184,9 @@ def get_all_hub_models() -> list[HubBaseModel]:
     hub_wan_2_1_video = HubBaseModel(
         name="WAN_2_1 Video",
         path=wan_2_1_video_path,
-        base_models_path=None,
+        checkpoints_path=None,
         lora_path=wan_2_1_video_path / "Lora",
+        sd_base_model_id="wan_2_1_video",
     )
     hub_models.append(hub_wan_2_1_video)
 
@@ -186,6 +205,7 @@ async def safetensor_import_helper_page(
     request: Request,
     db: Session = Depends(get_db),
     context: dict[str, Any] = Depends(get_template_context),
+    sd_base_model_id: str | None = Query(None),
 ) -> HTMLResponse:
     """Safetensor Import Helper page.
 
@@ -200,6 +220,14 @@ async def safetensor_import_helper_page(
     """
     hub_models = get_all_hub_models()
     context["hub_models"] = hub_models
+    if sd_base_model_id:
+        context["hub_models"] = [
+            hub_model for hub_model in hub_models if hub_model.sd_base_model_id == sd_base_model_id
+        ]
+
+    existing_sd_checkpoints = await crud.sd_checkpoint.get_all(db)
+    existing_sd_checkpoints_ids = [sd_checkpoint.id for sd_checkpoint in existing_sd_checkpoints]
+    context["existing_sd_checkpoints_ids"] = existing_sd_checkpoints_ids
 
     existing_sd_extra_networks = await crud.sd_extra_network.get_all(db)
     existing_sd_extra_networks_sha256s = [
@@ -208,6 +236,8 @@ async def safetensor_import_helper_page(
         if sd_extra_network.lora_sha256
     ]
     context["existing_sd_extra_networks_sha256s"] = existing_sd_extra_networks_sha256s
+
+    context["sd_base_model_id"] = sd_base_model_id
 
     return templates.TemplateResponse(
         "tools/safetensors_import_helper.html",
