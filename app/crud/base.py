@@ -155,7 +155,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         *args: BinaryExpression[Any],
         obj_in: ModelUpdateType,
         db_obj: ModelType | None = None,
-        exclude_none: bool = True,
+        exclude_none: bool = False,
         exclude_unset: bool = True,
         **kwargs: Any,
     ) -> ModelType:

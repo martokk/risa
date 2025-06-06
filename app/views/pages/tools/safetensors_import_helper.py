@@ -1,4 +1,3 @@
-import json
 import os
 from pathlib import Path
 from typing import Any
@@ -6,11 +5,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-from safetensors import safe_open
 from sqlmodel import Session
 
 from app import crud
 from app.core.db import get_db
+from app.models.sd_extra_networks import Safetensor
 from app.paths import HUB_MODELS_PATH
 from app.views.templates import templates
 from app.views.templates.context import get_template_context
@@ -20,80 +19,6 @@ FLUX_PATH = HUB_MODELS_PATH / "FLUX"
 HUNYUAN_PATH = HUB_MODELS_PATH / "Hunyuan"
 SDXL_PATH = HUB_MODELS_PATH / "SDXL"
 WAN_2_1_VIDEO_PATH = HUB_MODELS_PATH / "WAN_2_1 Video"
-
-
-class Safetensor(BaseModel):
-    path: Path
-
-    @property
-    def name(self) -> str:
-        return self.path.stem
-
-    @property
-    def id(self) -> str:
-        return self.name.lower().replace(" ", "_")
-
-    @property
-    def json_file(self) -> Path | None:
-        json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
-        if json_file_path.exists():
-            return json_file_path
-        return None
-
-    @property
-    def activation_text(self) -> str | None:
-        if self.json_file:
-            with open(self.json_file) as f:
-                json_data = json.load(f)
-            return str(json_data.get("activation_text"))
-        return None
-
-    @property
-    def sha256(self) -> str | None:
-        if self.json_file:
-            with open(self.json_file) as f:
-                json_data = json.load(f)
-            sha256 = str(json_data.get("sha256"))
-            if sha256 and sha256 != "None":
-                return sha256
-
-        # get the sha256 from the safetensors file
-        import hashlib
-
-        _sha256 = hashlib.sha256()
-        with open(self.path, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                _sha256.update(chunk)
-        sha256 = _sha256.hexdigest()
-        if sha256 and sha256 != "None":
-            # Load existing JSON data if file exists
-            existing_json_data = {}
-            if self.json_file and self.json_file.exists():
-                with open(self.json_file) as f:
-                    existing_json_data = json.load(f)
-
-            # Update only the sha256 field
-            existing_json_data["sha256"] = sha256
-
-            # Save updated JSON data
-            json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
-            with open(json_file_path, "w") as f:
-                json.dump(existing_json_data, f)
-
-            return sha256
-        return None
-
-    @property
-    def size(self) -> int:
-        return self.path.stat().st_size
-
-    @property
-    def metadata(self) -> dict[str, Any] | None:
-        if self.path and self.path.exists():
-            with safe_open(self.path, framework="pt") as f:
-                metadata = f.metadata()
-                return metadata
-        return None
 
 
 class HubBaseModel(BaseModel):

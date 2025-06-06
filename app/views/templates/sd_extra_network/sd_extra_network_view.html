@@ -53,7 +53,7 @@
                 <dd class="col-sm-9">{{ sd_extra_network.lora_sha256 if sd_extra_network.lora_sha256 else '' }}</dd>
 
                 <dt class="col-sm-3">Safetensors Name (derived):</dt>
-                <dd class="col-sm-9">{{ sd_extra_network.safetensors_name if sd_extra_network.safetensors_name else '' }}</dd>
+                <dd class="col-sm-9">{{ sd_extra_network.safetensors.name if sd_extra_network.safetensors.name else '' }}</dd>
 
                 <dt class="col-sm-3">Trigger Words:</dt>
                 <dd class="col-sm-9">{{ sd_extra_network.trigger if sd_extra_network.trigger else '' }}</dd>

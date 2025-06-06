@@ -1,6 +1,9 @@
+import json
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from pydantic import root_validator
+from pydantic import BaseModel, root_validator
+from safetensors import safe_open
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
 
@@ -8,6 +11,88 @@ if TYPE_CHECKING:
     from .character import Character
     from .sd_base_model import SDBaseModel
     from .sd_checkpoint import SDCheckpoint
+
+
+class SafetensorJSON(BaseModel):
+    path: Path
+    activation_text: str | None = None
+    sha256: str | None = None
+
+    def __init__(self, path: Path):
+        super().__init__(path=path)
+        if self.path.exists():
+            with open(self.path) as f:
+                json_data = json.load(f)
+                self.activation_text = json_data.get("activation_text")
+                self.sha256 = json_data.get("sha256")
+
+
+class Safetensor(BaseModel):
+    path: Path
+
+    @property
+    def name(self) -> str:
+        return self.path.stem
+
+    @property
+    def id(self) -> str:
+        return self.name.lower().replace(" ", "_")
+
+    @property
+    def json_file_path(self) -> Path | None:
+        json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
+        if json_file_path.exists():
+            return json_file_path
+        return None
+
+    @property
+    def json_file(self) -> SafetensorJSON | None:
+        if self.json_file_path:
+            return SafetensorJSON(path=self.json_file_path)
+        return None
+
+    @property
+    def sha256(self) -> str | None:
+        if self.json_file:
+            return self.json_file.sha256
+
+        # get the sha256 from the safetensors file
+        import hashlib
+
+        _sha256 = hashlib.sha256()
+        with open(self.path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                _sha256.update(chunk)
+        sha256 = _sha256.hexdigest()
+        if sha256 and sha256 != "None":
+            # Load existing JSON data if file exists
+            existing_json_data = {}
+            if self.json_file_path and self.json_file_path.exists():
+                with open(self.json_file_path) as f:
+                    existing_json_data = json.load(f)
+
+            # Update only the sha256 field
+            existing_json_data["sha256"] = sha256
+
+            # Save updated JSON data
+            json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
+            with open(json_file_path, "w") as f:
+                json.dump(existing_json_data, f)
+
+            return sha256
+        return None
+
+    @property
+    def size(self) -> int:
+        return self.path.stat().st_size
+
+    @property
+    def metadata(self) -> dict[str, Any] | None:
+        if self.path and self.path.exists():
+            with safe_open(self.path, framework="pt") as f:
+                metadata = f.metadata()
+                return metadata
+        return None
 
 
 class SDExtraNetworkBase(SQLModel):
@@ -33,6 +118,12 @@ class SDExtraNetworkBase(SQLModel):
     )
 
     @property
+    def safetensors(self) -> Safetensor | None:
+        if self.local_file_path:
+            return Safetensor(path=Path(self.local_file_path))
+        return None
+
+    @property
     def safetensors_name(self) -> str | None:
         if self.lora_tag:
             return self.lora_tag.split(":")[1]
@@ -48,10 +139,10 @@ class SDExtraNetwork(SDExtraNetworkBase, table=True):
     )
 
     def get_id(self):
-        return f"{self.character.id}_{self.safetensors_name}_{self.sd_base_model.id}"
+        return f"{self.character.id}_{self.safetensors.name}_{self.sd_base_model.id}"
 
     def __str__(self):
-        return f"{self.character_id} - {self.safetensors_name} ({self.sd_base_model_id})"
+        return f"{self.character_id} - {self.safetensors.name} ({self.sd_base_model_id})"
 
 
 class SDExtraNetworkCreate(SDExtraNetworkBase):

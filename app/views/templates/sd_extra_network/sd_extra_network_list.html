@@ -35,9 +35,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in sd_extra_networks | sort(attribute='safetensors_name') %}
+                    {% for item in sd_extra_networks | sort(attribute='name') %}
                     <tr data-id="{{ item.id }}">
-                        <td><a href="/sd-extra-network/{{ item.id }}/view">{{ item.safetensors_name }}</a></td>
+                        <td><a href="/sd-extra-network/{{ item.id }}/view">{{ item.safetensors.name }}</a></td>
                         <td><a href="/character/{{ item.character.id }}/view">{{ item.character.name }}</a></td>
                         <td><a href="/sd-base-model/{{ item.sd_base_model.id }}/view">{{ item.sd_base_model.name }}</a></td>
                         <td><span class="badge bg-success">{{ item.lora_sha256[:8] if item.lora_sha256 else '' }}</span></td>
@@ -49,7 +49,7 @@
                             <a href="/sd-extra-network/{{ item.id }}/edit" class="btn btn-warning btn-sm">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.lora_tag if item.lora_tag else item.safetensors_name }}')">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.lora_tag if item.lora_tag else item.safetensors.name }}')">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
                         </td>

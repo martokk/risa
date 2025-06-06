@@ -35,6 +35,7 @@ async def create_sd_extra_network_page(
     request: Request,
     context: Annotated[dict[str, Any], Depends(get_template_context)],
     id: str = Query(None),
+    character_id: str = Query(None),
     name: str = Query(None),
     local_file_path: str = Query(None),
     remote_file_path: str = Query(None),
@@ -73,6 +74,7 @@ async def create_sd_extra_network_page(
     context["sd_base_models"] = sd_base_models
     context["characters"] = characters
     context["id"] = unquote(id) if id else None
+    context["character_id"] = unquote(character_id) if character_id else None
     context["name"] = unquote(name) if name else None
     context["local_file_path"] = unquote(local_file_path) if local_file_path else None
     context["remote_file_path"] = unquote(remote_file_path) if remote_file_path else None

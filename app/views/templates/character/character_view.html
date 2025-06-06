@@ -118,7 +118,7 @@
                         {% for en in character.sd_extra_networks %}
                             <li class="list-group-item">
                                 <a href="{{ url_for('view_sd_extra_network_page', sd_extra_network_id=en.id) }}">
-                                    {{ en.safetensors_name if en.safetensors_name else en.id }}
+                                    {{ en.safetensors.name if en.safetensors else en.id }}
                                 </a>
                                 <br>
                                 <small class="text-muted">

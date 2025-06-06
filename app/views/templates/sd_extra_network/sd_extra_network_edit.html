@@ -5,105 +5,143 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="card card-warning">
-        <div class="card-header">
-            <h3 class="card-title">Update SD Extra Network Details</h3>
-        </div>
-        <form id="editSDExtraNetworkForm">
-            <input type="hidden" name="original_id" value="{{ sd_extra_network.id }}">
-            <div class="card-body">
-                <div class="form-group">
-                    <label for="sdExtraNetworkId">ID (auto-generated if empty, based on Character, Lora/Trigger, and Base Model)</label>
-                    <input type="text" class="form-control" id="sdExtraNetworkId" name="id" value="{{ sd_extra_network.id }}" placeholder="Leave empty to auto-generate">
-                    <small class="form-text text-muted">Current ID: {{ sd_extra_network.id }}</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="sdBaseModelId">Base Model</label>
-                    <select class="form-control" id="sdBaseModelId" name="sd_base_model_id" required>
-                        {% for base_model in sd_base_models | sort(attribute="name") %}
-                        <option value="{{ base_model.id }}" {% if sd_extra_network.sd_base_model.id==base_model.id %}selected{% endif
-                            %}>{{ base_model.name }} ({{ base_model.id }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
+    <form id="editSDExtraNetworkForm">
+        <input type="hidden" name="original_id" value="{{ sd_extra_network.id }}">
+        <div class="row">
+            <!-- Column 1: Core Details & File Paths -->
+            <div class="col-lg-6">
+                <!-- Core Details Card -->
+                <div class="card text-white mb-3">
+                    <div class="card-header bg-primary">
+                        <h3 class="card-title text-white">Core Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="sdExtraNetworkId" class="font-weight-bold">ID</label>
+                            <input type="text" class="form-control" id="sdExtraNetworkId" name="id" value="{{ sd_extra_network.id }}" placeholder="Leave empty to auto-generate based on other fields">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sdBaseModelId" class="font-weight-bold">Base Model <span class="text-danger">*</span></label>
+                            <select class="form-control" id="sdBaseModelId" name="sd_base_model_id" required>
+                                {% for base_model in sd_base_models | sort(attribute="name") %}
+                                <option value="{{ base_model.id }}" {% if sd_extra_network.sd_base_model.id==base_model.id %}selected{% endif %}>{{ base_model.name }} ({{ base_model.id }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                <div class="form-group">
-                    <label for="characterId">Character</label>
-                    <select class="form-control" id="characterId" name="character_id" required>
-                        {% for char in characters | sort(attribute="name") %}
-                            <option value="{{ char.id }}" {% if sd_extra_network.character.id == char.id %}selected{% endif %}>{{ char.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="localFilePath">Local File Path</label>
-                    <input type="text" class="form-control" id="localFilePath" name="local_file_path" value="{{ sd_extra_network.local_file_path if sd_extra_network.local_file_path else '' }}">
-                </div>
-
-                <div class="form-group">
-                    <label for="remoteFilePath">Remote File Path</label>
-                    <input type="text" class="form-control" id="remoteFilePath" name="remote_file_path" value="{{ sd_extra_network.remote_file_path if sd_extra_network.remote_file_path else '' }}">
-                </div>
-
-                <div class="form-group">
-                    <label for="loraTag">Lora Tag (e.g., &lt;lora:MODEL_NAME:1&gt;)</label>
-                    <input type="text" class="form-control" id="loraTag" name="lora_tag" value="{{ sd_extra_network.lora_tag if sd_extra_network.lora_tag is not none }}" placeholder="<lora:XXXX:1>">
-                    <small class="form-text text-muted">Either Lora Tag or Trigger is required for ID generation if ID field is empty.</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="loraSha256">Lora SHA256</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="loraSha256" name="lora_sha256"
-                            value="{{ sd_extra_network.lora_sha256 if sd_extra_network.lora_sha256 is not none }}"
-                            placeholder="SHA256 hash of the LORA file">
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-info" id="getSha256Btn">
-                                <i class="fas fa-sync"></i> Get SHA256
-                            </button>
+                        <div class="form-group">
+                            <label for="characterId" class="font-weight-bold">Character <span class="text-danger">*</span></label>
+                            <select class="form-control" id="characterId" name="character_id" required>
+                                {% for char in characters | sort(attribute="name") %}
+                                    <option value="{{ char.id }}" {% if sd_extra_network.character.id == char.id %}selected{% endif %}>{{ char.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
                 </div>
 
+                <!-- File Paths Card -->
+                <div class="card text-white mb-3">
+                    <div class="card-header bg-info">
+                        <h3 class="card-title text-white">File Paths</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="localFilePath" class="font-weight-bold">Local File Path</label>
+                            <input type="text" class="form-control" id="localFilePath" name="local_file_path" value="{{ sd_extra_network.local_file_path if sd_extra_network.local_file_path else '' }}">
+                             {% if sd_extra_network.local_file_path %}
+                            <small class="form-text"><a class="text-info font-weight-bold" href="file://{{ sd_extra_network.local_file_path | replace('.safetensors', '.json') }}" target="_blank" rel="noopener noreferrer">Open .json file</a></small>
+                            {% endif %}
+                        </div>
 
-                <div class="form-group">
-                    <label for="trigger">Trigger Words</label>
-                    <input type="text" class="form-control" id="trigger" name="trigger" value="{{ sd_extra_network.trigger if sd_extra_network.trigger is not none }}" placeholder="e.g., official art, character name">
+                        <div class="form-group">
+                            <label for="remoteFilePath" class="font-weight-bold">Remote File Path</label>
+                            <input type="text" class="form-control" id="remoteFilePath" name="remote_file_path" value="{{ sd_extra_network.remote_file_path if sd_extra_network.remote_file_path else '' }}">
+                        </div>
+                    </div>
                 </div>
-
-
-                <hr>
-                <h5 class="mt-3 mb-2">Restrictions</h5>
-
-                <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="onlyRealistic" name="only_realistic" {% if sd_extra_network.only_realistic %}checked{% endif %}>
-                    <label class="form-check-label" for="onlyRealistic">Only use on Realistic models</label>
-                </div>
-
-                <div class="form-group form-check">
-                    <input type="checkbox" class="form-check-input" id="onlyNonRealistic" name="only_nonrealistic" {% if sd_extra_network.only_nonrealistic %}checked{% endif %}>
-                    <label class="form-check-label" for="onlyNonRealistic">Only use on Non-Realistic models</label>
-                </div>
-
-                <div class="form-group">
-                    <label for="onlyCheckpoints">Only use on these Checkpoints (comma-separated IDs)</label>
-                    <input type="text" class="form-control" id="onlyCheckpoints" name="only_checkpoints_str" value="{{ sd_extra_network.only_checkpoints|join(',') if sd_extra_network.only_checkpoints }}" placeholder="e.g., checkpoint_id1,checkpoint_id2">
-                </div>
-
-                <div class="form-group">
-                    <label for="excludeCheckpoints">Exclude these Checkpoints (comma-separated IDs)</label>
-                    <input type="text" class="form-control" id="excludeCheckpoints" name="exclude_checkpoints_str" value="{{ sd_extra_network.exclude_checkpoints|join(',') if sd_extra_network.exclude_checkpoints }}" placeholder="e.g., checkpoint_id3,checkpoint_id4">
-                </div>
-
             </div>
-            <div class="card-footer">
-                <button type="submit" class="btn btn-warning">Update</button>
-                <a href="{{ url_for('list_sd_extra_networks_page') }}" class="btn btn-secondary">Cancel</a>
+
+            <!-- Column 2: LoRA Details & Filtering -->
+            <div class="col-lg-6">
+                <!-- LoRA Details Card -->
+                <div class="card text-white mb-3">
+                    <div class="card-header bg-success">
+                        <h3 class="card-title text-white">LoRA Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="loraTag" class="font-weight-bold">Lora Tag</label>
+                            <input type="text" class="form-control" id="loraTag" name="lora_tag" value="{{ sd_extra_network.lora_tag if sd_extra_network.lora_tag is not none else '' }}" placeholder="<lora:XXXX:1>">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="loraSha256" class="font-weight-bold">Lora SHA256</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="loraSha256" name="lora_sha256"
+                                    value="{{ sd_extra_network.lora_sha256 if sd_extra_network.lora_sha256 is not none else '' }}"
+                                    placeholder="SHA256 hash of the LORA file">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" id="getSha256Btn" title="Fetch SHA256 from server (if file exists)">
+                                        <i class="fas fa-sync"></i> Get SHA256
+                                    </button>
+                                </div>
+                            </div>
+                             <small class="form-text">
+                                <a id="sha256Link" class="text-success font-weight-bold" href="https://civitaiarchive.com/sha256/{{ sd_extra_network.lora_sha256 if sd_extra_network.lora_sha256 else '' }}" target="_blank" rel="noopener noreferrer" {% if not sd_extra_network.lora_sha256 %}style="display:none;"{% endif %}>Open sha256 in CivitAI Archive</a>
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="trigger" class="font-weight-bold">Trigger Words</label>
+                            <input type="text" class="form-control" id="trigger" name="trigger" value="{{ sd_extra_network.trigger if sd_extra_network.trigger is not none else '' }}" placeholder="e.g., official art, character name">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage Conditions & Filtering Card -->
+                <div class="card mb-3">
+                    <div class="card-header bg-warning">
+                        <h3 class="card-title text-dark">Usage Conditions & Checkpoint Filtering</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group form-check">
+                                    <input type="checkbox" class="form-check-input" id="onlyRealistic" name="only_realistic" {% if sd_extra_network.only_realistic %}checked{% endif %}>
+                                    <label class="form-check-label font-weight-bold" for="onlyRealistic">Only use on Realistic models</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group form-check">
+                                    <input type="checkbox" class="form-check-input" id="onlyNonRealistic" name="only_nonrealistic" {% if sd_extra_network.only_nonrealistic %}checked{% endif %}>
+                                    <label class="form-check-label font-weight-bold" for="onlyNonRealistic">Only use on Non-Realistic models</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="onlyCheckpoints" class="font-weight-bold">Only use on these Checkpoints</label>
+                            <input type="text" class="form-control" id="onlyCheckpoints" name="only_checkpoints_str" value="{{ sd_extra_network.only_checkpoints|join(',') if sd_extra_network.only_checkpoints }}" placeholder="e.g., checkpoint_id1,checkpoint_id2">
+                             <small class="form-text text-muted">Comma-separated IDs.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="excludeCheckpoints" class="font-weight-bold">Exclude these Checkpoints</label>
+                            <input type="text" class="form-control" id="excludeCheckpoints" name="exclude_checkpoints_str" value="{{ sd_extra_network.exclude_checkpoints|join(',') if sd_extra_network.exclude_checkpoints }}" placeholder="e.g., checkpoint_id3,checkpoint_id4">
+                            <small class="form-text text-muted">Comma-separated IDs.</small>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
-    </div>
+        </div>
+
+        <div class="card-footer bg-transparent text-right">
+            <button type="submit" class="btn btn-warning">Update SD Extra Network</button>
+            <a href="{{ url_for('list_sd_extra_networks_page') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
 </div>
 {% endblock %}
 
@@ -121,7 +159,28 @@
     initializeApi({});
     {% endif %}
 
-    // Add SHA256 fetch functionality
+    function updateSha256LinkVisibility(sha256Value) {
+        const link = document.getElementById('sha256Link');
+        if (link) {
+            if (sha256Value && sha256Value.trim() !== '') {
+                link.href = `https://civitaiarchive.com/sha256/${sha256Value}`;
+                link.style.display = 'inline';
+            } else {
+                link.style.display = 'none';
+            }
+        }
+    }
+
+    const loraSha256Input = document.getElementById('loraSha256');
+    if (loraSha256Input) {
+        loraSha256Input.addEventListener('input', function() {
+            updateSha256LinkVisibility(this.value);
+        });
+        // Initial check in case the value is pre-filled
+        updateSha256LinkVisibility(loraSha256Input.value);
+    }
+
+
     const getSha256Btn = document.getElementById('getSha256Btn');
     if (getSha256Btn) {
         getSha256Btn.addEventListener('click', async function() {
@@ -129,15 +188,15 @@
                 const originalId = document.querySelector('input[name="original_id"]').value;
                 const response = await apiCrud.getEndpoint(`sd-extra-networks/${originalId}/sha256`);
                 
-                if (response.sha256) {
+                if (response.success && response.sha256) {
                     document.getElementById('loraSha256').value = response.sha256;
+                    updateSha256LinkVisibility(response.sha256);
                     uiHelpers.showToast('SHA256 fetched successfully!', 'success');
                 } else {
-                    uiHelpers.showToast('No SHA256 found for this file.', 'warning');
+                     uiHelpers.showToast(response.message || 'No SHA256 found or error occurred.', response.success ? 'warning' : 'error');
                 }
             } catch (error) {
                 console.error('Error fetching SHA256:', error);
-                // Get the most specific error message available
                 const errorMessage = error.detail || error.message || 'Failed to fetch SHA256';
                 uiHelpers.showToast(errorMessage, 'error');
             }
@@ -170,23 +229,26 @@
                     processedFormData.exclude_checkpoints = [];
                 }
                 delete processedFormData.exclude_checkpoints_str;
-
-                // If ID is provided and different from original, it's an attempt to change ID.
-                // If ID is empty, backend will try to regenerate. If same, it's a normal update.
-                if (processedFormData.id === "") { // Allow backend to regenerate ID if user clears it
+                
+                if (processedFormData.id === "") { 
                     delete processedFormData.id; 
                 }
 
-                await apiCrud.update('sd-extra-networks', originalId, processedFormData);
+                const response = await apiCrud.update('sd-extra-networks', originalId, processedFormData);
+                
                 uiHelpers.showToast('SD Extra Network updated successfully!', 'success');
+                
+                // Determine redirect URL: if ID changed, use new ID, otherwise original.
+                const newId = response.id || originalId;
+                
                 setTimeout(() => {
-                    // Redirect to the potentially new ID's view page or list page
-                    // For simplicity, redirecting to list page.
-                    window.location.href = "{{ url_for('list_sd_extra_networks_page') }}";
+                    window.location.href = `/sd-extra-network/${newId}/edit`; 
                 }, 1500);
+
             } catch (error) {
                 console.error('Failed to update SD Extra Network:', error);
-                uiHelpers.showError(error.responseJSON?.detail || error.message || 'Failed to update. Check console.');
+                const errorMessage = error.responseJSON?.detail || error.message || 'Failed to update. Check console.';
+                uiHelpers.showError(errorMessage);
             }
         });
     }
