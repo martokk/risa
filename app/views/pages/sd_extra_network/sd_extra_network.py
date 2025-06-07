@@ -40,6 +40,7 @@ async def create_sd_extra_network_page(
     """Serves the page for creating a new SD Extra Network."""
     context["sd_base_models"] = await crud.sd_base_model.get_all(db=db)
     context["characters"] = await crud.character.get_all(db=db)
+    context["sd_checkpoints"] = await crud.sd_checkpoint.get_all(db=db)
     context["networks"] = ["lora", "locon", "other"]  # Add more as needed
     context["item"] = None
     context["redirect_url"] = redirect_url
@@ -64,6 +65,10 @@ async def view_sd_extra_network_page(
         raise HTTPException(status_code=404, detail="SD Extra Network not found")
 
     context["item"] = sd_extra_network_obj
+    context["sd_base_models"] = await crud.sd_base_model.get_all(db=db)
+    context["characters"] = await crud.character.get_all(db=db)
+    context["sd_checkpoints"] = await crud.sd_checkpoint.get_all(db=db)
+    context["networks"] = ["lora", "locon", "other"]
     context["view_mode"] = True
 
     return templates.TemplateResponse(
@@ -88,6 +93,7 @@ async def edit_sd_extra_network_page(
     context["item"] = sd_extra_network_obj
     context["sd_base_models"] = await crud.sd_base_model.get_all(db=db)
     context["characters"] = await crud.character.get_all(db=db)
+    context["sd_checkpoints"] = await crud.sd_checkpoint.get_all(db=db)
     context["networks"] = ["lora", "locon", "other"]  # Add more as needed
 
     return templates.TemplateResponse(

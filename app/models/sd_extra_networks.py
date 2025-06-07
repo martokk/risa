@@ -12,7 +12,6 @@ from app.models.settings import Settings
 if TYPE_CHECKING:
     from .character import Character
     from .sd_base_model import SDBaseModel
-    from .sd_checkpoint import SDCheckpoint
 
 
 class SafetensorJSON(BaseModel):
@@ -101,7 +100,8 @@ class Safetensor(BaseModel):
         if self.path and self.path.exists():
             with safe_open(self.path, framework="pt") as f:
                 metadata = f.metadata()
-                return metadata
+                if metadata:
+                    return dict(metadata)
         return None
 
 
@@ -123,12 +123,12 @@ class SDExtraNetworkBase(SQLModel):
 
     only_realistic: bool = Field(default=False, description="Only use on realistic models")
     only_nonrealistic: bool = Field(default=False, description="Only use on non-realistic models")
-    only_checkpoints: list["SDCheckpoint"] = Field(
+    only_checkpoints: list[str] = Field(
         default=[],
         description="Only use on these models (ie. 'ponyRealism_V21')",
         sa_column=Column(JSON),
     )
-    exclude_checkpoints: list["SDCheckpoint"] = Field(
+    exclude_checkpoints: list[str] = Field(
         default=[],
         description="Do not use on these models (ie. 'ponyRealism_V21')",
         sa_column=Column(JSON),
@@ -229,7 +229,6 @@ class SDExtraNetworkRead(SDExtraNetworkBase):
 # and then calling update_forward_refs() on each model that uses them.
 from .character import Character
 from .sd_base_model import SDBaseModel
-from .sd_checkpoint import SDCheckpoint
 
 
 SDExtraNetworkBase.update_forward_refs()

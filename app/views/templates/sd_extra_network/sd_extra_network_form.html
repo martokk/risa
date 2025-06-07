@@ -46,7 +46,7 @@
                             <select class="form-control" id="sdBaseModelId" name="sd_base_model_id" required {% if view_mode %}disabled{% endif %}>
                                 <option value="" disabled {% if not item %}selected{% endif %}>Select Base Model</option>
                                 {% for base_model in sd_base_models | sort(attribute="name") %}
-                                <option value="{{ base_model.id }}" {% if item and item.sd_base_model and item.sd_base_model.id==base_model.id %}selected{% endif %}>{{ base_model.name }} ({{ base_model.id }})</option>
+                                <option value="{{ base_model.id }}" {% if item and item.sd_base_model and item.sd_base_model.id==base_model.id %}selected{% endif %}>{{ base_model.id }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -63,7 +63,12 @@
 
                         <div class="form-group">
                             <label for="trainedOnCheckpoint" class="font-weight-bold">Trained On Checkpoint</label>
-                            <input type="text" class="form-control" id="trainedOnCheckpoint" name="trained_on_checkpoint" value="{{ item.trained_on_checkpoint if item and item.trained_on_checkpoint else '' }}" {% if view_mode %}disabled{% endif %}>
+                            <select id="trainedOnCheckpoint" name="trained_on_checkpoint" placeholder="Select a checkpoint..." {% if view_mode %}disabled{% endif %}>
+                                <option value="">Select a checkpoint...</option>
+                                {% for checkpoint in sd_checkpoints | sort(attribute="id") %}
+                                <option value="{{ checkpoint.id }}" {% if item and item.trained_on_checkpoint == checkpoint.id %}selected{% endif %}>{{ checkpoint.name }} [{{ checkpoint.sd_base_model.id }}]</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -165,14 +170,22 @@
 
                         <div class="form-group">
                             <label for="onlyCheckpoints" class="font-weight-bold">Only use on these Checkpoints</label>
-                            <input type="text" class="form-control" id="onlyCheckpoints" name="only_checkpoints_str" value="{{ item.only_checkpoints|join(',') if item and item.only_checkpoints }}" placeholder="e.g., checkpoint_id1,checkpoint_id2" {% if view_mode %}disabled{% endif %}>
-                             <small class="form-text text-muted">Comma-separated IDs.</small>
+                            <select id="onlyCheckpoints" name="only_checkpoints" multiple placeholder="Select checkpoints..." {% if view_mode %}disabled{% endif %}>
+                                {% for checkpoint in sd_checkpoints | sort(attribute="id") %}
+                                <option value="{{ checkpoint.id }}" {% if item and item.only_checkpoints and checkpoint.id in item.only_checkpoints %}selected{% endif %}>{{ checkpoint.name }} [{{ checkpoint.sd_base_model.id }}]</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">Comma-separated IDs. You can also type to create a new one.</small>
                         </div>
 
                         <div class="form-group">
                             <label for="excludeCheckpoints" class="font-weight-bold">Exclude these Checkpoints</label>
-                            <input type="text" class="form-control" id="excludeCheckpoints" name="exclude_checkpoints_str" value="{{ item.exclude_checkpoints|join(',') if item and item.exclude_checkpoints }}" placeholder="e.g., checkpoint_id3,checkpoint_id4" {% if view_mode %}disabled{% endif %}>
-                            <small class="form-text text-muted">Comma-separated IDs.</small>
+                            <select id="excludeCheckpoints" name="exclude_checkpoints" multiple placeholder="Select checkpoints..." {% if view_mode %}disabled{% endif %}>
+                                {% for checkpoint in sd_checkpoints | sort(attribute="id") %}
+                                <option value="{{ checkpoint.id }}" {% if item and item.exclude_checkpoints and checkpoint.id in item.exclude_checkpoints %}selected{% endif %}>{{ checkpoint.name }} [{{ checkpoint.sd_base_model.id }}]</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">Comma-separated IDs. You can also type to create a new one.</small>
                         </div>
                     </div>
                 </div>
@@ -198,6 +211,10 @@
 </div>
 {% endblock %}
 
+{% block js_dependencies %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+{% endblock %}
+
 {% block js_scripts %}
 {% if not view_mode %}
 <script type="module">
@@ -212,6 +229,10 @@
     console.warn('API tokens not found. API calls might fail.');
     initializeApi({});
     {% endif %}
+
+    new TomSelect("#trainedOnCheckpoint", { create: true, sortField: { field: "text", direction: "asc" } });
+    new TomSelect("#onlyCheckpoints", { plugins: ['remove_button'], create: true, sortField: { field: "text", direction: "asc" } });
+    new TomSelect("#excludeCheckpoints", { plugins: ['remove_button'], create: true, sortField: { field: "text", direction: "asc" } });
 
     const isEditMode = {{ 'true' if item else 'false' }};
 
@@ -271,17 +292,18 @@
                 processedFormData.only_realistic = document.getElementById('onlyRealistic').checked;
                 processedFormData.only_nonrealistic = document.getElementById('onlyNonRealistic').checked;
 
-                // Handle checkpoint lists
-                const processCheckpoints = (key) => {
-                    if (rawFormData[key] && rawFormData[key].trim() !== "") {
-                        processedFormData[key.replace('_str', '')] = rawFormData[key].split(',').map(s => s.trim()).filter(s => s !== "");
-                    } else {
-                        processedFormData[key.replace('_str', '')] = [];
-                    }
-                    delete processedFormData[key];
-                };
-                processCheckpoints('only_checkpoints_str');
-                processCheckpoints('exclude_checkpoints_str');
+                // getFormData helper doesn't handle multi-select, so we get them from TomSelect instance
+                const onlyCheckpointsSelect = document.getElementById('onlyCheckpoints');
+                if (onlyCheckpointsSelect.tomselect) {
+                    processedFormData.only_checkpoints = onlyCheckpointsSelect.tomselect.getValue();
+                }
+                const excludeCheckpointsSelect = document.getElementById('excludeCheckpoints');
+                if (excludeCheckpointsSelect.tomselect) {
+                    processedFormData.exclude_checkpoints = excludeCheckpointsSelect.tomselect.getValue();
+                }
+
+                delete processedFormData.only_checkpoints_str;
+                delete processedFormData.exclude_checkpoints_str;
                 
                 // Handle empty ID on create
                 if (!isEditMode && processedFormData.id === "") { 
