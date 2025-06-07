@@ -41,6 +41,13 @@
                                 {% endfor %}
                             </select>
                         </div>
+
+
+                        <div class="form-group">
+                            <label for="trainedOnCheckpoint" class="font-weight-bold">Trained On Checkpoint</label>
+                            <input type="text" class="form-control" id="trainedOnCheckpoint" name="trained_on_checkpoint" value="{{ trained_on_checkpoint if trained_on_checkpoint else '' }}">
+                        </div>
+
                     </div>
                 </div>
 
@@ -57,6 +64,16 @@
                             <small class="form-text"><a class="text-info font-weight-bold" href="file://{{ local_file_path | replace('.safetensors', '.json') }}" target="_blank" rel="noopener noreferrer">Open .json file</a></small>
                             {% endif %}
                         </div>
+                        
+                        <div class="form-group">
+                            <label for="sha256" class="font-weight-bold">SHA256</label>
+                            <input type="text" class="form-control" id="sha256" name="sha256" value="{{ sha256 if sha256 else '' }}">
+                            <small class="form-text">
+                                <a id="sha256Link" class="text-success font-weight-bold"
+                                    href="https://civitaiarchive.com/sha256/{{ sha256 if sha256 else '' }}" target="_blank"
+                                    rel="noopener noreferrer">Open sha256 in CivitAI Archive</a>
+                            </small>
+                        </div>
 
                         <div class="form-group">
                             <label for="remoteFilePath" class="font-weight-bold">Remote File Path</label>
@@ -71,28 +88,28 @@
                 <!-- LoRA Details Card -->
                 <div class="card text-white mb-3">
                     <div class="card-header bg-success">
-                        <h3 class="card-title text-white">LoRA Details</h3>
+                        <h3 class="card-title text-white">Netword Details</h3>
                     </div>
                     <div class="card-body">
+
                         <div class="form-group">
-                            <label for="loraTag" class="font-weight-bold">LoRA Tag</label>
-                            {% if not lora_tag %}
-                                {% set lora_tag = '<lora:' + (name if name else 'your_lora_name') + ':1>' %}
-                            {% endif %}
-                            <input type="text" class="form-control" id="loraTag" name="lora_tag" placeholder="<lora:your_lora_name:1>" value="{{ lora_tag }}">
+                            <label for="network" class="font-weight-bold">Network</label>
+                            <select class="form-control" id="network" name="network" required>
+                                <option value="" disabled selected>Select Network</option>
+                                {% for _network in networks %}
+                                    <option value="{{ _network }}" {% if _network == network %}selected{% endif %}>{{ _network }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
 
                         <div class="form-group">
-                            <label for="loraSha256" class="font-weight-bold">LoRA SHA256</label>
-                            <input type="text" class="form-control" id="loraSha256" name="lora_sha256" value="{{ sha256 if sha256 else '' }}" oninput="updateSha256Link(this.value)">
-                            <small class="form-text">
-                                <a id="sha256Link" class="text-success font-weight-bold" href="https://civitaiarchive.com/sha256/{{ sha256 if sha256 else '' }}" target="_blank" rel="noopener noreferrer">Open sha256 in CivitAI Archive</a>
-                            </small>
+                            <label for="networkWeight" class="font-weight-bold">Network Weight</label>
+                            <input type="number" class="form-control" id="networkWeight" name="network_weight" placeholder="1" value="{{ network_weight }}">
                         </div>
 
                         <div class="form-group">
-                            <label for="trigger" class="font-weight-bold">Trigger Words</label>
-                            <input type="text" class="form-control" id="trigger" name="trigger" placeholder="e.g., ohwx, ohwx woman">
+                            <label for="networkTrigger" class="font-weight-bold">Trigger Words</label>
+                            <input type="text" class="form-control" id="networkTrigger" name="network_trigger" placeholder="e.g., ohwx, ohwx woman">
                         </div>
                     </div>
                 </div>
@@ -168,26 +185,6 @@
                 formData.only_realistic = document.getElementById('onlyRealistic').checked;
                 formData.only_nonrealistic = document.getElementById('onlyNonrealistic').checked;
 
-                // The SDExtraNetworkCreate model expects lora_tag or trigger to generate an ID if ID is not provided.
-                // If ID is not provided, and lora_tag is empty but lora_name (from safetensor) exists, construct a default lora_tag.
-                if (!formData.id && !formData.lora_tag && formData.lora_name) {
-                    formData.lora_tag = `<lora:${formData.lora_name}:1>`;
-                } else if (!formData.id && !formData.lora_tag && !formData.trigger) {
-                    // If no ID, and no lora_tag, and no trigger, we might have an issue with ID generation on backend.
-                    // For safety, if 'id' input field from html (now 'id' in formData) is an empty string because it's a new record and was hidden,
-                    // we should remove it from formData so that the backend Pydantic model's default_factory for ID can kick in.
-                    // However, the backend model SDExtraNetworkCreate requires either id, or lora_tag, or trigger.
-                    // Best to ensure one of lora_tag or trigger is present if id is not.
-                    // The current logic for lora_tag placeholder handles this.
-                    // If 'id' came from a hidden field for new records and is empty string, it might be better to delete it.
-                    // For now, we assume if ID is present in form, it's intentional (e.g. for an update, though this is a create form)
-                    // or it's being pre-filled. If it's an empty string for a new item, it's fine, as Pydantic might ignore it or backend handles.
-                    // The main concern is that an empty `id` field doesn't block the `lora_tag` or `trigger` based ID generation.
-                    // Let's remove 'id' from formData if it's empty to rely on backend ID generation if possible.
-                    if (formData.id === '') {
-                        delete formData.id;
-                    }
-                }
 
                 // Convert comma-separated strings to arrays for checkpoint fields
                 if (formData.only_checkpoints_str && formData.only_checkpoints_str.trim() !== "") {

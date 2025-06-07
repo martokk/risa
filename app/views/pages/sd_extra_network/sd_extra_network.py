@@ -36,12 +36,13 @@ async def create_sd_extra_network_page(
     context: Annotated[dict[str, Any], Depends(get_template_context)],
     id: str = Query(None),
     character_id: str = Query(None),
-    name: str = Query(None),
+    trained_on_checkpoint: str = Query(None),
     local_file_path: str = Query(None),
     remote_file_path: str = Query(None),
-    lora_tag: str = Query(None),
+    network: str = Query(None),
+    network_trigger: str = Query(None),
+    network_weight: float = Query(None),
     sha256: str = Query(None),
-    trigger: str = Query(None),
     only_realistic: bool = Query(False),
     only_nonrealistic: bool = Query(False),
     only_checkpoints: list[str] = Query(None),
@@ -54,9 +55,20 @@ async def create_sd_extra_network_page(
     Args:
         request: The FastAPI request object.
         context: Template context dependency.
-        lora_name: The name of the LoRA.
-        local_file_path: The local path to the LoRA file.
-        lora_sha256: The SHA256 hash of the LoRA file.
+        id: The ID of the SD Extra Network.
+        character_id: The ID of the character.
+        trained_on_checkpoint: The checkpoint the network was trained on.
+        local_file_path: The local path to the network file.
+        remote_file_path: The remote path to the network file.
+        network: The name of the network.
+        network_trigger: The trigger words for the network.
+        network_weight: The default weight of the network.
+        sha256: The SHA256 hash of the network.
+        only_realistic: Whether the network is only realistic.
+        only_nonrealistic: Whether the network is only non-realistic.
+        only_checkpoints: The checkpoints the network is only used on.
+        exclude_checkpoints: The checkpoints the network is not used on.
+        sd_base_model_id: The ID of the SD Base Model.
         redirect_url: The URL to redirect to after creation.
 
     Returns:
@@ -73,16 +85,21 @@ async def create_sd_extra_network_page(
 
     context["sd_base_models"] = sd_base_models
     context["characters"] = characters
+    context["networks"] = ["lora"]
+
     context["id"] = unquote(id) if id else None
     context["character_id"] = unquote(character_id) if character_id else None
-    context["name"] = unquote(name) if name else None
+    context["trained_on_checkpoint"] = (
+        unquote(trained_on_checkpoint) if trained_on_checkpoint else None
+    )
     context["local_file_path"] = unquote(local_file_path) if local_file_path else None
     context["remote_file_path"] = unquote(remote_file_path) if remote_file_path else None
-    context["lora_tag"] = unquote(lora_tag) if lora_tag else None
+    context["network"] = unquote(network) if network else "lora"
+    context["network_trigger"] = unquote(network_trigger) if network_trigger else None
+    context["network_weight"] = network_weight if network_weight else 1
     context["sha256"] = unquote(sha256) if sha256 else None
-    context["trigger"] = unquote(trigger) if trigger else None
-    context["only_realistic"] = only_realistic
-    context["only_nonrealistic"] = only_nonrealistic
+    context["only_realistic"] = only_realistic if only_realistic else None
+    context["only_nonrealistic"] = only_nonrealistic if only_nonrealistic else None
     context["only_checkpoints"] = (
         [unquote(x) for x in only_checkpoints] if only_checkpoints else None
     )

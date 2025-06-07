@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from sqlmodel import Session
 
 from app import models
@@ -54,22 +56,30 @@ class SDBaseModelCRUD(
         db: Session,
         id: str,
         character_id: str,
-        lora_tag: str | None = None,
-        trigger: str | None = None,
+        trained_on_checkpoint: str | None = None,
+        local_file_path: str | None = None,
+        remote_file_path: str | None = None,
+        network: str | None = None,
+        network_trigger: str | None = None,
+        network_weight: float | None = None,
+        sha256: str | None = None,
         only_realistic: bool = False,
         only_nonrealistic: bool = False,
-        only_checkpoints: list[models.SDCheckpoint] = [],
-        exclude_checkpoints: list[models.SDCheckpoint] = [],
+        only_checkpoints: list[str] | None = None,
+        exclude_checkpoints: list[str] | None = None,
     ) -> models.SDBaseModel:
+        if only_checkpoints is None:
+            only_checkpoints = []
+        if exclude_checkpoints is None:
+            exclude_checkpoints = []
         db_base_model = await self.get_or_none(db, id=id)
         if not db_base_model:
             raise ValueError(f"SDBaseModel with id '{id}' not found")
 
-        if not lora_tag:
-            # Or handle this case as an error, depending on requirements
-            raise ValueError("lora_tag cannot be None when adding an extra network")
+        if not local_file_path:
+            raise ValueError("local_file_path cannot be None when adding an extra network")
 
-        safetensors_name = lora_tag.split(":")[1]
+        safetensors_name = Path(local_file_path).stem
         extra_network_id = f"{character_id}_{safetensors_name}_{db_base_model.id}"
 
         actual_extra_network: models.SDExtraNetwork | None = db.get(
@@ -79,8 +89,12 @@ class SDBaseModelCRUD(
         if not actual_extra_network:
             extra_network_create_schema = models.SDExtraNetworkCreate(
                 character_id=character_id,
-                lora_tag=lora_tag,
-                trigger=trigger,
+                local_file_path=local_file_path,
+                remote_file_path=remote_file_path,
+                network=network,
+                network_trigger=network_trigger,
+                network_weight=network_weight,
+                sha256=sha256,
                 only_realistic=only_realistic,
                 only_nonrealistic=only_nonrealistic,
                 only_checkpoints=only_checkpoints,

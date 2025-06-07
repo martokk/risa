@@ -30,8 +30,8 @@
                         <th>Safetensors</th>
                         <th>Character</th>
                         <th>Base Model</th>
-                        <th>Lora SHA256</th>
-                        <th style="width: 200px">Actions</th>
+                        <th>SHA256</th>
+                        <th style="width: 300px">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,7 +40,7 @@
                         <td><a href="/sd-extra-network/{{ item.id }}/view">{{ item.safetensors.name }}</a></td>
                         <td><a href="/character/{{ item.character.id }}/view">{{ item.character.name }}</a></td>
                         <td><a href="/sd-base-model/{{ item.sd_base_model.id }}/view">{{ item.sd_base_model.name }}</a></td>
-                        <td><span class="badge bg-success">{{ item.lora_sha256[:8] if item.lora_sha256 else '' }}</span></td>
+                        <td><span class="badge bg-success">{{ item.sha256[:8] if item.sha256 else '' }}</span></td>
 
                         <td>
                             <a href="/sd-extra-network/{{ item.id }}/view" class="btn btn-info btn-sm">
@@ -49,7 +49,7 @@
                             <a href="/sd-extra-network/{{ item.id }}/edit" class="btn btn-warning btn-sm">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.lora_tag if item.lora_tag else item.safetensors.name }}')">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.network_tag if item.network_tag else item.safetensors.name }}')">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
                         </td>

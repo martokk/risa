@@ -127,9 +127,9 @@
                                          <a href="{{ url_for('view_sd_base_model_page', sd_base_model_id=en.sd_base_model.id) }}">{{ en.sd_base_model.name if en.sd_base_model.name else en.sd_base_model.id }}</a>
                                     {% endif %}
                                     <br>
-                                    {% if en.lora_tag %}Lora Tag: {{en.lora_tag}}{% endif %}
+                                    {% if en.network_tag %}Tag: {{en.network_tag}}{% endif %}
                                     <br>
-                                    {% if en.trigger %}Trigger: {{en.trigger}}{% endif %}
+                                    {% if en.network_trigger %}Trigger: {{en.network_trigger}}{% endif %}
                                 </small>
                             </li>
                         {% endfor %}

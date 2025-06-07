@@ -31,8 +31,14 @@
                     {% endif %}
                 </dd>
 
+                <dt class="col-sm-3">Trained On Checkpoint:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.trained_on_checkpoint if sd_extra_network.trained_on_checkpoint else '' }}</dd>
+
                 <dt class="col-sm-3">Local File Path:</dt>
                 <dd class="col-sm-9">{{ sd_extra_network.local_file_path if sd_extra_network.local_file_path else '' }}</dd>
+
+                <dt class="col-sm-3">SHA256:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.sha256 if sd_extra_network.sha256 else '' }}</dd>
 
                 <dt class="col-sm-3">Remote File Path:</dt>
                 <dd class="col-sm-9">{{ sd_extra_network.remote_file_path if sd_extra_network.remote_file_path else '' }}</dd>
@@ -46,17 +52,17 @@
                     {% endif %}
                 </dd>
 
-                <dt class="col-sm-3">Lora Tag:</dt>
-                <dd class="col-sm-9">{{ sd_extra_network.lora_tag if sd_extra_network.lora_tag else '' }}</dd>
+                <dt class="col-sm-3">Network:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.network if sd_extra_network.network else '' }}</dd>
+
+                <dt class="col-sm-3">Network Weight:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.network_weight if sd_extra_network.network_weight else '' }}</dd>
                 
-                <dt class="col-sm-3">Lora SHA256:</dt>
-                <dd class="col-sm-9">{{ sd_extra_network.lora_sha256 if sd_extra_network.lora_sha256 else '' }}</dd>
+                <dt class="col-sm-3">Network Trigger:</dt>
+                <dd class="col-sm-9">{{ sd_extra_network.network_trigger if sd_extra_network.network_trigger else '' }}</dd>
 
                 <dt class="col-sm-3">Safetensors Name (derived):</dt>
                 <dd class="col-sm-9">{{ sd_extra_network.safetensors.name if sd_extra_network.safetensors.name else '' }}</dd>
-
-                <dt class="col-sm-3">Trigger Words:</dt>
-                <dd class="col-sm-9">{{ sd_extra_network.trigger if sd_extra_network.trigger else '' }}</dd>
                 
                 <hr class="col-12">
                 <dt class="col-sm-12 mt-2 mb-1">Restrictions:</dt>

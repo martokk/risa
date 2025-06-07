@@ -1,3 +1,4 @@
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 from pydantic import EmailStr
@@ -81,6 +82,9 @@ class Settings(BaseSettings):
 
     # Phidata Playground API Key
     PHI_API_KEY: str = ""
+
+    # Deployment Type
+    DEPLOYMENT_TYPE: Literal["local", "remote"] = "local"
 
     # Hub Path
     HUB_PATH: str = ""
