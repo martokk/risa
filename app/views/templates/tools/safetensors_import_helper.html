@@ -66,20 +66,20 @@
                         <h4 class="text-success">{{ hub_model.name }}</h4>
                         <ul class="list-group">
                             {% for safetensor_lora in hub_model.safetensors_loras | sort(attribute="name") %}
-                                {% set lora_sha256 = safetensor_lora.sha256 %}
-                                {% set has_already_been_seen = lora_sha256 in ns.seen_sha256s %}
-                                {% set _ = ns.seen_sha256s.append(lora_sha256) %}
-                                {% if lora_sha256 not in existing_sd_extra_networks_sha256s %}
+                                {% set sha256 = safetensor_lora.sha256 %}
+                                {% set has_already_been_seen = sha256 in ns.seen_sha256s %}
+                                {% set _ = ns.seen_sha256s.append(sha256) %}
+                                {% if sha256 not in existing_sd_extra_networks_sha256s %}
                                     <li class="list-group-item">
                                         <div class="row align-items-center">
                                             <div class="col-md-4">{{ safetensor_lora.name }}</div>
                                             <div class="col-md-2">
-                                                {% if lora_sha256 %}
-                                                    <a href="https://civitaiarchive.com/sha256/{{ lora_sha256 }}" target="_blank" rel="noopener noreferrer">
+                                                {% if sha256 %}
+                                                    <a href="https://civitaiarchive.com/sha256/{{ sha256 }}" target="_blank" rel="noopener noreferrer">
                                                         {% if has_already_been_seen %}
-                                                            <span class="badge bg-danger text-white" title="Duplicate SHA256: {{ lora_sha256 }}">{{ lora_sha256[:8] }}</span>
+                                                            <span class="badge bg-danger text-white" title="Duplicate SHA256: {{ sha256 }}">{{ sha256[:8] }}</span>
                                                         {% else %}
-                                                            <span class="badge bg-success text-white" title="{{ lora_sha256 }}">{{ lora_sha256[:8] }}</span>
+                                                            <span class="badge bg-success text-white" title="{{ sha256 }}">{{ sha256[:8] }}</span>
                                                         {% endif %}
                                                     </a>
                                                 {% endif %}
@@ -89,7 +89,7 @@
                                                 <span class="badge {% if 'MB' in size_str %}bg-secondary{% else %}bg-warning text-dark{% endif %}">{{ size_str }}</span>
                                             </div>
                                             <div class="col-md-4 text-end">
-                                                <button class="btn btn-sm btn-outline-success me-1" onclick="importLoraAsSDExtraNetwork('{{ safetensor_lora.id | urlencode }}', '{{ safetensor_lora.path | urlencode }}', '{{ safetensor_lora.name | urlencode }}', '{{ safetensor_lora.sha256 | urlencode if safetensor_lora.sha256 else '' }}', '{{ hub_model.sd_base_model_id if hub_model.sd_base_model_id else '' }}', '{{ safetensor_lora.activation_text if safetensor_lora.activation_text else '' }}')" title="Import as SD Extra Network">
+                                                <button class="btn btn-sm btn-outline-success me-1" onclick="importLoraAsSDExtraNetwork('{{ safetensor_lora.path | urlencode }}', '{{ safetensor_lora.sha256 | urlencode if safetensor_lora.sha256 else '' }}', '{{ hub_model.sd_base_model_id if hub_model.sd_base_model_id else '' }}', '{{ safetensor_lora.activation_text if safetensor_lora.activation_text else '' }}')" title="Import as SD Extra Network">
                                                     <i class="fas fa-file-import"></i> Import
                                                 </button>
                                                 <button class="btn btn-sm btn-outline-danger" onclick="deleteSafetensor('{{ safetensor_lora.path }}', '{{ safetensor_lora.name }}')" title="Delete">
@@ -119,15 +119,13 @@
         window.location.href = createUrl;
     };
 
-    window.importLoraAsSDExtraNetwork = function(safetensorId, loraPath, loraName, loraSha256, sdBaseModelId, activationText) {
+    window.importLoraAsSDExtraNetwork = function(loraPath, sha256, sdBaseModelId, activationText) {
         query = [
-            `id=${encodeURIComponent(safetensorId)}`,
-            `name=${encodeURIComponent(loraName)}`,
             `local_file_path=${encodeURIComponent(loraPath)}`,
-            `sha256=${encodeURIComponent(loraSha256)}`,
-            `redirect_url=${encodeURIComponent(window.location.href)}`,
+            `sha256=${encodeURIComponent(sha256)}`,
             `sd_base_model_id=${encodeURIComponent(sdBaseModelId)}`,
-            `trigger=${encodeURIComponent(activationText)}`
+            `network_trigger=${encodeURIComponent(activationText)}`,
+            `redirect_url=${encodeURIComponent(window.location.href)}`
         ];
 
         const createUrl = `/sd-extra-network/create?${query.join('&')}`;

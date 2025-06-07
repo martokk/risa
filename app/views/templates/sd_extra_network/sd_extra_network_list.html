@@ -113,14 +113,14 @@
 
                 // Process each network that doesn't have a SHA256
                 for (const network of networks) {
-                    if (!network.lora_sha256) {
+                    if (!network.sha256) {
                         try {
                             const response = await apiCrud.getEndpoint(`sd-extra-networks/${network.id}/sha256`);
                             if (response.sha256) {
                                 // Update the network with the new SHA256
                                 await apiCrud.update('sd-extra-networks', network.id, {
                                     ...network,
-                                    lora_sha256: response.sha256
+                                    sha256: response.sha256
                                 });
                                 updated++;
                                 // Update the UI immediately

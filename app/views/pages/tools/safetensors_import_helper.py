@@ -156,9 +156,9 @@ async def safetensor_import_helper_page(
 
     existing_sd_extra_networks = await crud.sd_extra_network.get_all(db)
     existing_sd_extra_networks_sha256s = [
-        sd_extra_network.lora_sha256
+        sd_extra_network.sha256
         for sd_extra_network in existing_sd_extra_networks
-        if sd_extra_network.lora_sha256
+        if sd_extra_network.sha256
     ]
     context["existing_sd_extra_networks_sha256s"] = existing_sd_extra_networks_sha256s
 
