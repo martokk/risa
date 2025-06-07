@@ -1,5 +1,7 @@
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
+from pydantic import root_validator
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -21,7 +23,31 @@ class SDCheckpoint(SDCheckpointBase, table=True):
 
 
 class SDCheckpointCreate(SDCheckpointBase):
-    pass
+    @root_validator(pre=True)
+    @classmethod
+    def generate_id(cls, values: dict[str, Any]) -> dict[str, Any]:
+        if values.get("id") is None:
+            name = values.get("name")
+            local_file_path_value = values.get("local_file_path")
+
+            safetensors_name = Path(local_file_path_value).stem if local_file_path_value else None
+
+            if not name and not safetensors_name:
+                raise ValueError(
+                    "name or safetensors_name(local_file_path) must be provided to generate an ID"
+                )
+
+            id_raw = safetensors_name if safetensors_name else name
+            id = (
+                id_raw.lower()
+                .replace(" ", "_")
+                .replace(".", "_")
+                .replace("-", "_")
+                .replace(":", "_")
+            )
+
+            values["id"] = id
+        return values
 
 
 class SDCheckpointUpdate(SDCheckpointBase):

@@ -1,0 +1,317 @@
+{% extends "base/base.html" %}
+
+{% block title %}
+    {% if view_mode %}
+        View SD Extra Network: {{ item.id }}
+    {% elif item and item.id %}
+        Edit SD Extra Network: {{ item.id }}
+    {% else %}
+        Create SD Extra Network
+    {% endif %}
+{% endblock %}
+
+{% block content_header %}
+    {% if view_mode %}
+        View SD Extra Network: {{ item.id }}
+    {% elif item and item.id %}
+        Edit SD Extra Network: <small class="text-muted">{{ item.id }}</small>
+    {% else %}
+        Create New SD Extra Network
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <form id="sdExtraNetworkForm">
+        {% if item %}
+        <input type="hidden" name="original_id" value="{{ item.id }}">
+        {% endif %}
+
+        <div class="row">
+            <!-- Column 1: Core Details & File Paths -->
+            <div class="col-lg-6">
+                <!-- Core Details Card -->
+                <div class="card text-white mb-3">
+                    <div class="card-header bg-primary">
+                        <h3 class="card-title text-white">Core Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="sdExtraNetworkId" class="font-weight-bold">ID</label>
+                            <input type="text" class="form-control" id="sdExtraNetworkId" name="id" value="{{ item.id if item else '' }}" placeholder="Leave empty to auto-generate" {% if view_mode %}disabled{% endif %}>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="sdBaseModelId" class="font-weight-bold">Base Model <span class="text-danger">*</span></label>
+                            <select class="form-control" id="sdBaseModelId" name="sd_base_model_id" required {% if view_mode %}disabled{% endif %}>
+                                <option value="" disabled {% if not item %}selected{% endif %}>Select Base Model</option>
+                                {% for base_model in sd_base_models | sort(attribute="name") %}
+                                <option value="{{ base_model.id }}" {% if item and item.sd_base_model and item.sd_base_model.id==base_model.id %}selected{% endif %}>{{ base_model.name }} ({{ base_model.id }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="characterId" class="font-weight-bold">Character <span class="text-danger">*</span></label>
+                            <select class="form-control" id="characterId" name="character_id" required {% if view_mode %}disabled{% endif %}>
+                                <option value="" disabled {% if not item %}selected{% endif %}>Select Character</option>
+                                {% for char in characters | sort(attribute="name") %}
+                                    <option value="{{ char.id }}" {% if item and item.character and item.character.id == char.id %}selected{% endif %}>{{ char.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="trainedOnCheckpoint" class="font-weight-bold">Trained On Checkpoint</label>
+                            <input type="text" class="form-control" id="trainedOnCheckpoint" name="trained_on_checkpoint" value="{{ item.trained_on_checkpoint if item and item.trained_on_checkpoint else '' }}" {% if view_mode %}disabled{% endif %}>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Paths Card -->
+                <div class="card text-white mb-3">
+                    <div class="card-header bg-info">
+                        <h3 class="card-title text-white">File Paths</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="localFilePath" class="font-weight-bold">Local File Path</label>
+                            <input type="text" class="form-control" id="localFilePath" name="local_file_path" value="{{ item.local_file_path if item and item.local_file_path else '' }}" {% if view_mode %}disabled{% endif %}>
+                             {% if item and item.local_file_path %}
+                            <small class="form-text"><a class="text-info font-weight-bold" href="file://{{ item.local_file_path | replace('.safetensors', '.json') }}" target="_blank" rel="noopener noreferrer">Open .json file</a></small>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sha256" class="font-weight-bold">SHA256</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="sha256" name="sha256"
+                                    value="{{ item.sha256 if item and item.sha256 is not none else '' }}"
+                                    placeholder="SHA256 hash of the file" {% if view_mode %}disabled{% endif %}>
+                                {% if item %}
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-info" id="getSha256Btn"
+                                        title="Fetch SHA256 from server (if file exists)" {% if view_mode %}disabled{% endif %}>
+                                        <i class="fas fa-sync"></i> Get SHA256
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <small class="form-text">
+                                <a id="sha256Link" class="text-success font-weight-bold"
+                                    href="https://civitaiarchive.com/sha256/{{ item.sha256 if item and item.sha256 else '' }}"
+                                    target="_blank" rel="noopener noreferrer" {% if not item or not item.sha256 %}style="display:none;" {% endif %}>Open sha256 in CivitAI Archive</a>
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="remoteFilePath" class="font-weight-bold">Remote File Path</label>
+                            <input type="text" class="form-control" id="remoteFilePath" name="remote_file_path" value="{{ item.remote_file_path if item and item.remote_file_path else '' }}" {% if view_mode %}disabled{% endif %}>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Network Details & Filtering -->
+            <div class="col-lg-6">
+                <!-- Network Details Card -->
+                <div class="card text-white mb-3">
+                    <div class="card-header bg-success">
+                        <h3 class="card-title text-white">Network Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="network" class="font-weight-bold">Network</label>
+                            <select class="form-control" id="network" name="network" required {% if view_mode %}disabled{% endif %}>
+                                <option value="" disabled {% if not item %}selected{% endif %}>Select Network</option>
+                                {% for _network in networks %}
+                                    <option value="{{ _network }}" {% if item and _network == item.network %}selected{% endif %}>{{ _network }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="networkWeight" class="font-weight-bold">Network Weight</label>
+                            <input type="number" step="0.1" class="form-control" id="networkWeight" name="network_weight" value="{{ item.network_weight if item and item.network_weight is not none else '1.0' }}" placeholder="1.0" {% if view_mode %}disabled{% endif %}>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="networkTrigger" class="font-weight-bold">Trigger Words</label>
+                            <input type="text" class="form-control" id="networkTrigger" name="network_trigger" value="{{ item.network_trigger if item and item.network_trigger is not none else '' }}" placeholder="e.g., ohwx, ohwx woman" {% if view_mode %}disabled{% endif %}>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage Conditions & Filtering Card -->
+                <div class="card mb-3">
+                    <div class="card-header bg-warning">
+                        <h3 class="card-title text-dark">Usage Conditions & Checkpoint Filtering</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group form-check">
+                                    <input type="checkbox" class="form-check-input" id="onlyRealistic" name="only_realistic" {% if item and item.only_realistic %}checked{% endif %} {% if view_mode %}disabled{% endif %}>
+                                    <label class="form-check-label font-weight-bold" for="onlyRealistic">Only use on Realistic models</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group form-check">
+                                    <input type="checkbox" class="form-check-input" id="onlyNonRealistic" name="only_nonrealistic" {% if item and item.only_nonrealistic %}checked{% endif %} {% if view_mode %}disabled{% endif %}>
+                                    <label class="form-check-label font-weight-bold" for="onlyNonRealistic">Only use on Non-Realistic models</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="onlyCheckpoints" class="font-weight-bold">Only use on these Checkpoints</label>
+                            <input type="text" class="form-control" id="onlyCheckpoints" name="only_checkpoints_str" value="{{ item.only_checkpoints|join(',') if item and item.only_checkpoints }}" placeholder="e.g., checkpoint_id1,checkpoint_id2" {% if view_mode %}disabled{% endif %}>
+                             <small class="form-text text-muted">Comma-separated IDs.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="excludeCheckpoints" class="font-weight-bold">Exclude these Checkpoints</label>
+                            <input type="text" class="form-control" id="excludeCheckpoints" name="exclude_checkpoints_str" value="{{ item.exclude_checkpoints|join(',') if item and item.exclude_checkpoints }}" placeholder="e.g., checkpoint_id3,checkpoint_id4" {% if view_mode %}disabled{% endif %}>
+                            <small class="form-text text-muted">Comma-separated IDs.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-transparent text-right">
+            {% if view_mode %}
+                <a href="{{ url_for('edit_sd_extra_network_page', sd_extra_network_id=item.id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{{ url_for('list_sd_extra_networks_page') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            {% else %}
+                <button type="submit" class="btn btn-{% if item %}warning{% else %}primary{% endif %}">
+                    {% if item %}Update{% else %}Create{% endif %} SD Extra Network
+                </button>
+                <a href="{{ redirect_url if redirect_url else url_for('list_sd_extra_networks_page') }}" class="btn btn-secondary">Cancel</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+{% if not view_mode %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found. API calls might fail.');
+    initializeApi({});
+    {% endif %}
+
+    const isEditMode = {{ 'true' if item else 'false' }};
+
+    function updateSha256LinkVisibility(sha256Value) {
+        const link = document.getElementById('sha256Link');
+        if (link) {
+            if (sha256Value && sha256Value.trim() !== '') {
+                link.href = `https://civitaiarchive.com/sha256/${sha256Value}`;
+                link.style.display = 'inline';
+            } else {
+                link.style.display = 'none';
+            }
+        }
+    }
+    
+    const sha256Input = document.getElementById('sha256');
+    if (sha256Input) {
+        sha256Input.addEventListener('input', function() {
+            updateSha256LinkVisibility(this.value);
+        });
+        updateSha256LinkVisibility(sha256Input.value);
+    }
+
+    if (isEditMode) {
+        const getSha256Btn = document.getElementById('getSha256Btn');
+        if (getSha256Btn) {
+            getSha256Btn.addEventListener('click', async function() {
+                try {
+                    const originalId = document.querySelector('input[name="original_id"]').value;
+                    const response = await apiCrud.getEndpoint(`sd-extra-networks/${originalId}/sha256`);
+                    
+                    if (response.success && response.sha256) {
+                        sha256Input.value = response.sha256;
+                        updateSha256LinkVisibility(response.sha256);
+                        uiHelpers.showToast('SHA256 fetched successfully!', 'success');
+                    } else {
+                         uiHelpers.showToast(response.message || 'No SHA256 found or error occurred.', response.success ? 'warning' : 'error');
+                    }
+                } catch (error) {
+                    console.error('Error fetching SHA256:', error);
+                    const errorMessage = error.detail || error.message || 'Failed to fetch SHA256';
+                    uiHelpers.showToast(errorMessage, 'error');
+                }
+            });
+        }
+    }
+
+    const form = document.getElementById('sdExtraNetworkForm');
+    if (form) {
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            try {
+                const rawFormData = uiHelpers.getFormData('sdExtraNetworkForm');
+                const processedFormData = { ...rawFormData };
+
+                // Handle booleans
+                processedFormData.only_realistic = document.getElementById('onlyRealistic').checked;
+                processedFormData.only_nonrealistic = document.getElementById('onlyNonRealistic').checked;
+
+                // Handle checkpoint lists
+                const processCheckpoints = (key) => {
+                    if (rawFormData[key] && rawFormData[key].trim() !== "") {
+                        processedFormData[key.replace('_str', '')] = rawFormData[key].split(',').map(s => s.trim()).filter(s => s !== "");
+                    } else {
+                        processedFormData[key.replace('_str', '')] = [];
+                    }
+                    delete processedFormData[key];
+                };
+                processCheckpoints('only_checkpoints_str');
+                processCheckpoints('exclude_checkpoints_str');
+                
+                // Handle empty ID on create
+                if (!isEditMode && processedFormData.id === "") { 
+                    delete processedFormData.id; 
+                }
+
+                if (isEditMode) {
+                    const originalId = rawFormData.original_id;
+                    delete processedFormData.original_id;
+                    const response = await apiCrud.update('sd-extra-networks', originalId, processedFormData);
+                    uiHelpers.showToast('SD Extra Network updated successfully!', 'success');
+                    const newId = response.id || originalId;
+                    setTimeout(() => {
+                        window.location.href = `/sd-extra-network/${newId}/edit`; 
+                    }, 1500);
+                } else {
+                    const response = await apiCrud.create('sd-extra-networks', processedFormData);
+                    uiHelpers.showToast('SD Extra Network created successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = "{{ redirect_url if redirect_url else url_for('list_sd_extra_networks_page') }}";
+                    }, 300);
+                }
+
+            } catch (error) {
+                console.error('Failed to save SD Extra Network:', error);
+                const errorMessage = error.responseJSON?.detail || error.message || 'Failed to save. Check console.';
+                uiHelpers.showError(errorMessage);
+            }
+        });
+    }
+</script>
+{% endif %}
+{% endblock %} 
