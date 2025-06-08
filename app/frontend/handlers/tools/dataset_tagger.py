@@ -16,9 +16,10 @@ from starlette.templating import _TemplateResponse
 
 from app import crud, logger
 from app.core.db import get_db
-from app.paths import DATASET_TAGGER_WALKTHROUGH_PATH
 from app.frontend.templates import templates
 from app.frontend.templates.context import get_template_context
+from app.paths import DATASET_TAGGER_WALKTHROUGH_PATH
+from app.routes.restrict_to_env import restrict_to
 
 
 # Define thumbnail constants
@@ -76,6 +77,7 @@ router = APIRouter(
 
 
 @router.get("/setup", response_class=HTMLResponse)
+@restrict_to("local")
 async def get_dataset_tagger_setup_page(
     request: Request,
     db: Session = Depends(get_db),
@@ -89,6 +91,7 @@ async def get_dataset_tagger_setup_page(
 
 
 @router.post("/setup")
+@restrict_to("local")
 async def post_dataset_tagger_setup(
     request: Request,
     character_id: Annotated[str, Form()],
@@ -243,6 +246,7 @@ def _generate_thumbnail(
 
 
 @router.get("/image-proxy", response_class=FileResponse)
+@restrict_to("local")
 async def get_image_proxy(
     request: Request,
     folder: str = Query(...),
@@ -333,6 +337,7 @@ async def get_image_proxy(
 
 
 @router.get("/workflow", response_class=HTMLResponse)
+@restrict_to("local")
 async def get_dataset_tagger_workflow_page(
     request: Request,
     character_id: str = Query(...),
@@ -968,6 +973,7 @@ async def _get_next_display_item_and_update_state(
 
 
 @router.post("/workflow/process-tag", response_class=HTMLResponse)
+@restrict_to("local")
 async def post_dataset_tagger_process_tag(
     request: Request,
     # --- TaggingWorkflowState fields --- #
@@ -1128,6 +1134,7 @@ async def post_dataset_tagger_process_tag(
 
 
 @router.post("/generate-thumbnail", status_code=200)
+@restrict_to("local")
 async def post_generate_single_thumbnail(
     request: Request,  # Added request for potential future use (e.g. auth)
     folder_path: Annotated[str, Form()],
