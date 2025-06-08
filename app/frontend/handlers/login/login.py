@@ -6,8 +6,8 @@ from sqlmodel import Session
 from app import models
 from app.core import security
 from app.core.db import get_db
-from app.views.deps import get_current_tokens
-from app.views.templates import templates
+from app.frontend.deps import get_current_tokens
+from app.frontend.templates import templates
 
 
 router = APIRouter()

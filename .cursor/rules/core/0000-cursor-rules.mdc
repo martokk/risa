@@ -139,7 +139,7 @@ Invalid concise example with explanation
 
 - **Folder Location**: `/.cursor/rules/standards/ui_ux/`
 - **Prefix**: `15XX`
-- **Common Glob Patterns**: `app/views/templates/**/*.html`, `app/views/static/**/*`
+- **Common Glob Patterns**: `app/frontend/templates/**/*.html`, `app/frontend/static/**/*`
 
 ### Language Rules
 
@@ -158,19 +158,19 @@ Invalid concise example with explanation
 
 - **Folder Location**: `/.cursor/rules/languages/javascript/`
 - **Prefix**: `22XX`
-- **Common Glob Patterns**: `app/views/static/js/**/*.js`
+- **Common Glob Patterns**: `app/frontend/static/js/**/*.js`
 
 #### HTML
 
 - **Folder Location**: `/.cursor/rules/languages/html/`
 - **Prefix**: `23XX`
-- **Common Glob Patterns**: `app/views/templates/**/*.html`
+- **Common Glob Patterns**: `app/frontend/templates/**/*.html`
 
 #### CSS & Bootstrap
 
 - **Folder Location**: `/.cursor/rules/languages/css/`
 - **Prefix**: `24XX`
-- **Common Glob Patterns**: `app/views/templates/**/*.html`, `app/views/static/css/**/*.css`
+- **Common Glob Patterns**: `app/frontend/templates/**/*.html`, `app/frontend/static/css/**/*.css`
 
 ### Framework Rules
 

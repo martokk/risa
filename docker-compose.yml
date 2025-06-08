@@ -1,12 +1,12 @@
 version: "3.9"
 
 services:
-  risa_ai:
-    container_name: "risa_ai"
-    image: ghcr.io/martokk/risa_ai:latest
+  risa:
+    container_name: "risa"
+    image: ghcr.io/martokk/risa:latest
     restart: unless-stopped
     volumes:
-      # - /home/ubuntu/volumes/risa_ai/data:/risa_ai/data
+      # - /home/ubuntu/volumes/risa/data:/risa/data
       - ./app:/app
     ports:
       - "5000:5000"

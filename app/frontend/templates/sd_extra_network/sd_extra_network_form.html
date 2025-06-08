@@ -10,16 +10,6 @@
     {% endif %}
 {% endblock %}
 
-{% block content_header %}
-    {% if view_mode %}
-        View SD Extra Network: {{ item.id }}
-    {% elif item and item.id %}
-        Edit SD Extra Network: <small class="text-muted">{{ item.id }}</small>
-    {% else %}
-        Create New SD Extra Network
-    {% endif %}
-{% endblock %}
-
 {% block content %}
 <div class="container" style="max-width: 600px;">
     <form id="sdExtraNetworkForm">
@@ -29,10 +19,16 @@
 
         <!-- Core Details Card -->
         <div class="card text-white mb-1">
+
+            <!-- Core Details Card Header -->
             <div class="card-header bg-primary py-1">
                 <div class="mb-0 text-white py-0 fw-bold">Core Details</div>
             </div>
+
+            <!-- Core Details Card Body -->
             <div class="card-body py-1">
+
+                <!-- ID -->
                 <div class="row mb-1 align-items-center">
                     <label for="sdExtraNetworkId"
                         class="col-md-3 col-form-label col-form-label-sm font-weight-bold">ID</label>
@@ -43,6 +39,7 @@
                     </div>
                 </div>
 
+                <!-- Base Model ID -->
                 <div class="row mb-1 align-items-center">
                     <label for="sdBaseModelId" class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Base
                         Model <span class="text-danger">*</span></label>
@@ -59,6 +56,7 @@
                     </div>
                 </div>
 
+                <!-- Character ID -->
                 <div class="row mb-1 align-items-center">
                     <label for="characterId"
                         class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Character <span
@@ -75,6 +73,7 @@
                     </div>
                 </div>
 
+                <!-- Trained On Checkpoint -->
                 <div class="row mb-1 align-items-center">
                     <label for="trainedOnCheckpoint"
                         class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Trained On Checkpoint</label>
@@ -90,15 +89,22 @@
                         </select>
                     </div>
                 </div>
+
             </div>
         </div>
 
         <!-- File Paths Card -->
         <div class="card text-white mb-1">
+
+            <!-- File Paths Card Header -->
             <div class="card-header bg-info py-1">
                 <div class="mb-0 text-white py-0 fw-bold">File Paths</div>
             </div>
+
+            <!-- File Paths Card Body -->
             <div class="card-body py-1">
+
+                <!-- Local File Path -->
                 <div class="row mb-2 align-items-center">
                     <label for="localFilePath" class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Local
                         File Path</label>
@@ -107,14 +113,21 @@
                             name="local_file_path"
                             value="{{ item.local_file_path if item and item.local_file_path else local_file_path or '' }}"
                             {% if view_mode %}disabled{% endif %}>
+                        
+                        <!-- Open .json file -->
                         {% if item and item.local_file_path %}
-                        <small class="form-text"><a class="text-info font-weight-bold"
-                                href="file://{{ item.local_file_path | replace('.safetensors', '.json') }}"
-                                target="_blank" rel="noopener noreferrer">Open .json file</a></small>
+                            <small class="form-text">
+                                <a class="text-info font-weight-bold"
+                                    href="file://{{ item.local_file_path | replace('.safetensors', '.json') }}"
+                                    target="_blank" rel="noopener noreferrer">Open .json file
+                                </a>
+                            </small>
                         {% endif %}
+
                     </div>
                 </div>
 
+                <!-- SHA256 -->
                 <div class="row mb-1 align-items-center">
                     <label for="sha256"
                         class="col-md-3 col-form-label col-form-label-sm font-weight-bold">SHA256</label>
@@ -123,6 +136,8 @@
                             <input type="text" class="form-control form-control-sm" id="sha256" name="sha256"
                                 value="{{ item.sha256 if item and item.sha256 is not none else sha256 or '' }}"
                                 placeholder="SHA256 hash of the file" {% if view_mode %}disabled{% endif %}>
+                            
+                            <!-- Get SHA256 button -->
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-info btn-sm" id="getSha256Btn"
                                     title="Fetch SHA256 from server (if file exists)" {% if view_mode %}disabled{% endif
@@ -131,6 +146,8 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Open sha256 in CivitAI Archive -->
                         <small class="form-text">
                             <a id="sha256Link" class="text-success font-weight-bold"
                                 href="https://civitaiarchive.com/sha256/{{ item.sha256 if item and item.sha256 else '' }}"
@@ -140,6 +157,7 @@
                     </div>
                 </div>
 
+                <!-- Remote File Path -->
                 <div class="row mb-1 align-items-center">
                     <label for="remoteFilePath"
                         class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Remote File Path</label>
@@ -150,15 +168,22 @@
                             view_mode %}disabled{% endif %}>
                     </div>
                 </div>
+
             </div>
         </div>
 
         <!-- Network Details Card -->
         <div class="card text-white mb-1">
+
+            <!-- Network Details Card Header -->
             <div class="card-header bg-success py-1">
                 <div class="mb-0 text-white py-0 fw-bold">Network Details</div>
             </div>
+
+            <!-- Network Details Card Body -->
             <div class="card-body py-1">
+
+                <!-- Network -->
                 <div class="row mb-1 align-items-center">
                     <label for="network"
                         class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Network</label>
@@ -174,6 +199,7 @@
                     </div>
                 </div>
 
+                <!-- Network Weight -->
                 <div class="row mb-1 align-items-center">
                     <label for="networkWeight"
                         class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Network Weight</label>
@@ -185,6 +211,7 @@
                     </div>
                 </div>
 
+                <!-- Network Trigger -->
                 <div class="row mb-1 align-items-center">
                     <label for="networkTrigger"
                         class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Trigger Words</label>
@@ -195,15 +222,22 @@
                             placeholder="e.g., ohwx, ohwx woman" {% if view_mode %}disabled{% endif %}>
                     </div>
                 </div>
+
             </div>
         </div>
 
         <!-- Usage Conditions & Filtering Card -->
         <div class="card mb-1">
+
+            <!-- Usage Conditions & Filtering Card Header -->
             <div class="card-header bg-warning py-1">
                 <div class="mb-0 text-dark py-0 fw-bold">Usage Conditions &amp; Checkpoint Filtering</div>
             </div>
+
+            <!-- Usage Conditions & Filtering Card Body -->
             <div class="card-body py-1">
+
+                <!-- Realism Filter -->
                 <div class="row mb-1 align-items-center">
                     <div class="col-md-3 col-form-label-sm font-weight-bold">Realism Filter</div>
                     <div class="col-md-9">
@@ -224,6 +258,7 @@
                     </div>
                 </div>
 
+                <!-- Only Checkpoints -->
                 <div class="row mb-1 align-items-center">
                     <label for="onlyCheckpoints" class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Only
                         use on</label>
@@ -239,6 +274,7 @@
                     </div>
                 </div>
 
+                <!-- Exclude Checkpoints -->
                 <div class="row mb-1 align-items-center">
                     <label for="excludeCheckpoints"
                         class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Exclude on</label>
@@ -254,26 +290,38 @@
                         </select>
                     </div>
                 </div>
+
             </div>
         </div>
 
+        <!-- Footer -->
         <div class="card-footer bg-transparent text-right">
             {% if view_mode %}
-            <a href="{{ url_for('edit_sd_extra_network_page', sd_extra_network_id=item.id) }}"
-                class="btn btn-warning btn-sm">
-                <i class="fas fa-edit"></i> Edit
-            </a>
-            <a href="{{ url_for('list_sd_extra_networks_page') }}" class="btn btn-secondary btn-sm">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
+
+                <!-- Edit button -->
+                <a href="{{ url_for('edit_sd_extra_network_page', sd_extra_network_id=item.id) }}"
+                    class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+
+                <!-- Back to List button -->
+                <a href="{{ url_for('list_sd_extra_networks_page') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+
             {% else %}
-            <button type="submit" class="btn btn-{% if item %}warning{% else %}primary{% endif %} btn-sm">
-                {% if item %}Update{% else %}Create{% endif %} SD Extra Network
-            </button>
-            <a href="{{ redirect_url if redirect_url else url_for('list_sd_extra_networks_page') }}"
-                class="btn btn-secondary btn-sm">Cancel</a>
+
+                <!-- Submit button -->
+                <button type="submit" class="btn btn-{% if item %}warning{% else %}primary{% endif %} btn-sm">
+                    {% if item %}Update{% else %}Create{% endif %} SD Extra Network
+                </button>
+
+                <!-- Cancel button -->
+                <a href="{{ redirect_url if redirect_url else url_for('list_sd_extra_networks_page') }}"
+                    class="btn btn-secondary btn-sm">Cancel</a>
             {% endif %}
         </div>
+
     </form>
 </div>
 {% endblock %}
@@ -331,12 +379,12 @@
                     const originalId = document.querySelector('input[name="original_id"]').value;
                     const response = await apiCrud.getEndpoint(`sd-extra-networks/${originalId}/sha256`);
                     
-                    if (response.success && response.sha256) {
+                    if (response.sha256) {
                         sha256Input.value = response.sha256;
                         updateSha256LinkVisibility(response.sha256);
                         uiHelpers.showToast('SHA256 fetched successfully!', 'success');
                     } else {
-                         uiHelpers.showToast(response.message || 'No SHA256 found or error occurred.', response.success ? 'warning' : 'error');
+                        uiHelpers.showToast(response.message || 'No SHA256 found or error occurred.', response.success ? 'warning' : 'error');
                     }
                 } catch (error) {
                     console.error('Error fetching SHA256:', error);
@@ -352,6 +400,9 @@
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
             try {
+                const apiRoute = 'sd-extra-networks';
+                const objectName = 'SD Extra Network';
+
                 const rawFormData = uiHelpers.getFormData('sdExtraNetworkForm');
                 const processedFormData = { ...rawFormData };
 
@@ -380,22 +431,22 @@
                 if (isEditMode) {
                     const originalId = rawFormData.original_id;
                     delete processedFormData.original_id;
-                    const response = await apiCrud.update('sd-extra-networks', originalId, processedFormData);
-                    uiHelpers.showToast('SD Extra Network updated successfully!', 'success');
+                    const response = await apiCrud.update(apiRoute, originalId, processedFormData);
+                    uiHelpers.showToast(`${objectName} updated successfully!`, 'success');
                     const newId = response.id || originalId;
                     setTimeout(() => {
-                        window.location.href = `/sd-extra-network/${newId}/edit`; 
+                        window.location.href = "{{ redirect_url if redirect_url else '/${apiRoute}/${newId}/edit' }}";
                     }, 1500);
                 } else {
-                    const response = await apiCrud.create('sd-extra-networks', processedFormData);
-                    uiHelpers.showToast('SD Extra Network created successfully!', 'success');
+                    const response = await apiCrud.create(apiRoute, processedFormData);
+                    uiHelpers.showToast(`${objectName} created successfully!`, 'success');
                     setTimeout(() => {
                         window.location.href = "{{ redirect_url if redirect_url else url_for('list_sd_extra_networks_page') }}";
                     }, 300);
                 }
 
             } catch (error) {
-                console.error('Failed to save SD Extra Network:', error);
+                console.error(`Failed to save ${objectName}:`, error);
                 const errorMessage = error.responseJSON?.detail || error.message || 'Failed to save. Check console.';
                 uiHelpers.showError(errorMessage);
             }

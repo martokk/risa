@@ -1,6 +1,6 @@
 ---
 description: FOLLOW when CREATING FastAPI handlers to ensure proper organization of API endpoints and page handlers
-globs: app/api/**/*.py, app/views/pages/**/*.py
+globs: app/api/**/*.py, app/frontend/handlers/**/*.py
 alwaysApply: false
 ---
 
@@ -31,7 +31,7 @@ alwaysApply: false
 
 ### 2. Page Handlers (HTML Responses)
 
-- **Location**: `app/views/pages/`
+- **Location**: `app/frontend/handlers/`
 - **Response Types**: HTMLResponse, TemplateResponse
 - **Registration**: Register in `app/routes/views.py`
 - **Subfolder Structure**:
@@ -76,7 +76,7 @@ async def get_tags(
 
 <example>
 # Page Handler (HTML Response)
-# File: app/views/pages/root/tag.py
+# File: app/frontend/handlers/root/tag.py
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
@@ -84,8 +84,8 @@ from sqlmodel import Session
 
 from app import crud
 from app.core.db import get_db
-from app.views.templates import templates
-from app.views.templates.context import get_template_context
+from app.frontend.templates import templates
+from app.frontend.templates.context import get_template_context
 
 router = APIRouter()
 
@@ -130,14 +130,14 @@ router = APIRouter()
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request):
-    # This should be in app/views/pages/root/dashboard.py instead
+    # This should be in app/frontend/handlers/root/dashboard.py instead
     return templates.TemplateResponse("dashboard.html", {"request": request})
 </example>
 
 ## Critical Rules
 
 - ALWAYS place JSON-returning handlers in `app/api/v1/endpoints/`
-- ALWAYS place HTML-returning handlers in `app/views/pages/` with appropriate subfolder
+- ALWAYS place HTML-returning handlers in `app/frontend/handlers/` with appropriate subfolder
 - NEVER mix response types within the same router file
 - ALWAYS register API endpoints in `app/routes/api.py`
 - ALWAYS register page handlers in `app/routes/views.py`

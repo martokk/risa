@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from app import models
-from app.views.deps import get_current_active_user, get_current_user
-from app.views.templates import templates
-from app.views.templates.context import get_template_context
+from app.frontend.deps import get_current_active_user, get_current_user
+from app.frontend.templates import templates
+from app.frontend.templates.context import get_template_context
 
 
 router = APIRouter()
@@ -69,4 +69,4 @@ async def favicon() -> FileResponse:
     Returns:
         FileResponse: favicon.ico file
     """
-    return FileResponse("app/views/static/images/favicons/favicon.ico")
+    return FileResponse("app/frontend/static/images/favicons/favicon.ico")

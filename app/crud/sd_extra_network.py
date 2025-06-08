@@ -64,5 +64,11 @@ class SDExtraNetworkCRUD(
 
         raise ValueError(f"SDExtraNetwork {id} has no safetensors file associated.")
 
+    async def add_excluded_checkpoint(self, db: Session, id: str, checkpoint_id: str) -> None:
+        """Add an excluded checkpoint to an SD Extra Network."""
+        sd_extra_network = await self.get(db, id=id)
+        sd_extra_network.excluded_checkpoints.append(checkpoint_id)
+        await self.update(db, id=id, obj=sd_extra_network)
+
 
 sd_extra_network = SDExtraNetworkCRUD(model=models.SDExtraNetwork)

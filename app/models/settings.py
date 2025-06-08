@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     NOTIFY_ON_START: bool = True
 
     # Project Settings
-    PROJECT_NAME: str = "risa_ai"
+    PROJECT_NAME: str = "risa"
     PACKAGE_NAME: str = PROJECT_NAME.lower().replace("-", "_").replace(" ", "_")
     PROJECT_DESCRIPTION: str = f"{PROJECT_NAME}"
     VERSION: str = ""

@@ -52,5 +52,66 @@
             </dl>
         </div>
     </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Excluded Extra Networks</h3>
+        </div>
+        <div class="card-body">
+            <form id="excluded-extra-networks-form">
+                <!-- Tom Select -->
+                <select id="excluded-extra-networks" class="form-control" multiple>
+                    {% for extra_network in extra_networks %}
+                    <option value="{{ extra_network.id }}" {% if extra_network.id in excluded_extra_networks %}selected{% endif %}>{{ extra_network.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+
+        </div>
+    </div>
 </div>
 {% endblock %} 
+
+{% block js_dependencies %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found. API calls might fail.');
+    initializeApi({});
+    {% endif %}
+
+
+    const excludedExtraNetworks = document.getElementById('excluded-extra-networks');
+    new TomSelect(excludedExtraNetworks, {
+        create: false,
+        createFilter: function(input) {
+            return input.length > 2;
+        },
+        createOnBlur: true,
+        plugins: ['remove_button'],
+        sortField: { field: "text", direction: "asc" }
+    });
+
+    const excludedExtraNetworksForm = document.getElementById('excluded-extra-networks-form');
+    excludedExtraNetworksForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const exlcudedIds = Array.from(excludedExtraNetworks.selectedOptions, option => option.value);
+        const response = await apiCrud.update('sd-checkpoint', '{{ sd_checkpoint.id }}', { excluded_extra_networks: exlcudedIds });
+        uiHelpers.showToast('SD Checkpoint updated successfully!', 'success');
+    });
+
+
+</script>
+{% endblock %}

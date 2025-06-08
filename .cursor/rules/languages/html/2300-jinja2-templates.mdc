@@ -1,6 +1,6 @@
 ---
 description: FOLLOW when CREATING or EDITING Jinja2 templates to ensure consistent structure
-globs: app/views/templates/**/*.html
+globs: app/frontend/templates/**/*.html
 alwaysApply: false
 ---
 

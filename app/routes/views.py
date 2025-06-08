@@ -1,23 +1,19 @@
 from fastapi import APIRouter
 
-from app.views.pages import context_templates, contexts
-from app.views.pages.character import character
-from app.views.pages.login import login
-from app.views.pages.root import root
-from app.views.pages.sd_base_model import sd_base_model
-from app.views.pages.sd_checkpoint import sd_checkpoint
-from app.views.pages.sd_extra_network import sd_extra_network
-from app.views.pages.tools import dataset_tagger, safetensors_import_helper
-from app.views.pages.user import user
+from app.frontend.handlers.character import character
+from app.frontend.handlers.login import login
+from app.frontend.handlers.root import root
+from app.frontend.handlers.sd_base_model import sd_base_model
+from app.frontend.handlers.sd_checkpoint import sd_checkpoint
+from app.frontend.handlers.sd_extra_network import sd_extra_network
+from app.frontend.handlers.tools import dataset_tagger, safetensors_import_helper
+from app.frontend.handlers.user import user
 
 
 # Root routes
 root_router = APIRouter()
 root_router.include_router(root.router, tags=["Root"])
 root_router.include_router(login.router, tags=["Logins"])
-
-root_router.include_router(contexts.router, tags=["Contexts"])
-root_router.include_router(context_templates.router, tags=["Context Templates"])
 
 # SD specific routes
 root_router.include_router(sd_base_model.router, tags=["SD Base Models"])

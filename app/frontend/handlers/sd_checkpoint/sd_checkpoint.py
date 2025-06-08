@@ -6,8 +6,8 @@ from sqlmodel import Session
 
 from app import crud
 from app.core.db import get_db
-from app.views.templates import templates
-from app.views.templates.context import get_template_context
+from app.frontend.templates import templates
+from app.frontend.templates.context import get_template_context
 
 
 router = APIRouter(tags=["SD Checkpoints"])
@@ -101,6 +101,21 @@ async def view_sd_checkpoint_page(
     if not sd_checkpoint_obj:
         raise HTTPException(status_code=404, detail="SD Checkpoint not found")
     context["sd_checkpoint"] = sd_checkpoint_obj
+
+    # Get all extra networks for the checkpoint
+    extra_networks = await crud.sd_checkpoint.get_all_extra_networks_for_checkpoint(
+        db=db, checkpoint_id=sd_checkpoint_id
+    )
+    context["extra_networks"] = extra_networks
+
+    # Get all excluded extra networks for the checkpoint
+    excluded_extra_networks = (
+        await crud.sd_checkpoint.get_all_excluded_extra_networks_for_checkpoint(
+            db=db, checkpoint_id=sd_checkpoint_id
+        )
+    )
+    context["excluded_extra_networks"] = excluded_extra_networks
+
     return templates.TemplateResponse(
         request=request,
         name="sd_checkpoint/sd_checkpoint_view.html",

@@ -104,7 +104,7 @@ This section outlines the technical architecture for the Dataset Tagging Assista
 
 ##### 6.2.1. Python / FastAPI Backend
 
-*   **Page Handlers & HTMX Endpoints (`app/views/pages/tools/dataset_tagger.py`):**
+*   **Page Handlers & HTMX Endpoints (`app/frontend/handlers/tools/dataset_tagger.py`):**
     *   **`GET /tools/dataset-tagger/setup`**: Renders `setup_form.html`. Fetches Characters for dropdown.
     *   **`POST /tools/dataset-tagger/setup`**: Validates input. Redirects to `GET /tools/dataset-tagger/workflow` with initial state parameters (e.g., `character_id`, `folder_path` in query).
     *   **`GET /tools/dataset-tagger/workflow`**: Renders `tagging_workflow.html`. Parses query parameters to initialize `TaggingWorkflowState`. Loads `dataset_tagger_walkthrough.yaml`. Renders initial `tagging_notes`, image grid, and the first tag/question via `_tag_processing_area.html` partial, including initial hidden state fields.
@@ -119,16 +119,16 @@ This section outlines the technical architecture for the Dataset Tagging Assista
 
 ##### 6.2.2. Jinja2 Templates
 
-*   **`app/views/templates/tools/dataset_tagger/setup_form.html`**: Form with Character dropdown, folder path input.
-*   **`app/views/templates/tools/dataset_tagger/tagging_workflow.html`**: Main layout. Includes `tagging_notes`, image grid placeholder, and `<div id="tag-processor"></div>`. Links to `dataset_tagger.js`.
-*   **`app/views/templates/tools/dataset_tagger/_tag_processing_area.html` (HTMX Partial)**:
+*   **`app/frontend/templates/tools/dataset_tagger/setup_form.html`**: Form with Character dropdown, folder path input.
+*   **`app/frontend/templates/tools/dataset_tagger/tagging_workflow.html`**: Main layout. Includes `tagging_notes`, image grid placeholder, and `<div id="tag-processor"></div>`. Links to `dataset_tagger.js`.
+*   **`app/frontend/templates/tools/dataset_tagger/_tag_processing_area.html` (HTMX Partial)**:
     *   Displays current step info, current tag/manual input prompt.
     *   Form (for manual input) or display for current tag.
     *   Action buttons with HTMX attributes.
     *   Hidden input fields for all attributes of `TaggingWorkflowState`.
     *   Hidden input field `<input type="hidden" name="selected_images_input" id="selectedImagesInput">`.
-*   **`app/views/templates/tools/dataset_tagger/_image_grid.html` (Partial)**: Loops through images, displaying thumbnails. Each image: `<img>` with `id="image-{{ filename_no_ext }}" data-filename="{{ filename }}"`.
-*   **`app/views/templates/tools/dataset_tagger/_notification.html` (HTMX Partial)**: For displaying success/error messages.
+*   **`app/frontend/templates/tools/dataset_tagger/_image_grid.html` (Partial)**: Loops through images, displaying thumbnails. Each image: `<img>` with `id="image-{{ filename_no_ext }}" data-filename="{{ filename }}"`.
+*   **`app/frontend/templates/tools/dataset_tagger/_notification.html` (HTMX Partial)**: For displaying success/error messages.
 
 ##### 6.2.3. HTMX Interactions
 
@@ -139,7 +139,7 @@ This section outlines the technical architecture for the Dataset Tagging Assista
     *   `hx-include="form"` (if in a form) or specific input names (e.g., `[name='current_step_index']`, `#selectedImagesInput`).
     *   `hx-indicator` for loading state.
 
-##### 6.2.4. Client-Side JavaScript (`app/views/static/js/tools/dataset_tagger.js`)
+##### 6.2.4. Client-Side JavaScript (`app/frontend/static/js/tools/dataset_tagger.js`)
 
 *   See Section 9.
 
@@ -169,12 +169,12 @@ This section outlines the technical architecture for the Dataset Tagging Assista
 #### 6.6. File Structure Summary
 
 *   **Python:**
-    *   `app/views/pages/tools/dataset_tagger.py`
+    *   `app/frontend/handlers/tools/dataset_tagger.py`
     *   (Models in `app/models/dataset_tagger_models.py` or within `dataset_tagger.py` for LLM initial pass)
     *   (Logic in `app/logic/dataset_tagger_logic.py` or within `dataset_tagger.py` for LLM initial pass)
 *   **Templates:**
-    *   `app/views/templates/tools/dataset_tagger/` (containing `setup_form.html`, `tagging_workflow.html`, `_tag_processing_area.html`, `_image_grid.html`, `_notification.html`)
-*   **Static:** `app/views/static/js/tools/dataset_tagger.js`
+    *   `app/frontend/templates/tools/dataset_tagger/` (containing `setup_form.html`, `tagging_workflow.html`, `_tag_processing_area.html`, `_image_grid.html`, `_notification.html`)
+*   **Static:** `app/frontend/static/js/tools/dataset_tagger.js`
 *   **Configuration:** `app/data/dataset_tagger_walkthrough.yaml` (or a more central config location)
 
 ### 7. Detailed Data Structures & State
@@ -308,7 +308,7 @@ class TaggingWorkflowState(BaseModel):
 
 **(Note: The "recursively call or loop" above means the logic should re-evaluate from step 4 with the updated state until a `next_display_item` is determined or completion is reached.)**
 
-### 9. JavaScript for Image Selection (`app/views/static/js/tools/dataset_tagger.js`)
+### 9. JavaScript for Image Selection (`app/frontend/static/js/tools/dataset_tagger.js`)
 
 * On document ready/load:
     * Get the image grid container element.
@@ -332,7 +332,7 @@ That's a great way to approach a complex feature with LLM assistance! Breaking i
 
 * **Focused Prompts:** For each task within a phase, provide the LLM with specific sections of the feature document and the current state of the relevant file(s).
 * **Iterative Refinement:** Expect to guide the LLM. It might not get it perfect on the first try. Use Cursor's diffing and editing features to correct and steer it.
-* **Consolidated Context (Initially):** As you noted, for initial generation of Python logic within a phase, you might ask the LLM to place Pydantic models, helper functions, and endpoint logic all within `app/views/pages/tools/dataset_tagger.py`. Refactor later. Same for Jinja partials within the main template.
+* **Consolidated Context (Initially):** As you noted, for initial generation of Python logic within a phase, you might ask the LLM to place Pydantic models, helper functions, and endpoint logic all within `app/frontend/handlers/tools/dataset_tagger.py`. Refactor later. Same for Jinja partials within the main template.
 
 ---
 
@@ -343,25 +343,25 @@ That's a great way to approach a complex feature with LLM assistance! Breaking i
 * **Goal:** Create the directory structure and empty files. Add router entry.
 * **Tasks (Mostly Manual):**
     1. **Create Directories:**
-        * `app/views/pages/tools/dataset_tagger/`
-        * `app/views/templates/tools/dataset_tagger/`
-        * `app/views/static/js/tools/`
+        * `app/frontend/handlers/tools/dataset_tagger/`
+        * `app/frontend/templates/tools/dataset_tagger/`
+        * `app/frontend/static/js/tools/`
         * `app/models/tool_specific/` (if you decide to separate models early)
     2. **Create Empty Python Files:**
-        * `app/views/pages/tools/dataset_tagger.py`
+        * `app/frontend/handlers/tools/dataset_tagger.py`
         * `app/models/tool_specific/dataset_tagger_models.py` (or plan to keep models in `dataset_tagger.py` for LLM's first pass)
     3. **Create Empty Template Files:**
-        * `app/views/templates/tools/dataset_tagger/setup_form.html`
-        * `app/views/templates/tools/dataset_tagger/tagging_workflow.html`
-        * `app/views/templates/tools/dataset_tagger/_tag_processing_area.html`
-        * `app/views/templates/tools/dataset_tagger/_image_grid.html`
-        * `app/views/templates/tools/dataset_tagger/_notification.html`
+        * `app/frontend/templates/tools/dataset_tagger/setup_form.html`
+        * `app/frontend/templates/tools/dataset_tagger/tagging_workflow.html`
+        * `app/frontend/templates/tools/dataset_tagger/_tag_processing_area.html`
+        * `app/frontend/templates/tools/dataset_tagger/_image_grid.html`
+        * `app/frontend/templates/tools/dataset_tagger/_notification.html`
     4. **Create `dataset_tagger_walkthrough.yaml`:**
         * Place `app/data/dataset_tagger_walkthrough.yaml` with the example content from the user's attached file.
     5. **Add Router:**
-        * In `app/routes/views.py` (or your project's equivalent), import the router from `app.views.pages.tools.dataset_tagger` and include it in the main view router.
+        * In `app/routes/views.py` (or your project's equivalent), import the router from `app.frontend.handlers.tools.dataset_tagger` and include it in the main view router.
     6. **Add Navigation Link (Placeholder):**
-        * In `app/views/templates/base/navbar_logged_in.html` (or equivalent), add a link to `/tools/dataset-tagger/setup` so you can easily access it.
+        * In `app/frontend/templates/base/navbar_logged_in.html` (or equivalent), add a link to `/tools/dataset-tagger/setup` so you can easily access it.
 * **Testing:**
     * Start the FastAPI application.
     * Verify you can navigate to `/tools/dataset-tagger/setup` (it will be blank or error out if the endpoint isn't defined, which is the next step).
@@ -370,7 +370,7 @@ That's a great way to approach a complex feature with LLM assistance! Breaking i
 **Phase 1: Setup Page - Rendering and Submission (LLM Focus)**
 
 * **Goal:** Implement the setup page UI, character loading (mocked), form submission, and redirection.
-* **LLM Tasks (Targeting `app/views/pages/tools/dataset_tagger.py` and `setup_form.html`):**
+* **LLM Tasks (Targeting `app/frontend/handlers/tools/dataset_tagger.py` and `setup_form.html`):**
     1. **Pydantic Models:**
         * Generate `TaggingWorkflowState`, `WalkthroughConfig`, and `WalkthroughStep` Pydantic models (Section 7.1, 7.2).
     2. **Setup GET Endpoint (`/tools/dataset-tagger/setup`):**
@@ -392,7 +392,7 @@ That's a great way to approach a complex feature with LLM assistance! Breaking i
 **Phase 2: Workflow Page - Initial Static Display (LLM Focus)**
 
 * **Goal:** Render the main workflow page, display `tagging_notes`, show images from the specified folder (via image proxy), and a static placeholder for the first tag/question.
-* **LLM Tasks (Targeting `app/views/pages/tools/dataset_tagger.py`, `tagging_workflow.html`, `_image_grid.html`, `_tag_processing_area.html`):**
+* **LLM Tasks (Targeting `app/frontend/handlers/tools/dataset_tagger.py`, `tagging_workflow.html`, `_image_grid.html`, `_tag_processing_area.html`):**
     1. **Image Proxy Endpoint (`/tools/dataset-tagger/image-proxy`):**
         * Implement this endpoint to serve images, including path traversal security checks (Section 6.2.1).
     2. **Workflow GET Endpoint (`/tools/dataset-tagger/workflow`):**
@@ -421,7 +421,7 @@ That's a great way to approach a complex feature with LLM assistance! Breaking i
 **Phase 3: Core Tag Progression Logic & Basic "Skip Tag" HTMX (LLM Focus)**
 
 * **Goal:** Implement the server-side logic for advancing through `dataset_tagger_walkthrough.yaml`. Make the "Skip Tag" button functional via HTMX to update the tag processing area.
-* **LLM Tasks (Mainly `app/views/pages/tools/dataset_tagger.py` and `_tag_processing_area.html`):**
+* **LLM Tasks (Mainly `app/frontend/handlers/tools/dataset_tagger.py` and `_tag_processing_area.html`):**
     1. **Tag Progression Logic (Section 8):**
         * Implement the detailed server-side logic to determine the next display item (`next_display_item`, `next_item_type`) and update `TaggingWorkflowState`. This is the most complex Python part. Start with the pseudocode from Section 8.
     2. **Workflow POST Endpoint (`/tools/dataset-tagger/workflow/process-tag`):**
@@ -444,7 +444,7 @@ That's a great way to approach a complex feature with LLM assistance! Breaking i
 **Phase 4: Manual Input & "Add Tag" Functionality (HTMX) (LLM Focus)**
 
 * **Goal:** Enable manual tag submission and the "Add Tag" functionality, including writing to `.txt` files.
-* **LLM Tasks (Mainly `app/views/pages/tools/dataset_tagger.py` and `_tag_processing_area.html`):**
+* **LLM Tasks (Mainly `app/frontend/handlers/tools/dataset_tagger.py` and `_tag_processing_area.html`):**
     1. **Update `_tag_processing_area.html`:**
         * When `next_item_type == "manual_question"`:
             * Render the text input field (`<input type="text" name="manual_tag_input" required>`).
@@ -472,7 +472,7 @@ That's a great way to approach a complex feature with LLM assistance! Breaking i
 * **LLM Tasks:**
     1. **Generate JavaScript (`dataset_tagger.js`):** Based on Section 9, generate the JS code for toggling selection class and updating `#selectedImagesInput`.
 * **Manual/Cursor Tasks:**
-    1. Create `app/views/static/js/tools/dataset_tagger.js` and paste the generated code.
+    1. Create `app/frontend/static/js/tools/dataset_tagger.js` and paste the generated code.
     2. Link this JS file in `tagging_workflow.html`.
     3. Ensure the hidden input `<input type="hidden" name="selected_images_input" id="selectedImagesInput">` is correctly placed within the form in `_tag_processing_area.html` so it's included in HTMX requests.
     4. Define a basic CSS class for `selected-image-outline` (e.g., in a global CSS file or a new `dataset_tagger.css`).

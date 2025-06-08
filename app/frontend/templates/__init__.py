@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 
 from app import paths, settings
 from app.utils.datetime import format_datetime, utc_to_local
-from app.views.templates.filters import (
+from app.frontend.templates.filters import (
     filter_humanize,
     filter_markdown,
     filter_nl2br,

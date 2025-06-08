@@ -5,7 +5,7 @@ from sqlmodel import Session
 
 from app import models
 from app.core.db import get_db
-from app.views.deps import get_current_active_user, get_tokens_from_cookie
+from app.frontend.deps import get_current_active_user, get_tokens_from_cookie
 
 
 async def get_template_context(

@@ -39,7 +39,7 @@ This guide provides a comprehensive checklist for implementing new tools in the 
 
 ### 3. Web Page Handler
 
-- [ ] Create/update handler in `app/views/pages/tools/{tool_name}.py`
+- [ ] Create/update handler in `app/frontend/handlers/tools/{tool_name}.py`
 - [ ] Implement GET route for rendering the tool page
 - [ ] Generally the POST of forms will be in the api enpoint discussed above in #2.
 - [ ] Ensure proper template context is provided
@@ -48,7 +48,7 @@ This guide provides a comprehensive checklist for implementing new tools in the 
 
 ### 4. HTML Template
 
-- [ ] Create HTML template in `app/views/templates/tools/{tool_name}.html`
+- [ ] Create HTML template in `app/frontend/templates/tools/{tool_name}.html`
 - [ ] Extend from `tools/tool_base.html`
 - [ ] Implement all required template blocks:
     - [ ] `title` - Page title
@@ -66,7 +66,7 @@ This guide provides a comprehensive checklist for implementing new tools in the 
 ### 5. Integration
 
 - [ ] Add router to `app/routes/views.py` in the appropriate section
-- [ ] Add navigation link in `app/views/templates/base/navbar_logged_in.html`
+- [ ] Add navigation link in `app/frontend/templates/base/navbar_logged_in.html`
 - [ ] Place the link in the appropriate dropdown or section.
 - [ ] If needed, add a divider
 - [ ] Maintain alphabetical or logical ordering of menu items, ususally grouped together by similarities

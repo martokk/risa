@@ -1,3 +1,3 @@
-# risa_ai
+# risa
 
 ---

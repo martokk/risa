@@ -17,8 +17,8 @@ from starlette.templating import _TemplateResponse
 from app import crud, logger
 from app.core.db import get_db
 from app.paths import DATASET_TAGGER_WALKTHROUGH_PATH
-from app.views.templates import templates
-from app.views.templates.context import get_template_context
+from app.frontend.templates import templates
+from app.frontend.templates.context import get_template_context
 
 
 # Define thumbnail constants

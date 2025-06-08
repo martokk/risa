@@ -4,8 +4,8 @@ PYTHON := python
 PWD := `pwd`
 
 #* Docker variables
-PROJECT := risa_ai
-PROJECT_TITLE := risa_ai
+PROJECT := risa
+PROJECT_TITLE := risa
 VERSION := latest
 PYINSTALLER_ENTRY := $(PROJECT)/__main__.py
 

@@ -10,12 +10,12 @@ BASE_PATH = Path(os.path.dirname(os.path.abspath(__file__)))
 
 # Folders
 DATA_PATH = BASE_PATH / "data"
-VIEWS_PATH = BASE_PATH / "views"
+FRONTEND_PATH = BASE_PATH / "frontend"
 
-# Views Folder
-STATIC_PATH = VIEWS_PATH / "static"
-EMAIL_TEMPLATES_PATH = VIEWS_PATH / "email-templates"
-TEMPLATES_PATH = VIEWS_PATH / "templates"
+# Frontend Folder
+STATIC_PATH = FRONTEND_PATH / "static"
+EMAIL_TEMPLATES_PATH = FRONTEND_PATH / "email-templates"
+TEMPLATES_PATH = FRONTEND_PATH / "templates"
 
 # Data Folder
 LOGS_PATH = DATA_PATH / "logs"
