@@ -69,7 +69,7 @@
                                 {% set sha256 = safetensor_lora.sha256 %}
                                 {% set has_already_been_seen = sha256 in ns.seen_sha256s %}
                                 {% set _ = ns.seen_sha256s.append(sha256) %}
-                                {% if sha256 not in existing_sd_extra_networks_sha256s %}
+                                {% if safetensor_lora.path | string not in existing_sd_extra_networks_file_paths %}
                                     <li class="list-group-item">
                                         <div class="row align-items-center">
                                             <div class="col-md-4">{{ safetensor_lora.name }}</div>

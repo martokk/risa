@@ -42,7 +42,7 @@ class Safetensor(BaseModel):
 
     @property
     def json_file_path(self) -> Path | None:
-        if self.env_name == "local":
+        if self.env_name in ["local", "dev"]:
             json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
             if json_file_path.exists():
                 return json_file_path
@@ -50,14 +50,14 @@ class Safetensor(BaseModel):
 
     @property
     def json_file(self) -> SafetensorJSON | None:
-        if self.env_name == "local":
+        if self.env_name in ["local", "dev"]:
             if self.json_file_path:
                 return SafetensorJSON(path=self.json_file_path)
         return None
 
     @property
     def sha256(self) -> str | None:
-        if self.env_name != "local":
+        if self.env_name != "local" and self.env_name != "dev":
             return None
 
         if self.json_file:
@@ -91,7 +91,7 @@ class Safetensor(BaseModel):
 
     @property
     def size(self) -> int:
-        if self.env_name != "local":
+        if self.env_name != "local" and self.env_name != "dev":
             return 0
         return self.path.stat().st_size
 

@@ -9,10 +9,10 @@ from sqlmodel import Session
 
 from app import crud
 from app.core.db import get_db
-from app.models.sd_extra_networks import Safetensor
-from app.paths import HUB_MODELS_PATH
 from app.frontend.templates import templates
 from app.frontend.templates.context import get_template_context
+from app.models.sd_extra_networks import Safetensor
+from app.paths import HUB_MODELS_PATH
 
 
 FLUX_PATH = HUB_MODELS_PATH / "FLUX"
@@ -54,8 +54,8 @@ def get_all_hub_models() -> list[HubBaseModel]:
     hub_flux = HubBaseModel(
         name="FLUX",
         path=flux_path,
-        checkpoints_path=flux_path / "Stable-diffusion",
-        lora_path=flux_path / "Lora",
+        checkpoints_path=flux_path / "checkpoints",
+        lora_path=flux_path / "loras",
         sd_base_model_id="flux",
     )
     hub_models.append(hub_flux)
@@ -155,12 +155,10 @@ async def safetensor_import_helper_page(
     context["existing_sd_checkpoints_ids"] = existing_sd_checkpoints_ids
 
     existing_sd_extra_networks = await crud.sd_extra_network.get_all(db)
-    existing_sd_extra_networks_sha256s = [
-        sd_extra_network.sha256
-        for sd_extra_network in existing_sd_extra_networks
-        if sd_extra_network.sha256
+    existing_sd_extra_networks_file_paths = [
+        sd_extra_network.local_file_path for sd_extra_network in existing_sd_extra_networks
     ]
-    context["existing_sd_extra_networks_sha256s"] = existing_sd_extra_networks_sha256s
+    context["existing_sd_extra_networks_file_paths"] = existing_sd_extra_networks_file_paths
 
     context["sd_base_model_id"] = sd_base_model_id
 
