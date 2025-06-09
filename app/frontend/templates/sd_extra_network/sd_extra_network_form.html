@@ -192,8 +192,7 @@
                             view_mode %}disabled{% endif %}>
                             <option value="" disabled {% if not item %}selected{% endif %}>Select Network</option>
                             {% for _network in networks %}
-                            <option value="{{ _network }}" {% if item and _network==item.network or network==_network
-                                %}selected{% endif %}>{{ _network }}</option>
+                            <option value="{{ _network }}" {{ 'selected' if item and _network==item.network or network==_network }}>{{ _network }}</option>
                             {% endfor %}
                         </select>
                     </div>
