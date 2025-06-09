@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     sd_base_model,
     sd_checkpoint,
     sd_extra_network,
+    state,
     users,
 )
 
@@ -13,12 +14,8 @@ from app.api.v1.endpoints import (
 api_router = APIRouter()
 
 # Include the export router directly with empty dependencies to bypass auth
-api_router.include_router(
-    export.router,
-    prefix="/export",
-    tags=["Export"],
-    dependencies=[],  # Empty dependencies list to bypass auth
-)
+api_router.include_router(export.router, tags=["Export"])
+api_router.include_router(state.router, tags=["State"])
 
 # Include routers that require auth
 api_router.include_router(users.router, tags=["Users"])

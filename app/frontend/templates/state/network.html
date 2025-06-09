@@ -1,0 +1,78 @@
+{% extends "base/base.html" %}
+
+{% block title %}Instance Status{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Network Status</h1>
+            <p>Last Updated: {{ network_state.last_updated | humanize if network_state.last_updated else '' }}</p>
+            <p>
+                This instance's ENV_NAME is: <strong>{{ ENV_NAME }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- List Key, Value tables for each status -->
+    <div class="row">
+        <div class="col-md-12">
+
+            <table class="table table-striped">
+                
+                <!-- Table Header -->
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>DEV</th>
+                        <th>LOCAL</th>
+                        <th>PLAYGROUND</th>
+                        <th>HOST</th>
+                    </tr>
+                </thead>
+
+                <!-- Table Body -->
+                <tbody>
+
+                    <!-- ENV_NAME -->
+                    <tr>
+                        <td>ENV_NAME</td>
+                        <td>{{ network_state.dev.id }}</td>
+                        <td>{{ network_state.local.id }}</td>
+                        <td>{{ network_state.playground.id }}</td>
+                        <td>{{ network_state.host.id }}</td>
+                    </tr>
+
+                    <!-- Last Updated -->
+                    <tr>
+                        <td>Last Updated</td>
+                        <td>{{ network_state.dev.last_updated | humanize if network_state.dev.last_updated else ''  }}</td>
+                        <td>{{ network_state.local.last_updated | humanize if network_state.local.last_updated else '' }}</td>
+                        <td>{{ network_state.playground.last_updated | humanize if network_state.playground.last_updated else '' }}</td>
+                        <td>{{ network_state.host.last_updated | humanize if network_state.host.last_updated else '' }}</td>
+                    </tr>
+
+                    <!-- BASE_DOMAIN -->
+                    <tr>
+                        <td>BASE_DOMAIN</td>
+                        <td>{{ network_state.dev.base_domain }}</td>
+                        <td>{{ network_state.local.base_domain }}</td>
+                        <td>{{ network_state.playground.base_domain }}</td>
+                        <td>{{ network_state.host.base_domain }}</td>
+                    </tr>
+
+                </tbody>
+            </table>
+
+        </div>
+
+        
+    </div>
+</div>
+    
+{% endblock %}
+
+{% block js_scripts %}
+{% endblock %}

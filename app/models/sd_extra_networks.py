@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, root_validator
 from safetensors import safe_open
@@ -30,7 +30,7 @@ class SafetensorJSON(BaseModel):
 
 class Safetensor(BaseModel):
     path: Path
-    deployment_type: Literal["local", "remote"] = Settings().DEPLOYMENT_TYPE
+    env_name: str = Settings().ENV_NAME
 
     @property
     def name(self) -> str:
@@ -42,7 +42,7 @@ class Safetensor(BaseModel):
 
     @property
     def json_file_path(self) -> Path | None:
-        if self.deployment_type == "local":
+        if self.env_name == "local":
             json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
             if json_file_path.exists():
                 return json_file_path
@@ -50,14 +50,14 @@ class Safetensor(BaseModel):
 
     @property
     def json_file(self) -> SafetensorJSON | None:
-        if self.deployment_type == "local":
+        if self.env_name == "local":
             if self.json_file_path:
                 return SafetensorJSON(path=self.json_file_path)
         return None
 
     @property
     def sha256(self) -> str | None:
-        if self.deployment_type != "local":
+        if self.env_name != "local":
             return None
 
         if self.json_file:
@@ -91,7 +91,7 @@ class Safetensor(BaseModel):
 
     @property
     def size(self) -> int:
-        if self.deployment_type != "local":
+        if self.env_name != "local":
             return 0
         return self.path.stat().st_size
 

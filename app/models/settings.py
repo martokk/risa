@@ -1,11 +1,10 @@
-from typing import Literal
 from zoneinfo import ZoneInfo
 
 from pydantic import EmailStr
 from pydantic_settings import BaseSettings
 
 
-class Settings(BaseSettings):
+class PythonFastAPIBaseSettings(BaseSettings):
     # Environment Settings #
     ENV_NAME: str = "Unknown"
     DEBUG: bool = True
@@ -83,16 +82,13 @@ class Settings(BaseSettings):
     # Phidata Playground API Key
     PHI_API_KEY: str = ""
 
-    # Deployment Type
-    DEPLOYMENT_TYPE: Literal["local", "remote"] = "local"
-
-    # Hub Path
-    HUB_PATH: str = ""
-
-    # Export API Key
-    EXPORT_API_KEY: str = ""
-
     @property
     def TIMEZONE_INFO(self) -> ZoneInfo:
         """Get the timezone info object."""
         return ZoneInfo(self.TIMEZONE)
+
+
+class Settings(PythonFastAPIBaseSettings):
+    RISA_HOST_BASE_URL: str = "http://localhost:5000"
+    HUB_PATH: str = ""
+    EXPORT_API_KEY: str = ""

@@ -1,0 +1,58 @@
+{% extends "base/base.html" %}
+
+{% block title %}Instance Status{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Instance State: {{ instance_state.id }}</h1>
+        </div>
+    </div>
+
+    <!-- List Key, Value table for each status -->
+    <div class="row">
+        <div class="col-md-6">
+            <table class="table table-striped">
+
+                <!-- Table Header -->
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+
+                <!-- Table Body -->
+                <tbody>
+
+                    <!-- Project Name -->
+                    <tr>
+                        <td>Project Name</td>
+                        <td>{{ instance_state.project_name }}</td>
+                    </tr>
+
+                    <!-- ENV_NAME -->
+                    <tr>
+                        <td>ENV_NAME</td>
+                        <td>{{ instance_state.id }}</td>
+                    </tr>
+
+                    <!-- BASE_DOMAIN -->
+                    <tr>
+                        <td>BASE_DOMAIN</td>
+                        <td>{{ instance_state.base_domain }}</td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+    
+{% endblock %}
+
+{% block js_scripts %}
+{% endblock %}

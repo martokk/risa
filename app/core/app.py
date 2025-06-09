@@ -1,14 +1,17 @@
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+import asyncio
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
 from app import logger, settings, version
 from app.api import deps
 from app.core.db import initialize_tables_and_initial_data
+from app.logic.state import update_instance_state
 from app.paths import STATIC_PATH
 from app.routes.api import api_router
 from app.routes.views import views_router
@@ -30,11 +33,25 @@ from app.services import notify
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         # Skip auth for export endpoint
         if request.url.path.endswith("/api/v1/export"):
             return await call_next(request)
         return await call_next(request)
+
+
+async def periodic_instance_state_update() -> None:
+    """Periodically update the instance state."""
+    while True:
+        try:
+            logger.info("Updating instance state...")
+            await update_instance_state()
+            logger.info("Instance state updated.")
+        except Exception as e:
+            logger.error(f"Error updating instance state: {e}")
+        await asyncio.sleep(5 * 60)  # 5 minutes
 
 
 async def startup_event(db: Session | None = None) -> None:
@@ -63,16 +80,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup
     await startup_event()
 
-    # Start task scheduler
-    # task_scheduler = TaskScheduler(app=app)
-    # await task_scheduler.register_startup_event()
+    # Start the periodic task
+    update_task = asyncio.create_task(periodic_instance_state_update())
 
     yield
 
     # Shutdown
-    # scheduler_task.cancel()
-    # with suppress(asyncio.CancelledError):
-    # await scheduler_task
+    update_task.cancel()
+    with suppress(asyncio.CancelledError):
+        await update_task
 
 
 # Initialize FastAPI App
