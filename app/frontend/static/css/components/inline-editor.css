@@ -1,0 +1,11 @@
+[data-editable="true"] {
+    cursor: pointer;
+    min-height: 2rem;
+    /* Ensure empty fields are clickable */
+    transition: background-color 0.2s ease-in-out;
+}
+
+[data-editable="true"]:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    /* Subtle blue on hover */
+}

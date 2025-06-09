@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -30,7 +31,23 @@ async def list_sd_checkpoints_page(
         HTMLResponse: The rendered page.
     """
     sd_checkpoints = await crud.sd_checkpoint.get_all(db=db)
-    context["sd_checkpoints"] = sd_checkpoints
+
+    # Group checkpoints by base model
+    grouped_checkpoints = defaultdict(list)
+    for cp in sd_checkpoints:
+        base_model_name = "Uncategorized"
+        if cp.sd_base_model and cp.sd_base_model.name:
+            base_model_name = cp.sd_base_model.name
+        grouped_checkpoints[base_model_name].append(cp)
+
+    # Sort checkpoints within each group by name
+    for group in grouped_checkpoints:
+        grouped_checkpoints[group].sort(key=lambda x: x.name)
+
+    # Sort groups by base model name
+    sorted_grouped_checkpoints = dict(sorted(grouped_checkpoints.items()))
+
+    context["grouped_checkpoints"] = sorted_grouped_checkpoints
     return templates.TemplateResponse(
         request=request,
         name="sd_checkpoint/sd_checkpoint_list.html",

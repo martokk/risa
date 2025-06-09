@@ -11,59 +11,55 @@
         </a>
     </div>
 
-    {% if sd_checkpoints %}
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Existing SD Checkpoints</h3>
+    {% if grouped_checkpoints %}
+        {% for base_model_name, checkpoints_in_group in grouped_checkpoints.items() %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ base_model_name }}</h3>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="w-25">Name</th>
+                            <th class="w-25">ID</th>
+                            <th class="w-25">Realistic</th>
+                            <th class="w-auto">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in checkpoints_in_group %}
+                        <tr>
+                            <td><a href="/sd-checkpoint/{{ item.id }}/view">{{ item.name }}</a></td>
+                            <td>{{ item.id }}</td>
+                            <td>
+                                {% if item.is_realistic %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/sd-checkpoint/{{ item.id }}/view" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="/sd-checkpoint/{{ item.id }}/edit" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.name }}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="card-body p-0">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Base Model</th>
-                        <th>Realistic</th>
-                        <th style="width: 300px">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in sd_checkpoints %}
-                    <tr>
-                        <td><a href="/sd-checkpoint/{{ item.id }}/view">{{ item.name }}</a></td>
-                        <td>
-                            {% if item.sd_base_model %}
-                                <a href="/sd-base-models/{{ item.sd_base_model.id }}">{{ item.sd_base_model.name }}</a>
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if item.is_realistic %}
-                                <span class="badge bg-success">Yes</span>
-                            {% else %}
-                                <span class="badge bg-secondary">No</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="/sd-checkpoint/{{ item.id }}/view" class="btn btn-info btn-sm">
-                                <i class="fas fa-eye"></i> View
-                            </a>
-                            <a href="/sd-checkpoint/{{ item.id }}/edit" class="btn btn-warning btn-sm">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.name }}')">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+        {% endfor %}
     {% else %}
     <div class="alert alert-info">
-        No SD Checkpoints found. <a href="/sd-checkpoints/create">Create one now!</a>
+        No SD Checkpoints found. <a href="{{ url_for('create_sd_checkpoint_page') }}">Create one now!</a>
     </div>
     {% endif %}
 </div>

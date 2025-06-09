@@ -35,22 +35,21 @@ async def create_character_page(
     context: Annotated[dict[str, Any], Depends(get_template_context)],
 ) -> HTMLResponse:
     """Serves the page for creating a new Character."""
-    # No additional data needed for character creation form initially
     return templates.TemplateResponse(
         request=request,
-        name="character/character_create.html",
+        name="character/character.html",
         context=context,
     )
 
 
-@router.get("/character/{character_id}/view", response_class=HTMLResponse)
-async def view_character_page(
+@router.get("/character/{character_id}", response_class=HTMLResponse)
+async def character_page(
     request: Request,
     character_id: str,
     db: Annotated[Session, Depends(get_db)],
     context: Annotated[dict[str, Any], Depends(get_template_context)],
 ) -> HTMLResponse:
-    """Serves the page for viewing a specific Character."""
+    """Serves the page for viewing and editing a specific Character."""
     character_obj = await crud.character.get(db=db, id=character_id)
     if not character_obj:
         raise HTTPException(status_code=404, detail="Character not found")
@@ -58,25 +57,6 @@ async def view_character_page(
     context["character"] = character_obj
     return templates.TemplateResponse(
         request=request,
-        name="character/character_view.html",
-        context=context,
-    )
-
-
-@router.get("/character/{character_id}/edit", response_class=HTMLResponse)
-async def edit_character_page(
-    request: Request,
-    character_id: str,
-    db: Annotated[Session, Depends(get_db)],
-    context: Annotated[dict[str, Any], Depends(get_template_context)],
-) -> HTMLResponse:
-    """Serves the page for editing a specific Character."""
-    character_obj = await crud.character.get(db=db, id=character_id)
-    if not character_obj:
-        raise HTTPException(status_code=404, detail="Character not found")
-    context["character"] = character_obj
-    return templates.TemplateResponse(
-        request=request,
-        name="character/character_edit.html",
+        name="character/character.html",
         context=context,
     )
