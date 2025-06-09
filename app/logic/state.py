@@ -5,6 +5,7 @@ import httpx
 from app import crud, logger, models, settings
 from app.core.db import get_db
 from app.models.core.state import InstanceState, NetworkState
+from app.routes.restrict_to_env import restrict_to
 
 
 async def _get_instance_state() -> InstanceState:
@@ -46,6 +47,7 @@ async def update_instance_state() -> InstanceState:
     return instance_state
 
 
+@restrict_to("host")
 async def get_network_state_from_db() -> NetworkState:
     db = next(get_db())
 

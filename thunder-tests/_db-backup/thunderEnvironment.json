@@ -1,0 +1,53 @@
+[
+  {
+    "_id": "f7beaa4a-7c2b-4a72-a934-102dda373f10",
+    "name": "Dev (Localhost)",
+    "default": true,
+    "sortNum": 10000,
+    "created": "2023-01-30T20:26:50.445Z",
+    "modified": "2023-01-30T20:26:50.445Z",
+    "data": [
+      {
+        "name": "BASE_URL",
+        "value": "http://localhost:{{PORT}}"
+      },
+      {
+        "name": "BASE_API_URL",
+        "value": "{{BASE_URL}}/api/v1"
+      },
+      {
+        "name": "ACCESS_TOKEN",
+        "value": ""
+      }
+    ]
+  },
+  {
+    "_id": "9969826f-64af-429f-9959-173557caf060",
+    "name": "Staging (DuckDNS)",
+    "default": false,
+    "sortNum": 20000,
+    "created": "2023-01-30T21:25:59.209Z",
+    "modified": "2023-01-30T21:25:59.209Z",
+    "data": [
+      {
+        "name": "BASE_URL",
+        "value": "http://{{PROJECT_SLUG}}.duckdns.org:{{PORT}}"
+      },
+      {
+        "name": "BASE_API_URL",
+        "value": "{{BASE_URL}}/api/v1"
+      }
+    ]
+  },
+  {
+    "_id": "6e6e841e-6878-424a-9751-015dd45f4091",
+    "name": "(Local Env)",
+    "default": false,
+    "global": true,
+    "local": true,
+    "sortNum": -1,
+    "created": "2023-01-31T01:32:40.234Z",
+    "modified": "2023-01-31T01:32:40.234Z",
+    "data": []
+  }
+]

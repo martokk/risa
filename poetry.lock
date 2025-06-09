@@ -4305,6 +4305,17 @@ files = [
 ]
 
 [[package]]
+name = "types-markdown"
+version = "3.8.0.20250415"
+description = "Typing stubs for Markdown"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "types_markdown-3.8.0.20250415-py3-none-any.whl", hash = "sha256:b41abed474a303ba300e3a4cf6f27eda339219124a59d529a158203570007776"},
+    {file = "types_markdown-3.8.0.20250415.tar.gz", hash = "sha256:98ab13587d1177769d93e55586d3dc97047df75bc6e37ce4074666f5dd4212ba"},
+]
+
+[[package]]
 name = "types-pyyaml"
 version = "6.0.12.20241230"
 description = "Typing stubs for PyYAML"
@@ -4765,4 +4776,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "867389097c8d127ad3afe035c088dbcb8e49b71665fa1103c85a4f0c5b03a232"
+content-hash = "ba5105595a975033ec2adbf306880ffe06a30aa654250c49cdb573aff4d76f04"
