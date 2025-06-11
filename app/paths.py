@@ -25,6 +25,7 @@ UPLOAD_PATH = DATA_PATH / "uploads"
 # Files
 ENV_FILE = DATA_PATH / ".env"
 DATABASE_FILE = DATA_PATH / "database.sqlite3"
+DASHBOARD_CONFIG_FILE = Path(_Settings().DASHBOARD_CONFIG_PATH)
 LOG_FILE = LOGS_PATH / "log.log"
 ERROR_LOG_FILE = LOGS_PATH / "error_log.log"
 DATASET_TAGGER_WALKTHROUGH_PATH = DATA_PATH / "dataset_tagger_walkthrough.yaml"

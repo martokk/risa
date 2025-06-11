@@ -1,0 +1,119 @@
+{% extends "/base/base.html" %}
+
+{% block title %}Risa Playground App Manager{% endblock %}
+{% block content_header %}App Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Column 1: App Launcher -->
+    <div class="col-md-3">
+        {% include "/dashboard/_app_manager.html" %}
+    </div>
+
+    <!-- Column 2 -->
+    <div class="col-md-6">
+
+      <div class="row">
+
+        <!-- Column 2.1 -->
+        <div class="col-xxl-6">
+          <div class="card">
+            <div class="card-header fw-bold">Column 2.1</div>
+            <div class="card-body">
+                <p class="card-text">Content for the second column will go here.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2.2 -->
+        <div class="col-xxl-6">
+            <div class="card">
+                <div class="card-header fw-bold">Column 2.2</div>
+                <div class="card-body">
+                    <p class="card-text">Content for the second column will go here.</p>
+                </div>
+            </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Column 3 -->
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header fw-bold">Column 3</div>
+            <div class="card-body">
+                <p class="card-text">Content for the third column will go here.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block loading_text %}Processing...{% endblock %}
+{% block loading_text_muted %}Please wait.{% endblock %}
+
+{% block results_card_body %}
+    <div id="resultContainer">
+        <!-- Results of start/stop operations will be shown here -->
+    </div>
+{% endblock %}
+
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiFetch, uiHelpers } from '/static/js/api_utils.js';
+
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+
+    window.sendAppCommand = async function(appName, command) {
+        const button = event.target.closest('button');
+        if (button) {
+            const group = button.closest('.btn-group');
+            group.querySelectorAll('button').forEach(b => b.disabled = true);
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-spinner fa-spin';
+            }
+        }
+        
+        try {
+            await apiFetch(`/api/v1/app_manager/${appName}/${command}`, {
+                method: 'POST',
+            });
+            uiHelpers.showAlert('success', `App ${appName} command '${command}' sent successfully.`);
+            setTimeout(() => {
+                uiHelpers.refreshPage();
+            }, 2500);
+
+        } catch (error) {
+            uiHelpers.showError(error);
+            if (button) {
+                 const group = button.closest('.btn-group');
+                 group.querySelector('[title*="Start"]').disabled = false;
+                 group.querySelector('[title*="Stop"]').disabled = false;
+                 const icon = button.querySelector('i');
+                 if(icon){
+                    if(command === 'start'){
+                        icon.className = 'fas fa-play';
+                    } else {
+                        icon.className = 'fas fa-stop';
+                    }
+                }
+            }
+        }
+    }
+
+    window.startApp = function(appName) {
+        sendAppCommand(appName, 'start');
+    }
+
+    window.stopApp = function(appName) {
+        sendAppCommand(appName, 'stop');
+    }
+</script>
+{% endblock %}

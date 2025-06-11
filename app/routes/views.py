@@ -1,13 +1,14 @@
 from fastapi import APIRouter
 
 from app.frontend.handlers.character import character
+from app.frontend.handlers.dashboard import dashboard
 from app.frontend.handlers.login import login
 from app.frontend.handlers.root import root
 from app.frontend.handlers.sd_base_model import sd_base_model
 from app.frontend.handlers.sd_checkpoint import sd_checkpoint
 from app.frontend.handlers.sd_extra_network import sd_extra_network
 from app.frontend.handlers.state import state
-from app.frontend.handlers.tools import dataset_tagger, safetensors_import_helper
+from app.frontend.handlers.tools import safetensors_import_helper
 from app.frontend.handlers.user import user
 
 
@@ -29,7 +30,7 @@ user_router.include_router(user.router, tags=["Users"])
 # Tools
 tools_router = APIRouter()
 tools_router.include_router(safetensors_import_helper.router, tags=["Tools"])
-tools_router.include_router(dataset_tagger.router, tags=["Dataset Tagger"])
+tools_router.include_router(dashboard.router, tags=["Dashboard"])
 
 # State
 state_router = APIRouter()

@@ -92,3 +92,4 @@ class Settings(PythonFastAPIBaseSettings):
     RISA_HOST_BASE_URL: str = "http://localhost:5000"
     HUB_PATH: str = ""
     EXPORT_API_KEY: str = ""
+    DASHBOARD_CONFIG_PATH: str = ""

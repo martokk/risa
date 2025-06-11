@@ -1,0 +1,41 @@
+<div class="card">
+    <div class="card-header fw-bold">
+        App Launcher
+    </div>
+    <ul class="list-group list-group-flush">
+        {% for app in apps %}
+            {% set is_running = app.is_running %}
+            <li class="list-group-item py-1 {% if is_running %}bg-success-subtle fw-bold border-success {% else %}bg-dark-subtle{% endif %}">
+                <div class="d-flex align-items-center">
+ 
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0 py-2c" style="font-size: 1.1rem;">
+                        {% if is_running and app.port_connect %}
+                            <a href="//{{ request.client.host }}:{{ app.port_connect }}" target="_blank" class="text-success fw-bold text-decoration-none">{{ app.name
+                                }}</a>
+                        {% else %}
+                            <span class="text-secondary fst-italic fw-bold">{{ app.name }}</span>
+                        {% endif %}
+                        </h6>
+                    </div>
+                    <div class="btn-group ms-2">
+                        {% if app.command_start %}
+                            <button class="btn btn-sm {% if is_running %}btn-secondary {% else %}btn-outline-success{% endif %} py-0 px-1" title="Start {{ app.name }}"
+                                onclick="startApp('{{ app.name }}')" >
+                                <i class="fas fa-play"></i>
+                            </button>
+                        {% endif %}
+
+                        {% if app.command_start %}
+                            <button class="btn btn-sm {% if is_running %}btn-danger{% else %}btn-outline-secondary{% endif %} py-0 px-1" title="Stop {{ app.name }}"
+                                onclick="stopApp('{{ app.name }}')" >
+                                <i class="fas fa-stop"></i>
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
