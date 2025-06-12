@@ -4,6 +4,8 @@ from app.api.v1.endpoints import (
     app_manager,
     character,
     export,
+    idle_watcher,
+    job_queue,
     sd_base_model,
     sd_checkpoint,
     sd_extra_network,
@@ -16,6 +18,8 @@ from app.routes.restrict_to_env import restrict_to
 api_router = APIRouter()
 
 api_router.include_router(state.router, tags=["State"])
+api_router.include_router(job_queue.router, tags=["Job Queue"])
+api_router.include_router(idle_watcher.router, tags=["Idle Watcher"])
 
 
 @restrict_to("host")
