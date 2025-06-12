@@ -57,6 +57,7 @@ phidata = "^2.7.10"
 safetensors = "^0.5.3"
 markdown = "^3.8"
 pillow = "^11.2.1"
+huey = {extras = ["sqlite"], version = "^2.5.3"}
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.10"

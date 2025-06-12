@@ -1553,6 +1553,20 @@ socks = ["socksio (==1.*)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
+name = "huey"
+version = "2.5.3"
+description = "huey, a little task queue"
+optional = false
+python-versions = "*"
+files = [
+    {file = "huey-2.5.3.tar.gz", hash = "sha256:089fc72b97fd26a513f15b09925c56fad6abe4a699a1f0e902170b37e85163c7"},
+]
+
+[package.extras]
+backends = ["redis (>=3.0.0)"]
+redis = ["redis (>=3.0.0)"]
+
+[[package]]
 name = "huggingface-hub"
 version = "0.28.1"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
@@ -4776,4 +4790,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "ba5105595a975033ec2adbf306880ffe06a30aa654250c49cdb573aff4d76f04"
+content-hash = "f184c493249729a9902877559dcdd0258e7416a72f499fee751a4f7284caa32f"
