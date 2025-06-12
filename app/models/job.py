@@ -4,6 +4,7 @@ Pydantic models for the Job Queue feature.
 
 from datetime import datetime
 from enum import Enum
+from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -40,7 +41,7 @@ class Job(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     type: JobType
     command: str
-    meta: dict | None = None
+    meta: dict[str, Any] | None = None
     priority: Priority = Priority.medium
     status: JobStatus = JobStatus.queued
     retry_count: int = 0
