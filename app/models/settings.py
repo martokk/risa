@@ -93,3 +93,7 @@ class Settings(PythonFastAPIBaseSettings):
     HUB_PATH: str = ""
     EXPORT_API_KEY: str = ""
     DASHBOARD_CONFIG_PATH: str = ""
+
+    # Job Queue
+    HUEY_SQLITE_PATH: str = ""
+    IDLE_TIMEOUT_MINUTES: int = 30

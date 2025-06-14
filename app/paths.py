@@ -2,6 +2,8 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from app.models.settings import Settings as _Settings
 
 
@@ -22,8 +24,23 @@ LOGS_PATH = DATA_PATH / "logs"
 CACHE_PATH = DATA_PATH / "cache"
 UPLOAD_PATH = DATA_PATH / "uploads"
 
-# Files
+# Job Queue Paths
+JOB_LOGS_PATH = LOGS_PATH / "jobs"
+
+# ENV File
 ENV_FILE = DATA_PATH / ".env"
+
+_env_file = os.getenv("ENV_FILE", ENV_FILE)
+load_dotenv(dotenv_path=_env_file)
+
+
+# Files
+HUEY_DB_PATH = (
+    Path(_Settings().HUEY_SQLITE_PATH)
+    if _Settings().HUEY_SQLITE_PATH
+    else DATA_PATH / "huey.sqlite3"
+)
+JOB_DB_PATH = DATA_PATH / "jobs.json"
 DATABASE_FILE = DATA_PATH / "database.sqlite3"
 DASHBOARD_CONFIG_FILE = Path(_Settings().DASHBOARD_CONFIG_PATH)
 LOG_FILE = LOGS_PATH / "log.log"

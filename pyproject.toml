@@ -57,6 +57,9 @@ phidata = "^2.7.10"
 safetensors = "^0.5.3"
 markdown = "^3.8"
 pillow = "^11.2.1"
+huey = {extras = ["sqlite"], version = "^2.5.3"}
+tinydb = "^4.8.2"
+debugpy = "^1.8.14"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.10"
@@ -76,6 +79,7 @@ pytest-cov = "^6.0.0"
 pytest-asyncio = "^0.24.0"
 ruff = "^0.5.3"
 types-markdown = "^3.8.0.20250415"
+types-requests = "^2.32.4.20250611"
 
 [tool.ruff]
 # Same as Black
