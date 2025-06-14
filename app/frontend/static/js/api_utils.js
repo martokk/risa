@@ -203,6 +203,25 @@ export const apiCrud = {
     },
 
     /**
+     * Get text content from an endpoint
+     * @param {string} endpoint - API endpoint
+     * @param {HTMLElement} [loadingTarget] - Optional target element
+     * @returns {Promise<string>} Text content
+     */
+    async getText(endpoint, loadingTarget = null) {
+        console.log(`Fetching text from ${endpoint}`);
+        const response = await makeRequest(`${API_CONFIG.baseUrl}/${endpoint}`, {
+            headers: getHeaders(false),
+            loadingTarget
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || `Failed to fetch text from ${endpoint}`);
+        }
+        return response.text();
+    },
+
+    /**
      * Post text to api endpoint
      * @param {string} endpoint - API endpoint
      * @param {Object} postData - Data to send to endpoint

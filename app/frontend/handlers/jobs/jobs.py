@@ -40,4 +40,4 @@ async def jobs_page(
     )
 
     context["jobs"] = sorted_jobs
-    return templates.TemplateResponse("root/jobs.html", context)
+    return templates.TemplateResponse("jobs/jobs.html", context)

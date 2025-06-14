@@ -64,6 +64,7 @@
 {% block js_scripts %}
 <script type="module">
     import { initializeApi, apiFetch, uiHelpers } from '/static/js/api_utils.js';
+    import { toast } from '/static/js/toast.js';
 
     initializeApi({
         access_token: "{{ tokens.access_token }}",
@@ -85,13 +86,13 @@
             await apiFetch(`/api/v1/app_manager/${appName}/${command}`, {
                 method: 'POST',
             });
-            uiHelpers.showAlert('success', `App ${appName} command '${command}' sent successfully.`);
+            toast.show(`App ${appName} command '${command}' sent successfully.`, 'success');
             setTimeout(() => {
                 uiHelpers.refreshPage();
             }, 2500);
 
         } catch (error) {
-            uiHelpers.showError(error);
+            toast.show(error.message || 'An unknown error occurred', 'danger');
             if (button) {
                  const group = button.closest('.btn-group');
                  group.querySelector('[title*="Start"]').disabled = false;
