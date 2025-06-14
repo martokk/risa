@@ -16,6 +16,7 @@ from app.paths import STATIC_PATH
 from app.routes.api import api_router
 from app.routes.views import views_router
 from app.services import notify
+from app.services.idle_watcher import start_idle_watcher, stop_idle_watcher
 
 
 # def run_playground_app():
@@ -79,6 +80,7 @@ async def startup_event(db: Session | None = None) -> None:
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup
     await startup_event()
+    start_idle_watcher()
 
     # Start the periodic task
     update_task = asyncio.create_task(periodic_instance_state_update())
@@ -86,6 +88,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     # Shutdown
+    stop_idle_watcher()
     update_task.cancel()
     with suppress(asyncio.CancelledError):
         await update_task

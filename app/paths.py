@@ -35,7 +35,12 @@ load_dotenv(dotenv_path=_env_file)
 
 
 # Files
-HUEY_DB_PATH = Path(_Settings().HUEY_SQLITE_PATH)
+HUEY_DB_PATH = (
+    Path(_Settings().HUEY_SQLITE_PATH)
+    if _Settings().HUEY_SQLITE_PATH
+    else DATA_PATH / "huey.sqlite3"
+)
+JOB_DB_PATH = DATA_PATH / "jobs.json"
 DATABASE_FILE = DATA_PATH / "database.sqlite3"
 DASHBOARD_CONFIG_FILE = Path(_Settings().DASHBOARD_CONFIG_PATH)
 LOG_FILE = LOGS_PATH / "log.log"

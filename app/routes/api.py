@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     export,
     idle_watcher,
     job_queue,
+    job_queue_ws,
     sd_base_model,
     sd_checkpoint,
     sd_extra_network,
@@ -55,3 +56,6 @@ def include_sd_extra_network_router():
 @restrict_to("playground")
 def include_app_manager_router():
     api_router.include_router(app_manager.router, tags=["App Manager"])
+
+
+api_router.include_router(job_queue_ws.router, tags=["Job Queue WS"])

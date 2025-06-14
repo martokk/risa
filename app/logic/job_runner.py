@@ -5,17 +5,17 @@ This module contains the core logic for executing jobs.
 import subprocess
 
 import requests
+from tinydb import Query, TinyDB
 
 from app import logger, models, paths
 
 
-def write_job_log(job: models.Job, output: str) -> None:
+def run_command_job(job: models.Job) -> None:
     """
-    Writes the output of a job to a versioned log file.
+    Executes a command-line job using subprocess and logs output in real-time.
 
     Args:
-        job: The job that was executed.
-        output: The stdout/stderr output from the job execution.
+        job: The job to execute.
     """
     log_file_name = f"job_{job.id}_retry_{job.retry_count}.txt"
     log_path = paths.JOB_LOGS_PATH / log_file_name
@@ -23,38 +23,68 @@ def write_job_log(job: models.Job, output: str) -> None:
     # Ensure the logs directory exists
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(log_path, "w") as f:
-        f.write(output)
-    logger.info(f"Wrote log for job {job.id} to {log_path}")
+    # Initialize the TinyDB database for jobs
+    db = TinyDB(paths.JOB_DB_PATH)
 
-
-def run_command_job(job: models.Job) -> None:
-    """
-    Executes a command-line job using subprocess.
-
-    Args:
-        job: The job to execute.
-    """
     try:
-        # Execute the command and capture output
-        result = subprocess.run(
-            job.command,
-            shell=True,
-            capture_output=True,
-            text=True,
-            check=True,  # Raise CalledProcessError for non-zero exit codes
-        )
-        output = result.stdout
-        logger.info(f"Command job {job.id} executed successfully.")
-    except subprocess.CalledProcessError as e:
-        # Handle cases where the command returns a non-zero exit code
-        output = f"Error executing command: {e.stderr}\n{e.stdout}"
-        logger.error(f"Command job {job.id} failed: {output}")
-    except Exception as e:
-        output = f"An unexpected error occurred: {str(e)}"
-        logger.error(f"Unexpected error in command job {job.id}: {output}")
+        # Open the log file for writing
+        with open(log_path, "w") as log_file:
+            # Execute the command and stream output in real-time
+            process = subprocess.Popen(
+                job.command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,  # Redirect stderr to stdout
+                text=True,
+                bufsize=1,  # Line buffered
+                universal_newlines=True,
+            )
 
-    write_job_log(job, output)
+            pid = process.pid
+            logger.info(f"Command job {job.id} started with PID {pid}")
+
+            db.update({"pid": pid}, Query().id == str(job.id))
+
+            print("\n\n\n--------------------------------")
+            print("JOB")
+            print(f"job: {job}")
+            print(f"job.id: {job.id}")
+            print(f"pid: {pid}")
+            print("--------------------------------\n\n\n")
+            print(f"db: {db}")
+            print("--------------------------------")
+            print("DB JOB")
+            db_job = db.get(Query().id == str(job.id))
+            db_job_object = models.Job(**db_job)
+
+            print(f"db_job_object: {db_job_object}")
+            print(f"db_job_object.id: {db_job_object.id if db_job_object else 'None'}")
+            print(f"db_job_object.pid: {db_job_object.pid if db_job_object else 'None'}")
+            print("--------------------------------")
+
+            # Read and write output in real-time
+            if process.stdout:
+                for line in process.stdout:
+                    log_file.write(line)
+                    log_file.flush()  # Ensure immediate writing to disk
+                logger.debug(f"Job {job.id} output: {line.strip()}")
+
+            # Wait for the process to complete
+            return_code = process.wait()
+
+            if return_code == 0:
+                logger.info(f"Command job {job.id} executed successfully.")
+            else:
+                error_msg = f"Command job {job.id} failed with exit code {return_code}"
+                logger.error(error_msg)
+                raise subprocess.CalledProcessError(return_code, job.command)
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Command job {job.id} failed: {str(e)}")
+        raise  # Re-raise the exception to be caught by the Huey task
+    except Exception as e:
+        logger.error(f"Unexpected error in command job {job.id}: {str(e)}")
+        raise
 
 
 def run_api_post_job(job: models.Job) -> None:
@@ -72,23 +102,8 @@ def run_api_post_job(job: models.Job) -> None:
     except requests.exceptions.RequestException as e:
         output = f"Error executing API POST job: {str(e)}"
         logger.error(f"API POST job {job.id} failed: {output}")
+        raise  # Re-raise
     except Exception as e:
         output = f"An unexpected error occurred: {str(e)}"
         logger.error(f"Unexpected error in API POST job {job.id}: {output}")
-
-    write_job_log(job, output)
-
-
-def execute_job(job: models.Job) -> None:
-    """
-    Central function to execute a job based on its type.
-
-    Args:
-        job: The job to execute.
-    """
-    logger.info(f"Executing job {job.id} of type {job.type.value}")
-
-    if job.type == models.JobType.command:
-        run_command_job(job)
-    elif job.type == models.JobType.api_post:
-        run_api_post_job(job)
+        raise

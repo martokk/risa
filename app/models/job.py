@@ -20,14 +20,17 @@ class JobType(str, Enum):
 class Priority(str, Enum):
     """Enum for job priority levels."""
 
+    highest = "highest"
     high = "high"
-    medium = "medium"
+    normal = "normal"
     low = "low"
+    lowest = "lowest"
 
 
 class JobStatus(str, Enum):
     """Enum for the status of a job."""
 
+    pending = "pending"
     queued = "queued"
     running = "running"
     failed = "failed"
@@ -39,11 +42,26 @@ class Job(BaseModel):
     """The core Job model for data transfer and validation."""
 
     id: UUID = Field(default_factory=uuid4)
+    name: str = ""
     type: JobType
     command: str
     meta: dict[str, Any] | None = None
-    priority: Priority = Priority.medium
-    status: JobStatus = JobStatus.queued
+    pid: int | None = None
+    priority: Priority = Priority.normal
+    status: JobStatus = JobStatus.pending
     retry_count: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
     recurrence: str | None = None  # e.g., "hourly", "daily"
+
+
+class JobUpdate(BaseModel):
+    """Pydantic model for updating a job."""
+
+    name: str | None = None
+    command: str | None = None
+    meta: dict[str, Any] | None = None
+    pid: int | None = None
+    priority: Priority | None = None
+    status: JobStatus | None = None
+    retry_count: int | None = None
+    recurrence: str | None = None
