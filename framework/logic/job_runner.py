@@ -82,6 +82,9 @@ def run_command_job(job: schemas.Job) -> None:
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Command job {job.id} failed: {str(e)}")
+
+        with open(log_path, "a") as log_file:
+            log_file.write(f"Command job {job.id} failed: {str(e)}\n")
         raise  # Re-raise the exception to be caught by the Huey task
     except Exception as e:
         logger.error(f"Unexpected error in command job {job.id}: {str(e)}")

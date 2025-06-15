@@ -56,7 +56,7 @@
 
 {% block js_scripts %}
 <script type="module">
-    import { initializeApi, apiFetch, uiHelpers } from '/static/js/api_utils.js';
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
     import { toast } from '/static/js/toast.js';
 
     initializeApi({
@@ -76,9 +76,7 @@
         }
         
         try {
-            await apiFetch(`/api/v1/app_manager/${appName}/${command}`, {
-                method: 'POST',
-            });
+            await apiCrud.postText(`app_manager/${appName}/${command}`, {});
             toast.show(`App ${appName} command '${command}' sent successfully.`, 'success');
             setTimeout(() => {
                 uiHelpers.refreshPage();
