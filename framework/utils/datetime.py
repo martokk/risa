@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from app import settings
 
@@ -14,7 +14,7 @@ def utc_to_local(dt: str | datetime) -> datetime:
     """Convert UTC datetime to local timezone."""
     dt = parse_datetime(dt)
     if dt.tzinfo is None:  # If naive datetime, assume it's UTC
-        dt = dt.replace(tzinfo=UTC)
+        dt = dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(settings.TIMEZONE_INFO)
 
 
