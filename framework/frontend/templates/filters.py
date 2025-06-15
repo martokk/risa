@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timezone
 
 import markdown
 
@@ -42,7 +42,7 @@ def filter_humanize(dt: datetime | str | None) -> str:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=UTC)
 
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     diff = now - dt
     second_diff = diff.seconds
     day_diff = diff.days

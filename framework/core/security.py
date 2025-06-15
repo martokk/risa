@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
@@ -58,8 +58,8 @@ def encode_token(
         token (str): encoded token
     """
     payload = {
-        "exp": datetime.now(UTC) + expires_delta,
-        "iat": datetime.now(UTC),
+        "exp": datetime.now(timezone.utc) + expires_delta,
+        "iat": datetime.now(timezone.utc),
         "sub": str(subject),
         "fresh": fresh,
     }
