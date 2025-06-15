@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "app"
-version = "0.0.1"
+version = "0.0.2"
 description = "risa"
 readme = "README.md"
 authors = ["martokk <25113632+martokk@users.noreply.github.com>"]
@@ -24,7 +24,7 @@ classifiers = []
 "app" = "app.__main__:app"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.10.12"
 loguru = "^0.7.2"
 pyyaml = "^6.0"
 python-dotenv = "^1.0.1"
@@ -85,7 +85,7 @@ types-requests = "^2.32.4.20250611"
 # Same as Black
 line-length = 100
 indent-width = 4
-target-version = "py312"
+target-version = "py310"
 
 # Exclude files/directories (combined from isort and flake8)
 exclude = [
@@ -161,7 +161,7 @@ line-ending = "auto"
 
 [tool.black]
 # https://github.com/psf/black
-target-version = ["py311"]
+target-version = ["py310"]
 line-length = 100
 color = true
 
@@ -185,7 +185,7 @@ exclude = '''
 
 [tool.mypy]
 # https://mypy.readthedocs.io/en/latest/config_file.html#using-a-pyproject-toml-file
-python_version = "3.12"
+python_version = "3.10"
 pretty = true
 show_traceback = true
 color_output = true
