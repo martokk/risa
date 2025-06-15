@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, Security
 from sqlmodel import Session
 
 from app import crud, models
-from app.core.api_key import get_api_key
-from app.core.db import get_db
+from framework.core.api_key import get_api_key
+from framework.core.db import get_db
 
 
 # Create a router that bypasses global auth

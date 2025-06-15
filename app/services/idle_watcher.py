@@ -7,7 +7,7 @@ import threading
 import time
 
 from app import logger, settings
-from app.services import job_queue
+from framework.services import job_queue
 
 
 class IdleWatcher(threading.Thread):

@@ -1,22 +1,19 @@
 import asyncio
-from collections.abc import AsyncGenerator, Awaitable, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, suppress
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
 
-from app import logger, settings, version
-from app.api import deps
-from app.core.db import initialize_tables_and_initial_data
+from app import logger, settings
 from app.logic.state import update_instance_state
 from app.paths import STATIC_PATH
 from app.routes.api import api_router
 from app.routes.views import views_router
-from app.services import notify
 from app.services.idle_watcher import start_idle_watcher, stop_idle_watcher
+from framework.core.db import get_db, initialize_tables_and_initial_data
+from framework.services import notify
 
 
 # def run_playground_app():
@@ -31,16 +28,6 @@ from app.services.idle_watcher import start_idle_watcher, stop_idle_watcher
 #             "--reload",
 #         ]
 #     )
-
-
-class AuthMiddleware(BaseHTTPMiddleware):
-    async def dispatch(
-        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
-    ) -> Response:
-        # Skip auth for export endpoint
-        if request.url.path.endswith("/api/v1/export"):
-            return await call_next(request)
-        return await call_next(request)
 
 
 async def periodic_instance_state_update() -> None:
@@ -69,7 +56,7 @@ async def startup_event(db: Session | None = None) -> None:
 
     # Initialize database and tables if they do not exist
     if db is None:
-        db = next(deps.get_db())
+        db = next(get_db())
     await initialize_tables_and_initial_data(db=db)
 
     # Start the playground app in a separate thread
@@ -97,14 +84,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 # Initialize FastAPI App
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    version=version,
     openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
     debug=settings.DEBUG,
     lifespan=lifespan,
 )
-
-# Add auth middleware that skips export endpoint
-app.add_middleware(AuthMiddleware)
 
 # Include routers
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)

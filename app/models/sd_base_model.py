@@ -1,5 +1,7 @@
-from sqlmodel import SQLModel, Field, Relationship
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
+
+from sqlmodel import Field, Relationship, SQLModel
+
 
 if TYPE_CHECKING:
     from .sd_checkpoint import SDCheckpoint
@@ -12,10 +14,8 @@ class SDBaseModelBase(SQLModel):
 
 
 class SDBaseModel(SDBaseModelBase, table=True):
-    sd_checkpoints: List["SDCheckpoint"] = Relationship(back_populates="sd_base_model")
-    sd_extra_networks: List["SDExtraNetwork"] = Relationship(
-        back_populates="sd_base_model"
-    )
+    sd_checkpoints: list["SDCheckpoint"] = Relationship(back_populates="sd_base_model")
+    sd_extra_networks: list["SDExtraNetwork"] = Relationship(back_populates="sd_base_model")
 
 
 class SDBaseModelCreate(SDBaseModelBase):

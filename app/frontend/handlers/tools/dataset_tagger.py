@@ -15,11 +15,10 @@ from sqlmodel import Session
 from starlette.templating import _TemplateResponse
 
 from app import crud, logger
-from app.core.db import get_db
-from app.frontend.templates import templates
-from app.frontend.templates.context import get_template_context
-from app.paths import DATASET_TAGGER_WALKTHROUGH_PATH
-from app.routes.restrict_to_env import restrict_to
+from framework.core.db import get_db
+from framework.frontend.templates import templates
+from framework.frontend.templates.context import get_template_context
+from framework.routes.restrict_to_env import restrict_to
 
 
 # Define thumbnail constants

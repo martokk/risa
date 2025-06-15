@@ -3,8 +3,7 @@ from pathlib import Path
 from sqlmodel import Session
 
 from app import models
-
-from .base import BaseCRUD
+from framework.crud.base import BaseCRUD
 
 
 class SDBaseModelCRUD(
