@@ -6,7 +6,7 @@ from app.frontend.handlers.sd_base_model import sd_base_model
 from app.frontend.handlers.sd_checkpoint import sd_checkpoint
 from app.frontend.handlers.sd_extra_network import sd_extra_network
 from app.frontend.handlers.state import state
-from app.frontend.handlers.tools import safetensors_import_helper
+from app.frontend.handlers.tools import dataset_tagger, safetensors_import_helper
 from framework.frontend.handlers.jobs import jobs
 from framework.frontend.handlers.login import login
 from framework.frontend.handlers.root import root
@@ -34,6 +34,7 @@ user_router.include_router(user.router, tags=["Users"])
 tools_router = APIRouter()
 tools_router.include_router(safetensors_import_helper.router, tags=["Tools"])
 tools_router.include_router(dashboard.router, tags=["Dashboard"])
+tools_router.include_router(dataset_tagger.router, tags=["Dataset Tagger"])
 
 # State
 state_router = APIRouter()
