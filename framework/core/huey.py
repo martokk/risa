@@ -12,7 +12,7 @@ from app import paths
 def get_huey(file_path: str | Path) -> SqliteHuey:
     print(f"HUEY_DB_PATH: {file_path}")
 
-    Path(file_path).mkdir(parents=True, exist_ok=True)
+    Path(file_path).parent.mkdir(parents=True, exist_ok=True)
 
     return SqliteHuey(filename=str(file_path))
 
