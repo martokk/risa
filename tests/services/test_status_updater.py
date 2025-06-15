@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from pytest_mock import MockerFixture
@@ -44,7 +44,7 @@ async def test_awaiting_to_in_progress_transition(
 ) -> None:
     """Test transition from AWAITING to IN_PROGRESS when first_action_date is reached."""
     # Setup
-    today = datetime.now(UTC)
+    today = datetime.now(timezone.utc)
     # Create a new cycle with the modified date to avoid read-only property error
     cycle = GrantCycle(
         **{
@@ -90,7 +90,7 @@ async def test_in_progress_to_submitted_transition(
 ) -> None:
     """Test transition from IN_PROGRESS to SUBMITTED when conditions are met."""
     # Setup
-    today = datetime.now(UTC)
+    today = datetime.now(timezone.utc)
     # Create a new cycle with the modified dates and status
     cycle = GrantCycle(
         **{
@@ -138,7 +138,7 @@ async def test_no_transition_when_dates_not_met(
 ) -> None:
     """Test no transition occurs when dates are not met."""
     # Setup
-    today = datetime.now(UTC)
+    today = datetime.now(timezone.utc)
     # Create a new cycle with the modified date
     cycle = GrantCycle(
         **{
@@ -182,7 +182,7 @@ async def test_inactive_cycle_no_transition(
 ) -> None:
     """Test that inactive cycles don't transition even if dates are met."""
     # Setup
-    today = datetime.now(UTC)
+    today = datetime.now(timezone.utc)
     # Create a new cycle with modified properties
     cycle = GrantCycle(
         **{

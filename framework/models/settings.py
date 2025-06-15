@@ -1,12 +1,15 @@
 from zoneinfo import ZoneInfo
 
-from pydantic import EmailStr
+from pydantic import EmailStr, validator
 from pydantic_settings import BaseSettings
 
 
 class PythonFastAPIBaseSettings(BaseSettings):
+    class Config:
+        env_prefix = "RISA_"
+
     # Environment Settings #
-    ENV_NAME: str = "Unknown"
+    ENV_NAME: str = "invalid_default_value"
     DEBUG: bool = True
 
     # Log
@@ -27,8 +30,8 @@ class PythonFastAPIBaseSettings(BaseSettings):
 
     # API
     API_V1_PREFIX: str = "/api/v1"
-    JWT_ACCESS_SECRET_KEY: str = "jwt_access_secret_key"
-    JWT_REFRESH_SECRET_KEY: str = "jwt_refresh_secret_key"
+    JWT_ACCESS_SECRET_KEY: str = "invalid_default_value"
+    JWT_REFRESH_SECRET_KEY: str = "invalid_default_value"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 10080
     ALGORITHM: str = "HS256"
@@ -46,9 +49,9 @@ class PythonFastAPIBaseSettings(BaseSettings):
     EMAILS_ENABLED: bool = False
 
     # Users
-    FIRST_SUPERUSER_USERNAME: str = "admin"
-    FIRST_SUPERUSER_EMAIL: EmailStr = "admin@example.com"
-    FIRST_SUPERUSER_PASSWORD: str = "2sd3f4g5h6j7k8l9"
+    FIRST_SUPERUSER_USERNAME: str = "invalid_default_value"
+    FIRST_SUPERUSER_EMAIL: EmailStr = "invalid@default-value.com"
+    FIRST_SUPERUSER_PASSWORD: str = "invalid_default_value"
     USERS_OPEN_REGISTRATION: bool = False
 
     # Notify
@@ -57,10 +60,10 @@ class PythonFastAPIBaseSettings(BaseSettings):
     NOTIFY_TELEGRAM_ENABLED: bool = False
     TELEGRAM_API_TOKEN: str = ""
     TELEGRAM_CHAT_ID: int = 0
-    NOTIFY_ON_START: bool = True
+    NOTIFY_ON_START: bool = False
 
     # Project Settings
-    PROJECT_NAME: str = "risa"
+    PROJECT_NAME: str = "invalid_default_value"
     PACKAGE_NAME: str = PROJECT_NAME.lower().replace("-", "_").replace(" ", "_")
     PROJECT_DESCRIPTION: str = f"{PROJECT_NAME}"
     VERSION: str | None = None
@@ -86,3 +89,62 @@ class PythonFastAPIBaseSettings(BaseSettings):
     def TIMEZONE_INFO(self) -> ZoneInfo:
         """Get the timezone info object."""
         return ZoneInfo(self.TIMEZONE)
+
+    @validator("ENV_NAME")
+    def validate_env_name(cls, v: str) -> str:
+        """Validate that ENV_NAME is provided and not the default value."""
+        if v == "invalid_default_value":
+            raise ValueError("ENV_NAME must be provided via environment variable or .env file")
+        return v
+
+    @validator("JWT_ACCESS_SECRET_KEY")
+    def validate_jwt_access_secret_key(cls, v: str) -> str:
+        """Validate that JWT_ACCESS_SECRET_KEY is provided and not the default value."""
+        if v == "invalid_default_value":
+            raise ValueError(
+                "JWT_ACCESS_SECRET_KEY must be provided via environment variable or .env file"
+            )
+        return v
+
+    @validator("JWT_REFRESH_SECRET_KEY")
+    def validate_jwt_refresh_secret_key(cls, v: str) -> str:
+        """Validate that JWT_REFRESH_SECRET_KEY is provided and not the default value."""
+        if v == "invalid_default_value":
+            raise ValueError(
+                "JWT_REFRESH_SECRET_KEY must be provided via environment variable or .env file"
+            )
+        return v
+
+    @validator("FIRST_SUPERUSER_EMAIL")
+    def validate_first_superuser_email(cls, v: EmailStr) -> EmailStr:
+        """Validate that FIRST_SUPERUSER_EMAIL is provided and not the default value."""
+        if v == "invalid@default-value.com":
+            raise ValueError(
+                "FIRST_SUPERUSER_EMAIL must be provided via environment variable or .env file"
+            )
+        return v
+
+    @validator("FIRST_SUPERUSER_PASSWORD")
+    def validate_first_superuser_password(cls, v: str) -> str:
+        """Validate that FIRST_SUPERUSER_PASSWORD is provided and not the default value."""
+        if v == "invalid_default_value":
+            raise ValueError(
+                "FIRST_SUPERUSER_PASSWORD must be provided via environment variable or .env file"
+            )
+        return v
+
+    @validator("FIRST_SUPERUSER_USERNAME")
+    def validate_first_superuser_username(cls, v: str) -> str:
+        """Validate that FIRST_SUPERUSER_USERNAME is provided and not the default value."""
+        if v == "invalid_default_value":
+            raise ValueError(
+                "FIRST_SUPERUSER_USERNAME must be provided via environment variable or .env file"
+            )
+        return v
+
+    @validator("PROJECT_NAME")
+    def validate_project_name(cls, v: str) -> str:
+        """Validate that PROJECT_NAME is provided and not the default value."""
+        if v == "invalid_default_value":
+            raise ValueError("PROJECT_NAME must be provided via environment variable or .env file")
+        return v

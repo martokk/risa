@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from fastapi.templating import Jinja2Templates
 
@@ -38,7 +38,7 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals["BASE_DOMAIN"] = settings.BASE_DOMAIN
     templates.env.globals["BASE_URL"] = settings.BASE_URL
     templates.env.globals["VERSION"] = settings.VERSION
-    templates.env.globals["current_year"] = datetime.now(UTC).year
+    templates.env.globals["current_year"] = datetime.now(timezone.utc).year
 
     return templates
 

@@ -1,5 +1,5 @@
 import ipaddress
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests
 from fastapi import Request
@@ -45,7 +45,7 @@ def _update_cloudfront_ranges() -> None:
         # Update the cache
         _cloudfront_ipv4_ranges = new_ipv4_ranges
         _cloudfront_ipv6_ranges = new_ipv6_ranges
-        _cloudfront_ranges_last_update = datetime.now(UTC)
+        _cloudfront_ranges_last_update = datetime.now(timezone.utc)
         logger.info(
             f"Updated CloudFront IP ranges:{len(new_ipv4_ranges)} IPv4, {len(new_ipv6_ranges)} IPv6"
         )
@@ -61,7 +61,7 @@ def is_cloudfront_ip(ip: str) -> bool:
     # Update ranges if needed
     if (
         _cloudfront_ranges_last_update is None
-        or datetime.now(UTC) - _cloudfront_ranges_last_update > _CLOUDFRONT_CACHE_TTL
+        or datetime.now(timezone.utc) - _cloudfront_ranges_last_update > _CLOUDFRONT_CACHE_TTL
     ):
         _update_cloudfront_ranges()
 
