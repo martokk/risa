@@ -31,7 +31,7 @@ jobs:
         with:
           context: ./
           tags: |
-            ghcr.io/martokk/grant_manager:latest
+            ghcr.io/martokk/risa:latest
           push: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Create Deployment

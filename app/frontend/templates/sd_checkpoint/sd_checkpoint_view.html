@@ -1,0 +1,117 @@
+{% extends "base/base.html" %}
+
+{% block title %}View SD Checkpoint: {{ sd_checkpoint.name }}{% endblock %}
+{% block content_header %}View SD Checkpoint: {{ sd_checkpoint.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Details</h3>
+            <div class="card-tools">
+                <a href="{{ url_for('edit_sd_checkpoint_page', sd_checkpoint_id=sd_checkpoint.id) }}" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{{ url_for('list_sd_checkpoints_page') }}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID:</dt>
+                <dd class="col-sm-9">{{ sd_checkpoint.id }}</dd>
+
+                <dt class="col-sm-3">Name:</dt>
+                <dd class="col-sm-9">{{ sd_checkpoint.name }}</dd>
+
+                <dt class="col-sm-3">Local File Path:</dt>
+                <dd class="col-sm-9">{{ sd_checkpoint.local_file_path }}</dd>
+
+                <dt class="col-sm-3">Remote File Path:</dt>
+                <dd class="col-sm-9">{{ sd_checkpoint.remote_file_path }}</dd>
+
+                <dt class="col-sm-3">Base Model:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_checkpoint.sd_base_model %}
+                        <a href="{{ url_for('view_sd_base_model_page', sd_base_model_id=sd_checkpoint.sd_base_model.id) }}">{{ sd_checkpoint.sd_base_model.name }} ({{sd_checkpoint.sd_base_model.id}})</a>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Is Realistic:</dt>
+                <dd class="col-sm-9">
+                    {% if sd_checkpoint.is_realistic %}
+                        <span class="badge bg-success">Yes</span>
+                    {% else %}
+                        <span class="badge bg-secondary">No</span>
+                    {% endif %}
+                </dd>
+               
+            </dl>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Excluded Extra Networks</h3>
+        </div>
+        <div class="card-body">
+            <form id="excluded-extra-networks-form">
+                <!-- Tom Select -->
+                <select id="excluded-extra-networks" class="form-control" multiple>
+                    {% for extra_network in extra_networks %}
+                    <option value="{{ extra_network.id }}" {% if extra_network.id in excluded_extra_networks %}selected{% endif %}>{{ extra_network.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %} 
+
+{% block js_dependencies %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found. API calls might fail.');
+    initializeApi({});
+    {% endif %}
+
+
+    const excludedExtraNetworks = document.getElementById('excluded-extra-networks');
+    new TomSelect(excludedExtraNetworks, {
+        create: false,
+        createFilter: function(input) {
+            return input.length > 2;
+        },
+        createOnBlur: true,
+        plugins: ['remove_button'],
+        sortField: { field: "text", direction: "asc" }
+    });
+
+    const excludedExtraNetworksForm = document.getElementById('excluded-extra-networks-form');
+    excludedExtraNetworksForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const exlcudedIds = Array.from(excludedExtraNetworks.selectedOptions, option => option.value);
+        const response = await apiCrud.update('sd-checkpoint', '{{ sd_checkpoint.id }}', { excluded_extra_networks: exlcudedIds });
+        uiHelpers.showToast('SD Checkpoint updated successfully!', 'success');
+    });
+
+
+</script>
+{% endblock %}

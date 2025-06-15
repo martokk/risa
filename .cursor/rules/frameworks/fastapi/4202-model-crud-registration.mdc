@@ -69,7 +69,7 @@ async def get_examples(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[models.Example]:
     """Get all examples."""
-    return await crud.example.get_multi(db=db)
+    return await crud.example.get_all(db=db)
 
 @router.post("/examples", response_model=models.ExampleRead)
 async def create_example(
@@ -105,7 +105,7 @@ from app.crud.example import example_crud  # Wrong import name
 
 @router.get("/examples")
 async def get_examples(db: Session = Depends(get_db)):
-    return example_crud.get_multi(db=db)  # Wrong CRUD instance name
+    return example_crud.get_all(db=db)  # Wrong CRUD instance name
 </example>
 
 ## Proper Model Registration Steps

@@ -1,0 +1,219 @@
+<div class="card mb-3">
+    <div class="card-header fw-bold">Jobs Queue</div>
+    <div class="card-body p-2">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <span id="queueStatusBadge" class="badge bg-secondary me-2">Queue: 0</span>
+            </div>
+                <span id="consumerStatusBadge" class="badge bg-secondary">Consumer: Stopped</span>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-outline-success" id="startConsumerBtn" title="Start Huey Consumer">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="stopConsumerBtn" title="Stop Huey Consumer">
+                    <i class="fas fa-stop"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0" style="font-size: 0.92rem;">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th class="bg-dark-subtle">Name</th>
+                        <th class="bg-dark-subtle">Type</th>
+                        <th class="bg-dark-subtle">Priority</th>
+                        <th class="bg-dark-subtle">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="queueTableBody">
+                    <tr>
+                        <td colspan="4" class="text-center">No jobs in queue</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header fw-bold">Log Viewer</div>
+    <div class="card-body p-2">
+        <!-- Log Viewer for Currently Running Job -->
+        <div id="dashboardLogViewer"
+            style="min-height: 80px; max-height: 180px; overflow-y: auto; background: #181a1b; color: #e0e0e0; font-size: 0.92rem; border-radius: 0.3rem; border: 1px solid #222; padding: 0.5rem 0.75rem; white-space: pre-wrap;">
+            <!-- Log content will be streamed here -->
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { apiCrud, uiHelpers } from '/static/js/api_utils.js';
+    import { toast } from '/static/js/toast.js';
+
+    function connectJobQueueWebSocket() {
+        let protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        let wsUrl = `${protocol}://${window.location.host}/api/v1/ws/job-queue`;
+        const socket = new WebSocket(wsUrl);
+        
+        socket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.jobs) {
+                    updateQueueTable(data.jobs);
+                }
+                if (data.consumer_status) {
+                    updateConsumerStatusBadge(data.consumer_status);
+                }
+            } catch (e) {
+                console.error('Failed to parse WebSocket message:', e);
+            }
+        };
+        
+        socket.onclose = function() {
+            updateConsumerStatusBadge('unknown');
+            setTimeout(connectJobQueueWebSocket, 3000);
+        };
+        
+        return socket;
+    }
+
+    function updateQueueTable(jobs) {
+        const queueJobs = jobs.filter(j => ['queued', 'running', 'pending'].includes(j.status));
+        const queueTableBody = document.getElementById('queueTableBody');
+        const queueStatusBadge = document.getElementById('queueStatusBadge');
+        queueStatusBadge.textContent = `Queue: ${queueJobs.length}`;
+        if (queueJobs.length === 0) {
+            queueTableBody.innerHTML = '<tr><td colspan="4" class="text-center">No jobs in queue</td></tr>';
+            return;
+        }
+        const statusOrder = { running: 0, queued: 1, pending: 2 };
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        queueJobs.sort((a, b) => 
+            (statusOrder[a.status] - statusOrder[b.status]) || 
+            (priorityOrder[a.priority] - priorityOrder[b.priority])
+        );
+        queueTableBody.innerHTML = queueJobs.map(job => {
+            const priorityBadge = job.priority === 'high' ? 'bg-danger'
+                : job.priority === 'medium' ? 'bg-warning text-dark'
+                : 'bg-secondary';
+            const statusBadge = job.status === 'running' ? 'bg-primary'
+                : job.status === 'queued' ? 'bg-info text-dark'
+                : 'bg-secondary';
+            return `
+                <tr>
+                    <td><small>${job.name}</small></td>
+                    <td><small>${job.type.charAt(0).toUpperCase() + job.type.slice(1)}</small></td>
+                    <td class="text-center"><span class="badge ${priorityBadge}">${job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}</span></td>
+                    <td class="text-center"><span class="badge ${statusBadge}">${job.status.charAt(0).toUpperCase() + job.status.slice(1)}</span></td>
+                </tr>
+            `;
+        }).join('');
+        streamRunningJobLog(jobs);
+    }
+
+    function updateConsumerStatusBadge(status) {
+        const badge = document.getElementById('consumerStatusBadge');
+        const startBtn = document.getElementById('startConsumerBtn');
+        const stopBtn = document.getElementById('stopConsumerBtn');
+        if (status === 'running') {
+            badge.textContent = 'Consumer: Running';
+            badge.className = 'badge bg-success me-2';
+            startBtn.classList = "btn btn-sm btn-outline-secondary";
+            stopBtn.classList = "btn btn-sm btn-danger";
+        } else if (status === 'stopped') {
+            badge.textContent = 'Consumer: Stopped';
+            badge.className = 'badge bg-secondary me-2';
+            startBtn.classList = "btn btn-sm btn-success";
+            stopBtn.classList = "btn btn-sm btn-outline-secondary";
+        } else {
+            badge.textContent = 'Consumer: Unknown';
+            badge.className = 'badge bg-warning text-dark me-2';
+            startBtn.classList = "btn btn-sm btn-outline-warning";
+            stopBtn.classList = "btn btn-sm btn-outline-warning";
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        connectJobQueueWebSocket();
+        const startBtn = document.getElementById('startConsumerBtn');
+        const stopBtn = document.getElementById('stopConsumerBtn');
+        if (startBtn) {
+            startBtn.addEventListener('click', async () => {
+                try {
+                    const resp = await fetch('/api/v1/jobs/start-consumer', { method: 'POST' });
+                    const data = await resp.json();
+                    toast.show(data.message, data.success ? 'success' : 'danger');
+                } catch (err) {
+                    toast.show('Failed to start consumer', 'danger');
+                }
+            });
+        }
+        if (stopBtn) {
+            stopBtn.addEventListener('click', async () => {
+                try {
+                    const resp = await fetch('/api/v1/jobs/stop-consumer', { method: 'POST' });
+                    const data = await resp.json();
+                    toast.show(data.message, data.success ? 'success' : 'danger');
+                } catch (err) {
+                    toast.show('Failed to stop consumer', 'danger');
+                }
+            });
+        }
+    });
+
+    // --- Log Streaming for Currently Running Job ---
+    let logSocket = null;
+    let currentRunningJobId = null;
+    let logViewer = document.getElementById('dashboardLogViewer');
+
+    function streamRunningJobLog(jobs) {
+        // Find the first running job
+        const runningJob = jobs.find(j => j.status === 'running');
+        if (!runningJob) {
+            logViewer.textContent = '';
+            currentRunningJobId = null;
+            if (logSocket) {
+                logSocket.close();
+                logSocket = null;
+            }
+            return;
+        }
+        // If already streaming this job, do nothing
+        if (currentRunningJobId === runningJob.id && logSocket && logSocket.readyState === WebSocket.OPEN) {
+            return;
+        }
+        // If switching jobs or first time, reset
+        logViewer.textContent = 'Loading log...';
+        currentRunningJobId = runningJob.id;
+        if (logSocket) {
+            logSocket.close();
+            logSocket = null;
+        }
+        // Open a new WebSocket for log streaming
+        let protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        let wsUrl = `${protocol}://${window.location.host}/api/v1/ws/job-queue`;
+        logSocket = new WebSocket(wsUrl);
+        logSocket.onopen = function() {
+            logSocket.send(JSON.stringify({ type: 'subscribe_log', job_id: currentRunningJobId }));
+        };
+        logSocket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'log_update' && data.job_id === currentRunningJobId) {
+                    logViewer.textContent += data.content;
+                    logViewer.scrollTop = logViewer.scrollHeight;
+                } else if (data.type === 'log_error' && data.job_id === currentRunningJobId) {
+                    logViewer.textContent += `\n[Error streaming log: ${data.error}]`;
+                }
+            } catch (e) {
+                // Ignore parse errors
+            }
+        };
+        logSocket.onclose = function() {
+            // Don't auto-reconnect for log viewer
+        };
+    }
+</script>

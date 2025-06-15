@@ -1,6 +1,10 @@
+from pathlib import Path
+from typing import Any
+
 from sqlmodel import Session
-from .base import BaseCRUD
-import models
+
+from app import models
+from framework.crud.base import BaseCRUD
 
 
 class CharacterCRUD(
@@ -12,23 +16,37 @@ class CharacterCRUD(
 ):
     """CRUD operations for Character."""
 
-    def add_extra_network(
+    async def add_extra_network(
         self,
         db: Session,
         id: str,
         sd_base_model_id: str,
-        lora_tag: str | None = None,
-        trigger: str | None = None,
+        trained_on_checkpoint: str | None = None,
+        local_file_path: str | None = None,
+        remote_file_path: str | None = None,
+        network: str | None = None,
+        network_trigger: str | None = None,
+        network_weight: float | None = None,
+        sha256: str | None = None,
         only_realistic: bool = False,
         only_nonrealistic: bool = False,
-        only_checkpoints: list[str] = [],
-        exclude_checkpoints: list[str] = [],
+        only_checkpoints: list[str] | None = None,
+        exclude_checkpoints: list[str] | None = None,
     ) -> models.Character:
-        db_character = self.get_or_none(db, id=id)
+        if only_checkpoints is None:
+            only_checkpoints = []
+        if exclude_checkpoints is None:
+            exclude_checkpoints = []
+        db_character = await self.get_or_none(db, id=id)
         if not db_character:
             raise ValueError(f"Character with id '{id}' not found")
 
-        safetensors_name = lora_tag.split(":")[1]
+        safetensors_name = Path(local_file_path).stem if local_file_path else None
+        if not safetensors_name:
+            raise ValueError(
+                "safetensors_name must be provided to generate an ID. Enter a local file path."
+            )
+
         extra_network_id = f"{db_character.id}_{safetensors_name}_{sd_base_model_id}"
 
         actual_extra_network: models.SDExtraNetwork | None = db.get(
@@ -39,16 +57,19 @@ class CharacterCRUD(
             extra_network_create_schema = models.SDExtraNetworkCreate(
                 sd_base_model_id=sd_base_model_id,
                 character_id=db_character.id,
-                lora_tag=lora_tag,
-                trigger=trigger,
+                trained_on_checkpoint=trained_on_checkpoint,
+                local_file_path=local_file_path,
+                remote_file_path=remote_file_path,
+                network=network,
+                network_trigger=network_trigger,
+                network_weight=network_weight,
+                sha256=sha256,
                 only_realistic=only_realistic,
                 only_nonrealistic=only_nonrealistic,
                 only_checkpoints=only_checkpoints,
                 exclude_checkpoints=exclude_checkpoints,
             )
-            actual_extra_network = models.SDExtraNetwork.model_validate(
-                extra_network_create_schema
-            )
+            actual_extra_network = models.SDExtraNetwork.model_validate(extra_network_create_schema)
             db.add(actual_extra_network)
         else:
             pass
@@ -62,6 +83,13 @@ class CharacterCRUD(
         db.refresh(actual_extra_network)
 
         return db_character
+
+    async def get_dataset_tagger_tags(self, db: Session, character_id: str) -> dict[str, Any]:
+        db_character = await self.get_or_none(db, id=character_id)
+        if not db_character:
+            raise ValueError(f"Character with id '{character_id}' not found")
+
+        return db_character.model_dump()
 
 
 character = CharacterCRUD(model=models.Character)

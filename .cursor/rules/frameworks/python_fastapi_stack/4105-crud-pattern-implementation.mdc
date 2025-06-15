@@ -46,7 +46,7 @@ async def get_entities(
     current_user: Annotated[models.User, Depends(get_current_active_user)],
 ) -> list[models.Entity]:
     """Get all entities."""
-    return await crud.entity.get_multi(db=db)
+    return await crud.entity.get_all(db=db)
 
 @router.post("/", response_model=models.EntityRead, status_code=status.HTTP_201_CREATED)
 async def create_entity(
@@ -119,7 +119,7 @@ async def delete_entity(
         )
     await crud.entity.remove(db=db, id=entity_id)
 
-# Good: View Page Implementation (app/views/pages/root/[entity].py)
+# Good: View Page Implementation (app/frontend/handlers/root/[entity].py)
 
 from typing import Annotated, Any
 
@@ -129,8 +129,8 @@ from sqlmodel import Session
 
 from app import crud
 from app.core.db import get_db
-from app.views.templates import templates
-from app.views.templates.context import get_template_context
+from app.frontend.templates import templates
+from app.frontend.templates.context import get_template_context
 
 router = APIRouter(tags=["[entity_plural]"])
 
@@ -140,7 +140,7 @@ async def entities_page(
     context: dict[str, Any] = Depends(get_template_context),
 ) -> HTMLResponse:
     """Entities page."""
-    entities = await crud.entity.get_multi(db=db)
+    entities = await crud.entity.get_all(db=db)
     context["entities"] = entities
     return templates.TemplateResponse(
         "root/[entity].html",
@@ -155,7 +155,7 @@ api_router.include_router(entity.router, tags=["[Entity_plural]"])
 
 # Good: Route Registration (app/routes/views.py)
 
-from app.views.pages.root import entity
+from app.frontend.handlers.root import entity
 
 root_router.include_router(entity.router, tags=["[Entity_plural]"])
 </example>
@@ -213,7 +213,7 @@ def update(id: int, data: dict, db: Session = Depends(get_db)):
     return entity
 </example>
 
-## Template Implementation (app/views/templates/root/[entity].html)
+## Template Implementation (app/frontend/templates/root/[entity].html)
 
 ```html
 {% extends "base/base.html" %}
@@ -314,7 +314,7 @@ def update(id: int, data: dict, db: Session = Depends(get_db)):
 {% endblock %}
 ```
 
-## Navigation Link (app/views/templates/base/navbar_logged_in.html)
+## Navigation Link (app/frontend/templates/base/navbar_logged_in.html)
 
 ```html
 <li class="nav-item">
@@ -330,11 +330,11 @@ Create a new file in `app/api/v1/endpoints/[entity].py` with standard CRUD endpo
 
 ### 2. View Page Implementation
 
-Create a new file in `app/views/pages/root/[entity].py` with the page handler to render the entity management page.
+Create a new file in `app/frontend/handlers/root/[entity].py` with the page handler to render the entity management page.
 
 ### 3. Template Implementation
 
-Create a new file in `app/views/templates/root/[entity].html` with the HTML template for entity management, including:
+Create a new file in `app/frontend/templates/root/[entity].html` with the HTML template for entity management, including:
 
 - List view of entities
 - Add/edit modals
@@ -349,7 +349,7 @@ Register the new routes in:
 
 ### 5. Navigation Link
 
-Add a navigation link in `app/views/templates/base/navbar_logged_in.html` to make the new page accessible.
+Add a navigation link in `app/frontend/templates/base/navbar_logged_in.html` to make the new page accessible.
 
 ## Best Practices
 

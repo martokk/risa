@@ -1,0 +1,97 @@
+{% extends "base/base.html" %}
+
+{% block title %}SD Checkpoints{% endblock %}
+{% block content_header %}SD Checkpoints{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-3">
+        <a href="{{ url_for('create_sd_checkpoint_page') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New SD Checkpoint
+        </a>
+    </div>
+
+    {% if grouped_checkpoints %}
+        {% for base_model_name, checkpoints_in_group in grouped_checkpoints.items() %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="card-title">{{ base_model_name }}</h3>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="w-25">Name</th>
+                            <th class="w-25">ID</th>
+                            <th class="w-25">Realistic</th>
+                            <th class="w-auto">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in checkpoints_in_group %}
+                        <tr>
+                            <td><a href="/sd-checkpoint/{{ item.id }}/view">{{ item.name }}</a></td>
+                            <td>{{ item.id }}</td>
+                            <td>
+                                {% if item.is_realistic %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/sd-checkpoint/{{ item.id }}/view" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="/sd-checkpoint/{{ item.id }}/edit" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.name }}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="alert alert-info">
+        No SD Checkpoints found. <a href="{{ url_for('create_sd_checkpoint_page') }}">Create one now!</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found in template context. API calls might fail if authentication is required.');
+    initializeApi({}); // Initialize with empty tokens or default config
+    {% endif %}
+
+    window.confirmDelete = async function(id, name) {
+        if (uiHelpers.confirm(`Are you sure you want to delete SD Checkpoint "${name}" (ID: ${id})?`)) {
+            try {
+                await apiCrud.delete('sd-checkpoints', id);
+                uiHelpers.showToast('SD Checkpoint deleted successfully!', 'success');
+                setTimeout(() => {
+                    uiHelpers.refreshPage();
+                }, 1500);
+            } catch (error) {
+                console.error('Failed to delete SD Checkpoint:', error);
+                uiHelpers.showError(error.message || 'Failed to delete SD Checkpoint. Please check console for details.');
+            }
+        }
+    };
+</script>
+{% endblock %} 

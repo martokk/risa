@@ -1,0 +1,172 @@
+{% extends "base/base.html" %}
+
+{% block title %}SD Extra Networks{% endblock %}
+{% block content_header %}SD Extra Networks{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <div>
+            <a href="{{ url_for('create_sd_extra_network_page') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New SD Extra Network
+            </a>
+        </div>
+        <div>
+            <button id="updateAllSha256Btn" class="btn btn-info">
+                <i class="fas fa-sync"></i> Update All SHA256
+            </button>
+        </div>
+    </div>
+
+    {% if sd_extra_networks %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Existing SD Extra Networks</h3>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Safetensors</th>
+                        <th>Character</th>
+                        <th>Base Model</th>
+                        <th>SHA256</th>
+                        <th style="width: 300px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sd_extra_networks | sort(attribute='name') %}
+                    <tr data-id="{{ item.id }}">
+                        <td><a href="/sd-extra-network/{{ item.id }}/view">{{ item.safetensors.name }}</a></td>
+                        <td><a href="/character/{{ item.character.id }}/view">{{ item.character.name }}</a></td>
+                        <td><a href="/sd-base-model/{{ item.sd_base_model.id }}/view">{{ item.sd_base_model.name }}</a></td>
+                        <td><span class="badge bg-success">{{ item.sha256[:8] if item.sha256 else '' }}</span></td>
+
+                        <td>
+                            <a href="/sd-extra-network/{{ item.id }}/view" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="/sd-extra-network/{{ item.id }}/edit" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.network_tag if item.network_tag else item.safetensors.name }}')">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No SD Extra Networks found. <a href="/sd-extra-networks/create">Create one now!</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found in template context. API calls might fail if authentication is required.');
+    initializeApi({});
+    {% endif %}
+
+    window.confirmDelete = async function(id, name) {
+        if (uiHelpers.confirm(`Are you sure you want to delete SD Extra Network "${name}" (ID: ${id})?`)) {
+            try {
+                await apiCrud.delete('sd-extra-networks', id);
+                uiHelpers.showToast('SD Extra Network deleted successfully!', 'success');
+                setTimeout(() => {
+                    uiHelpers.refreshPage();
+                }, 1500);
+            } catch (error) {
+                console.error('Failed to delete SD Extra Network:', error);
+                uiHelpers.showError(error.message || 'Failed to delete SD Extra Network. Please check console for details.');
+            }
+        }
+    };
+
+    // Add batch SHA256 update functionality
+    const updateAllSha256Btn = document.getElementById('updateAllSha256Btn');
+    if (updateAllSha256Btn) {
+        updateAllSha256Btn.addEventListener('click', async function() {
+            try {
+                // Disable the button to prevent multiple clicks
+                updateAllSha256Btn.disabled = true;
+                updateAllSha256Btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+                // Get all SD Extra Networks
+                const networks = await apiCrud.getAll('sd-extra-networks');
+                let updated = 0;
+                let skipped = 0;
+                let failed = 0;
+
+                // Process each network that doesn't have a SHA256
+                for (const network of networks) {
+                    if (!network.sha256) {
+                        try {
+                            const response = await apiCrud.getEndpoint(`sd-extra-networks/${network.id}/sha256`);
+                            if (response.sha256) {
+                                // Update the network with the new SHA256
+                                await apiCrud.update('sd-extra-networks', network.id, {
+                                    ...network,
+                                    sha256: response.sha256
+                                });
+                                updated++;
+                                // Update the UI immediately
+                                const sha256Cell = document.querySelector(`tr[data-id="${network.id}"] td:nth-child(4) .badge`);
+                                if (sha256Cell) {
+                                    sha256Cell.textContent = response.sha256.substring(0, 8);
+                                }
+                            } else {
+                                skipped++;
+                            }
+                        } catch (error) {
+                            console.warn(`Failed to update SHA256 for network ${network.id}:`, error);
+                            failed++;
+                        }
+                    } else {
+                        skipped++;
+                    }
+                }
+
+                // Show summary
+                uiHelpers.showToast(
+                    `SHA256 Update Complete:\n` +
+                    `✅ Updated: ${updated}\n` +
+                    `⏭️ Skipped: ${skipped}\n` +
+                    `❌ Failed: ${failed}`,
+                    'info'
+                );
+
+                // Re-enable the button
+                updateAllSha256Btn.disabled = false;
+                updateAllSha256Btn.innerHTML = '<i class="fas fa-sync"></i> Update All SHA256';
+
+                // Refresh the page to show all updates
+                if (updated > 0) {
+                    setTimeout(() => {
+                        uiHelpers.refreshPage();
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Failed to update SHA256 values:', error);
+                uiHelpers.showError(error.message || 'Failed to update SHA256 values. Check console for details.');
+                // Re-enable the button
+                updateAllSha256Btn.disabled = false;
+                updateAllSha256Btn.innerHTML = '<i class="fas fa-sync"></i> Update All SHA256';
+            }
+        });
+    }
+</script>
+{% endblock %} 

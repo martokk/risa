@@ -84,7 +84,7 @@ class ExampleCRUD(BaseCRUD[models.Example, models.ExampleCreate, models.ExampleU
     # Custom methods if needed
     async def get_active(self, db: Session) -> list[models.Example]:
         """Get all active examples."""
-        return await self.get_multi(db=db, filters={"is_active": True})
+        return await self.get_all(db=db, filters={"is_active": True})
 
 # Initialize the CRUD instance
 
@@ -101,7 +101,7 @@ async def get_examples(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[models.Example]:
     """Get all examples."""
-    return await crud.example.get_multi(db=db)
+    return await crud.example.get_all(db=db)
 
 @router.post("/examples", response_model=models.ExampleRead, status_code=201)
 async def create_example(
@@ -265,7 +265,7 @@ from app.crud.example import example
 async def get_examples(
     db: Annotated[Session, Depends(get_db)],
 ) -> list[models.Example]:
-    return await crud.example.get_multi(db=db)
+    return await crud.example.get_all(db=db)
 
 @router.post("/examples", response_model=models.ExampleRead)
 async def create_example(

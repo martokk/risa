@@ -1,0 +1,56 @@
+<div class="card mb-3">
+    <div class="card-header fw-bold py-2" style="font-size:1rem;">States</div>
+    <div class="card-body p-2">
+        <!-- Instance State Section -->
+        <div class="mb-2">
+            <div class="fw-semibold text-muted mb-1" style="font-size:0.95rem;">Instance State</div>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-1" style="font-size:0.92rem;">
+                    <thead>
+                        <tr>
+                            <th>ENV</th>
+                            <th>Project</th>
+                            <th>Base Domain</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>{{ instance_state.id }}</td>
+                            <td>{{ instance_state.project_name }}</td>
+                            <td>{{ instance_state.base_domain }}</td>
+                            <td>{{ instance_state.last_updated | humanize if instance_state.last_updated else '' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Network State Section -->
+        <div>
+            <div class="fw-semibold text-muted mb-1" style="font-size:0.95rem;">Network State</div>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0" style="font-size:0.92rem;">
+                    <thead>
+                        <tr>
+                            <th>ENV</th>
+                            <th>Project</th>
+                            <th>Base Domain</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for env in ["dev", "local", "playground", "host"] %}
+                        {% set s = network_state[env] if network_state and network_state[env] else None %}
+                        <tr>
+                            <td>{{ s.id if s else env }}</td>
+                            <td>{{ s.project_name if s else '' }}</td>
+                            <td>{{ s.base_domain if s else '' }}</td>
+                            <td>{{ s.last_updated | humanize if s and s.last_updated else '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 

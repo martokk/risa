@@ -1,30 +1,22 @@
 # PROJECT STRUCTURE
-import os
 from pathlib import Path
 
+from app.models.settings import get_settings
+from framework.paths import *
+from framework.paths import DATA_PATH, ENV_FILE
 
-# Project Path
-BASE_PATH = Path(os.path.dirname(os.path.abspath(__file__)))
 
-# Folders
-DATA_PATH = BASE_PATH / "data"
-VIEWS_PATH = BASE_PATH / "views"
+# Load ENV File - Needed for Settings
+settings = get_settings(env_file_path=ENV_FILE)
 
-# Views Folder
-STATIC_PATH = VIEWS_PATH / "static"
-EMAIL_TEMPLATES_PATH = VIEWS_PATH / "email-templates"
-TEMPLATES_PATH = VIEWS_PATH / "templates"
+HUEY_DB_PATH = (
+    Path(settings.HUEY_SQLITE_PATH) if settings.HUEY_SQLITE_PATH else DATA_PATH / "huey.sqlite3"
+)
+JOB_DB_PATH = DATA_PATH / "jobs.json"
+DASHBOARD_CONFIG_FILE = Path(settings.DASHBOARD_CONFIG_PATH)
+DATASET_TAGGER_WALKTHROUGH_PATH = Path(settings.DATASET_TAGGER_WALKTHROUGH_PATH)
 
-# Data Folder
-LOGS_PATH = DATA_PATH / "logs"
-CACHE_PATH = DATA_PATH / "cache"
-UPLOAD_PATH = DATA_PATH / "uploads"
 
-# Cache Folders
-# GUEST_INFO_CACHE_PATH = CACHE_PATH / "guest_info"
-
-# Files
-ENV_FILE = DATA_PATH / ".env"
-DATABASE_FILE = DATA_PATH / "database.sqlite3"
-LOG_FILE = LOGS_PATH / "log.log"
-ERROR_LOG_FILE = LOGS_PATH / "error_log.log"
+# HUB PATHS
+HUB_PATH = Path(settings.HUB_PATH)
+HUB_MODELS_PATH = HUB_PATH / "models"

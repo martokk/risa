@@ -666,3 +666,7 @@ app/data/database.sqlite3.old
 .repomix-output.txt
 
 .repomix-plan-files.txt
+
+app/data/database.sqlite3.backup
+
+app/data/

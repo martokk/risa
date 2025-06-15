@@ -1,0 +1,18 @@
+{
+    "_id": "9969826f-64af-429f-9959-173557caf060",
+    "name": "Staging (DuckDNS)",
+    "default": false,
+    "sortNum": 20000,
+    "created": "2023-01-30T21:25:59.209Z",
+    "modified": "2023-01-30T21:25:59.209Z",
+    "data": [
+        {
+            "name": "BASE_URL",
+            "value": "http://{{PROJECT_SLUG}}.duckdns.org:{{PORT}}"
+        },
+        {
+            "name": "BASE_API_URL",
+            "value": "{{BASE_URL}}/api/v1"
+        }
+    ]
+}

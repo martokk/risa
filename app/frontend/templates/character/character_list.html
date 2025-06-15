@@ -1,0 +1,111 @@
+{% extends "base/base.html" %}
+
+{% block title %}Characters{% endblock %}
+{% block content_header %}Characters{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="sticky-top pt-2 pb-2 bg-dark border-bottom border-secondary" style="margin: -1rem -1rem 1rem -1rem; padding-left: 1rem; padding-right: 1rem;">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('create_character_page') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Character
+            </a>
+        </div>
+    </div>
+
+    {% if characters %}
+        {# Group characters by is_known status #}
+        {% for group in characters|groupby('is_known')|reverse %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        {% if group.grouper %}Known Characters ({{ group.list|length }}){% else %}Unverified Characters ({{ group.list|length }}){% endif %}
+                    </h3>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Extra Networks (Total)</th>
+                                <th>Incomplete</th>
+                                <th style="width: 150px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in group.list|sort(attribute='name') %}
+                            <tr>
+                                <td><a href="{{ url_for('character_page', character_id=item.id) }}">{{ item.name }}</a></td>
+                                <td>{{ item.sd_extra_networks | length }}</td>
+                                <td>
+                                    {% if item.is_incomplete %}
+                                    <span class="badge bg-danger">Incomplete</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.id != 'default_fallback' %}
+                                    <button type="button" class="btn btn-sm" onclick="confirmDelete('{{ item.id }}', '{{ item.name }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+    <div class="alert alert-info">
+        No Characters found. <a href="{{ url_for('create_character_page') }}">Create one now!</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+
+    {% if tokens and tokens.access_token and tokens.refresh_token %}
+    initializeApi({
+        access_token: "{{ tokens.access_token }}",
+        refresh_token: "{{ tokens.refresh_token }}"
+    });
+    {% else %}
+    console.warn('API tokens not found in template context. API calls might fail if authentication is required.');
+    initializeApi({});
+    {% endif %}
+
+    window.confirmDelete = async function(id, name) {
+        if (uiHelpers.confirm(`Are you sure you want to delete Character "${name}" (ID: ${id})?`)) {
+            try {
+                await apiCrud.delete('characters', id);
+                uiHelpers.showToast('Character deleted successfully!', 'success');
+                setTimeout(() => {
+                    uiHelpers.refreshPage();
+                }, 1500);
+            } catch (error) {
+                console.error('Failed to delete Character:', error);
+                let errorMessage = error.message || 'Failed to delete Character. Please check console for details.';
+                
+                // Parse common error messages
+                if (errorMessage.includes('UNIQUE constraint failed')) {
+                    errorMessage = 'A character with this ID already exists. Please use a different name.';
+                }
+                
+                uiHelpers.showError(errorMessage);
+            }
+        }
+    };
+
+    // Add error handler for runtime.lastError
+    window.addEventListener('error', function(event) {
+        if (event.error && event.error.message && event.error.message.includes('runtime.lastError')) {
+            // Suppress the runtime.lastError messages
+            event.preventDefault();
+        }
+    });
+</script>
+{% endblock %} 

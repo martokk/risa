@@ -6,12 +6,12 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 name = "app"
 version = "0.0.1"
-description = "grant_manager"
+description = "risa"
 readme = "README.md"
 authors = ["martokk <25113632+martokk@users.noreply.github.com>"]
 license = "MIT"
-repository = "https://github.com/martokk/grant_manager"
-homepage = "https://github.com/martokk/grant_manager"
+repository = "https://github.com/martokk/risa"
+homepage = "https://github.com/martokk/risa"
 
 # Keywords description https://python-poetry.org/docs/pyproject/#keywords
 keywords = ["fastapi", "poetry", "python", "sqlmodel", "alembic", "loguru", "crud"]
@@ -54,6 +54,12 @@ emails = "^0.6"
 chromadb = "^0.6.3"
 python-docx = "^1.1.2"
 phidata = "^2.7.10"
+safetensors = "^0.5.3"
+markdown = "^3.8"
+pillow = "^11.2.1"
+huey = {extras = ["sqlite"], version = "^2.5.3"}
+tinydb = "^4.8.2"
+debugpy = "^1.8.14"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.10"
@@ -72,6 +78,8 @@ pytest-html = "^4.1.1"
 pytest-cov = "^6.0.0"
 pytest-asyncio = "^0.24.0"
 ruff = "^0.5.3"
+types-markdown = "^3.8.0.20250415"
+types-requests = "^2.32.4.20250611"
 
 [tool.ruff]
 # Same as Black

@@ -1,6 +1,9 @@
+from pathlib import Path
+
 from sqlmodel import Session
-from .base import BaseCRUD
-import models
+
+from app import models
+from framework.crud.base import BaseCRUD
 
 
 class SDBaseModelCRUD(
@@ -12,7 +15,7 @@ class SDBaseModelCRUD(
 ):
     """CRUD operations for SDBaseModel."""
 
-    def add_checkpoint(
+    async def add_checkpoint(
         self,
         db: Session,
         id: str,
@@ -20,13 +23,11 @@ class SDBaseModelCRUD(
         checkpoint_name: str,
         is_realistic: bool,
     ) -> models.SDBaseModel:
-        db_base_model = self.get_or_none(db, id=id)
+        db_base_model = await self.get_or_none(db, id=id)
         if not db_base_model:
             raise ValueError(f"SDBaseModel with id '{id}' not found")
 
-        actual_checkpoint: models.SDCheckpoint | None = db.get(
-            models.SDCheckpoint, checkpoint_id
-        )
+        actual_checkpoint: models.SDCheckpoint | None = db.get(models.SDCheckpoint, checkpoint_id)
 
         if not actual_checkpoint:
             checkpoint_create_schema = models.SDCheckpointCreate(
@@ -34,9 +35,7 @@ class SDBaseModelCRUD(
                 name=checkpoint_name,
                 is_realistic=is_realistic,
             )
-            actual_checkpoint = models.SDCheckpoint.model_validate(
-                checkpoint_create_schema
-            )
+            actual_checkpoint = models.SDCheckpoint.model_validate(checkpoint_create_schema)
             db.add(actual_checkpoint)
         else:
             pass
@@ -51,23 +50,35 @@ class SDBaseModelCRUD(
 
         return db_base_model
 
-    def add_extra_network(
+    async def add_extra_network(
         self,
         db: Session,
         id: str,
         character_id: str,
-        lora_tag: str | None = None,
-        trigger: str | None = None,
+        trained_on_checkpoint: str | None = None,
+        local_file_path: str | None = None,
+        remote_file_path: str | None = None,
+        network: str | None = None,
+        network_trigger: str | None = None,
+        network_weight: float | None = None,
+        sha256: str | None = None,
         only_realistic: bool = False,
         only_nonrealistic: bool = False,
-        only_checkpoints: list[models.SDCheckpoint] = [],
-        exclude_checkpoints: list[models.SDCheckpoint] = [],
+        only_checkpoints: list[str] | None = None,
+        exclude_checkpoints: list[str] | None = None,
     ) -> models.SDBaseModel:
-        db_base_model = self.get_or_none(db, id=id)
+        if only_checkpoints is None:
+            only_checkpoints = []
+        if exclude_checkpoints is None:
+            exclude_checkpoints = []
+        db_base_model = await self.get_or_none(db, id=id)
         if not db_base_model:
             raise ValueError(f"SDBaseModel with id '{id}' not found")
 
-        safetensors_name = lora_tag.split(":")[1]
+        if not local_file_path:
+            raise ValueError("local_file_path cannot be None when adding an extra network")
+
+        safetensors_name = Path(local_file_path).stem
         extra_network_id = f"{character_id}_{safetensors_name}_{db_base_model.id}"
 
         actual_extra_network: models.SDExtraNetwork | None = db.get(
@@ -77,17 +88,19 @@ class SDBaseModelCRUD(
         if not actual_extra_network:
             extra_network_create_schema = models.SDExtraNetworkCreate(
                 character_id=character_id,
-                lora_tag=lora_tag,
-                trigger=trigger,
+                local_file_path=local_file_path,
+                remote_file_path=remote_file_path,
+                network=network,
+                network_trigger=network_trigger,
+                network_weight=network_weight,
+                sha256=sha256,
                 only_realistic=only_realistic,
                 only_nonrealistic=only_nonrealistic,
                 only_checkpoints=only_checkpoints,
                 exclude_checkpoints=exclude_checkpoints,
                 sd_base_model_id=db_base_model.id,
             )
-            actual_extra_network = models.SDExtraNetwork.model_validate(
-                extra_network_create_schema
-            )
+            actual_extra_network = models.SDExtraNetwork.model_validate(extra_network_create_schema)
             db.add(actual_extra_network)
         else:
             pass
@@ -101,6 +114,18 @@ class SDBaseModelCRUD(
         db.refresh(actual_extra_network)
 
         return db_base_model
+
+    async def get_character_ids_for_base_model(self, db: Session, id: str) -> list[str]:
+        db_base_model = await self.get_or_none(db, id=id)
+        if not db_base_model:
+            raise ValueError(f"SDBaseModel with id '{id}' not found")
+
+        character_ids = []
+        for extra_network in db_base_model.sd_extra_networks:
+            if extra_network.character_id not in character_ids:
+                character_ids.append(extra_network.character_id)
+
+        return character_ids
 
 
 sd_base_model = SDBaseModelCRUD(model=models.SDBaseModel)

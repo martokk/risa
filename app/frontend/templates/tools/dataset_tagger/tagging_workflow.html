@@ -1,0 +1,60 @@
+{% extends 'base/base_full_width.html' %} {# Adjust base template if different #}
+
+{% block title %}Dataset Tagger - Workflow{% endblock %}
+
+{% block content %}
+{# This outer div becomes a flex column, attempting to take available height #}
+{# Note: Effective height management often needs cooperation from base.html styles #}
+<div class="d-flex flex-column" style="height: calc(100vh - 56px - 1rem);"> {# Assuming 56px for a typical navbar height and 1rem for existing pt-0 now becoming general padding/margin space #}
+    
+    {# Tag Processing Area - HTMX Target (Topbar) - Should not grow #}
+    <div id="tag-processor" class="mb-0 flex-shrink-0">
+        {% with initial_state=TaggingWorkflowState, 
+                initial_display_item=initial_display_item, 
+                initial_item_type=initial_item_type, 
+                initial_step_name=initial_step_name, 
+                initial_step_description=initial_step_description,
+                notification_message=notification_message,
+                notification_type=notification_type,
+                selected_images=selected_images %}
+            {% include "tools/dataset_tagger/_tag_processing_area.html" %}
+        {% endwith %}
+    </div>
+
+    {# Thumbnail Generation Progress Area - Should not grow, shown conditionally #}
+    <div id="thumbnail-progress-area" class="mb-3 flex-shrink-0" style="display: none;">
+        <h5>Generating Thumbnails...</h5>
+        <div class="progress" role="progressbar" aria-label="Thumbnail generation progress" aria-valuenow="0"
+            aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" id="thumbnail-progress-bar"
+                style="width: 0%">0%</div>
+        </div>
+        <p id="thumbnail-progress-status" class="mt-1 text-muted small"></p>
+    </div>
+
+    {# Image Grid Area - This will grow and handle its own content fitting #}
+    <div id="image-grid-container" 
+         class="image-grid-container mt-0 flex-grow-1 w-100" {# mt-3 changed to mt-0, flex-grow-1 added #}
+         style="overflow: hidden;" {# Crucial: prevent this container from scrolling #}
+         data-folder-path="{{ initial_state.folder_path }}">
+        {% if initial_state and initial_state.images_data %}
+            {% with grid_images_data=initial_state.images_data, grid_folder_path=initial_state.folder_path %}
+                {% include "tools/dataset_tagger/_image_grid.html" %}
+            {% endwith %}
+        {% else %}
+            <div class="text-center p-3 d-flex flex-column justify-content-center align-items-center h-100">
+                <p class="text-muted">Image grid is loading or no images found.</p>
+                 <div class="spinner-border text-primary mt-2" role="status">
+                    <span class="visually-hidden">Loading images...</span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+    {# Link to dataset_tagger.js #}
+    <script src="/static/js/tools/dataset_tagger.js" defer></script>
+{% endblock %}

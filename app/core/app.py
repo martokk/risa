@@ -1,19 +1,19 @@
+import asyncio
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 
-from app import logger, settings, version
-from app.api import deps
-from app.core.db import initialize_tables_and_initial_data
+from app import logger, settings
+from app.logic.state import update_instance_state
 from app.paths import STATIC_PATH
 from app.routes.api import api_router
 from app.routes.views import views_router
-from app.services import notify
-from app.services.status_updater import StatusUpdateService
-from app.tasks.scheduler import TaskScheduler
+from app.services.idle_watcher import start_idle_watcher, stop_idle_watcher
+from framework.core.db import get_db, initialize_tables_and_initial_data
+from framework.services import notify
 
 
 # def run_playground_app():
@@ -30,6 +30,18 @@ from app.tasks.scheduler import TaskScheduler
 #     )
 
 
+async def periodic_instance_state_update() -> None:
+    """Periodically update the instance state."""
+    while True:
+        try:
+            logger.info("Updating instance state...")
+            await update_instance_state()
+            logger.info("Instance state updated.")
+        except Exception as e:
+            logger.error(f"Error updating instance state: {e}")
+        await asyncio.sleep(5 * 60)  # 5 minutes
+
+
 async def startup_event(db: Session | None = None) -> None:
     """
     Event handler that gets called when the application starts.
@@ -44,13 +56,8 @@ async def startup_event(db: Session | None = None) -> None:
 
     # Initialize database and tables if they do not exist
     if db is None:
-        db = next(deps.get_db())
+        db = next(get_db())
     await initialize_tables_and_initial_data(db=db)
-
-    # Run status updater
-    logger.info("Running status updater")
-    status_updater = StatusUpdateService(db=db)
-    await status_updater.update_grant_cycle_statuses()
 
     # Start the playground app in a separate thread
     # threading.Thread(target=run_playground_app).start()
@@ -60,23 +67,23 @@ async def startup_event(db: Session | None = None) -> None:
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup
     await startup_event()
+    start_idle_watcher()
 
-    # Start task scheduler
-    task_scheduler = TaskScheduler(app=app)
-    await task_scheduler.register_startup_event()
+    # Start the periodic task
+    update_task = asyncio.create_task(periodic_instance_state_update())
 
     yield
 
     # Shutdown
-    # scheduler_task.cancel()
-    # with suppress(asyncio.CancelledError):
-    # await scheduler_task
+    stop_idle_watcher()
+    update_task.cancel()
+    with suppress(asyncio.CancelledError):
+        await update_task
 
 
 # Initialize FastAPI App
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    version=version,
     openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
     debug=settings.DEBUG,
     lifespan=lifespan,

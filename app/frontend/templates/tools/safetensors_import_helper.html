@@ -1,0 +1,162 @@
+{% extends "tools/tool_base.html" %}
+
+{% block title %}Safetensor Import Helper{% endblock %}
+{% block tool_name %}Safetensor Import Helper{% endblock %}
+
+{% block tool_description %}
+    View all available safetensors in the hub, organized by type and model.
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Base Models Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Base Models</h3>
+        </div>
+        <div class="card-body">
+            {% for hub_model in hub_models | sort(attribute="name") %}
+                {% if hub_model.safetensors_checkpoints %}
+                    <div class="mb-4">
+                        <h4 class="text-primary">{{ hub_model.name }}</h4>
+                        <ul class="list-group">
+                            {% for safetensor_base_model in hub_model.safetensors_checkpoints | sort(attribute="name") %}
+                                {% if safetensor_base_model.id not in existing_sd_checkpoints_ids %}
+                                    <li class="list-group-item">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4">{{ safetensor_base_model.name }}</div>
+                                        <div class="col-md-2">
+                                            {% if safetensor_base_model.md5 %}
+                                            <span class="badge bg-primary text-white" title="{{ safetensor_base_model.md5 }}">{{ safetensor_base_model.md5[:8] }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2 text-end">
+                                            {% set size_str = safetensor_base_model.size | filesizeformat %}
+                                            <span class="badge {% if 'MB' in size_str %}bg-secondary{% else %}bg-warning text-dark{% endif %}">{{ size_str }}</span>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <button class="btn btn-sm btn-outline-primary me-1" onclick="importBaseModelAsSDCheckpoint('{{ safetensor_base_model.id }}', '{{ safetensor_base_model.path | urlencode }}', '{{ safetensor_base_model.name | urlencode }}')" title="Import as SD Checkpoint">
+                                                <i class="fas fa-file-import"></i> Import
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteSafetensor('{{ safetensor_base_model.path }}', '{{ safetensor_base_model.name }}')" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        </div>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Loras Section -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">Loras</h3>
+        </div>
+        <div class="card-body">
+            {% set ns = namespace(seen_sha256s=[]) %}
+            {% for hub_model in hub_models | sort(attribute="name") %}
+                {% if hub_model.safetensors_loras %}
+                    <div class="mb-4">
+                        <h4 class="text-success">{{ hub_model.name }}</h4>
+                        <ul class="list-group">
+                            {% for safetensor_lora in hub_model.safetensors_loras | sort(attribute="name") %}
+                                {% set sha256 = safetensor_lora.sha256 %}
+                                {% set has_already_been_seen = sha256 in ns.seen_sha256s %}
+                                {% set _ = ns.seen_sha256s.append(sha256) %}
+                                {% if safetensor_lora.path | string not in existing_sd_extra_networks_file_paths %}
+                                    <li class="list-group-item">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-4">{{ safetensor_lora.name }}</div>
+                                            <div class="col-md-2">
+                                                {% if sha256 %}
+                                                    <a href="https://civitaiarchive.com/sha256/{{ sha256 }}" target="_blank" rel="noopener noreferrer">
+                                                        {% if has_already_been_seen %}
+                                                            <span class="badge bg-danger text-white" title="Duplicate SHA256: {{ sha256 }}">{{ sha256[:8] }}</span>
+                                                        {% else %}
+                                                            <span class="badge bg-success text-white" title="{{ sha256 }}">{{ sha256[:8] }}</span>
+                                                        {% endif %}
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-2 text-end">
+                                                {% set size_str = safetensor_lora.size | filesizeformat %}
+                                                <span class="badge {% if 'MB' in size_str %}bg-secondary{% else %}bg-warning text-dark{% endif %}">{{ size_str }}</span>
+                                            </div>
+                                            <div class="col-md-4 text-end">
+                                                <button class="btn btn-sm btn-outline-success me-1" onclick="importLoraAsSDExtraNetwork('{{ safetensor_lora.path | urlencode }}', '{{ safetensor_lora.sha256 | urlencode if safetensor_lora.sha256 else '' }}', '{{ hub_model.sd_base_model_id if hub_model.sd_base_model_id else '' }}', '{{ safetensor_lora.activation_text if safetensor_lora.activation_text else '' }}', '{{ safetensor_lora.network_type if safetensor_lora.network_type else '' }}')" title="Import as SD Extra Network">
+                                                    <i class="fas fa-file-import"></i> Import
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteSafetensor('{{ safetensor_lora.path }}', '{{ safetensor_lora.name }}')" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
+
+{% block js_scripts %}
+<script>
+    window.importBaseModelAsSDCheckpoint = function(safetensorId, safetensorPath, safetensorName, baseModelId) {
+        // Assuming your SD Checkpoint creation page is at '/sd-checkpoints-page/add'
+        // And it can accept 'id_from_safetensor' and 'name_from_safetensor' as query parameters.
+        // You'll need to adjust the URL to your actual SD Checkpoint creation page.
+        const createUrl = `/sd-checkpoint/create_OLD?id=${encodeURIComponent(safetensorId)}&name=${encodeURIComponent(safetensorName)}&sd_base_model=${encodeURIComponent(baseModelId)}&local_file_path=${encodeURIComponent(safetensorPath)}&redirect_url=${encodeURIComponent(window.location.href)}`;
+        window.location.href = createUrl;
+    };
+
+    window.importLoraAsSDExtraNetwork = function(loraPath, sha256, sdBaseModelId, activationText, network) {
+        query = [
+            `sd_base_model_id=${encodeURIComponent(sdBaseModelId)}`,
+            `network=${encodeURIComponent(network)}`,
+            `network_trigger=${encodeURIComponent(activationText)}`,
+            `local_file_path=${encodeURIComponent(loraPath)}`,
+            `sha256=${encodeURIComponent(sha256)}`,
+            `redirect_url=${encodeURIComponent(window.location.href)}`
+        ];
+
+        const createUrl = `/sd-extra-network/create?${query.join('&')}`;
+        window.location.href = createUrl;
+    };
+
+    window.deleteSafetensor = async function(filePath, fileName) {
+        if (confirm(`Are you sure you want to delete "${fileName}"? This action cannot be undone.`)) {
+            try {
+                const response = await fetch('/tools/delete_safetensor', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        file_path: filePath
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Files deleted successfully');
+                    location.reload();
+                } else {
+                    throw new Error(result.error || 'Failed to delete files');
+                }
+            } catch (error) {
+                alert('Error deleting files: ' + error.message);
+            }
+        }
+    };
+</script>
+{% endblock %} 
