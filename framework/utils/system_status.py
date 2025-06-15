@@ -2,6 +2,16 @@ import shutil
 import subprocess
 
 import psutil
+from pydantic import BaseModel
+
+
+class SystemStatus(BaseModel):
+    cpu_usage: float
+    gpu_usage: float
+    gpu_memory_used: float
+    total_disk_space: float
+    used_disk_space: float
+    free_disk_space: float
 
 
 def get_gpu_stats():
@@ -45,8 +55,12 @@ def get_disk_stats():
     }
 
 
-def get_all_statuses():
+def get_system_status():
     statuses = get_cpu_stats()
     statuses.update(get_gpu_stats())
     statuses.update(get_disk_stats())
-    return statuses
+    return SystemStatus(**statuses)
+
+
+def get_system_status_as_dict():
+    return get_system_status().model_dump()
