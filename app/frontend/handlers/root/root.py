@@ -5,7 +5,6 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from framework import models
 from framework.frontend.deps import get_current_active_user, get_current_user
-from framework.frontend.templates import templates
 from framework.frontend.templates.context import get_template_context
 
 
@@ -58,7 +57,7 @@ async def root_index_authenticated(
     Returns:
         Response: Home page
     """
-    return templates.TemplateResponse("root/home.html", context)
+    return RedirectResponse(url="/dashboard")
 
 
 @router.get("/favicon.ico", response_class=FileResponse)

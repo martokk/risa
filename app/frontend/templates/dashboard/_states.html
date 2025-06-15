@@ -25,32 +25,42 @@
                 </table>
             </div>
         </div>
+
+
         <!-- Network State Section -->
-        <div>
-            <div class="fw-semibold text-muted mb-1" style="font-size:0.95rem;">Network State</div>
-            <div class="table-responsive">
-                <table class="table table-sm table-striped mb-0" style="font-size:0.92rem;">
-                    <thead>
-                        <tr>
-                            <th>ENV</th>
-                            <th>Project</th>
-                            <th>Base Domain</th>
-                            <th>Last Updated</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for env in ["dev", "local", "playground", "host"] %}
-                        {% set s = network_state[env] if network_state and network_state[env] else None %}
-                        <tr>
-                            <td>{{ s.id if s else env }}</td>
-                            <td>{{ s.project_name if s else '' }}</td>
-                            <td>{{ s.base_domain if s else '' }}</td>
-                            <td>{{ s.last_updated | humanize if s and s.last_updated else '' }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        {% if network_state %}
+            <div>
+                <div class="fw-semibold text-muted mb-1" style="font-size:0.95rem;">Network State</div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped mb-0" style="font-size:0.92rem;">
+                        <thead>
+                            <tr>
+                                <th>ENV</th>
+                                <th>Project</th>
+                                <th>Base Domain</th>
+                                <th>Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for env in ["dev", "local", "playground", "host"] %}
+                            {% set s = network_state[env] if network_state and network_state[env] else None %}
+                            <tr>
+                                <td>{{ s.id if s else env }}</td>
+                                <td>{{ s.project_name if s else '' }}</td>
+                                <td>{{ s.base_domain if s else '' }}</td>
+                                <td>{{ s.last_updated | humanize if s and s.last_updated else '' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        {% else %}
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Could not get network state from Risa Host API.
+            </div>
+        {% endif %}
+
     </div>
 </div> 

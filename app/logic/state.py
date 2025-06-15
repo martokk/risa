@@ -65,10 +65,14 @@ async def get_network_state_from_db() -> NetworkState:
     )
 
 
-async def get_network_state_from_host() -> NetworkState:
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            f"{settings.RISA_HOST_BASE_URL}/api/v1/state/network",
-            headers={"X-API-Key": settings.EXPORT_API_KEY},
-        )
+async def get_network_state_from_host() -> NetworkState | None:
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{settings.RISA_HOST_BASE_URL}/api/v1/state/network",
+                headers={"X-API-Key": settings.EXPORT_API_KEY},
+            )
         return NetworkState.model_validate(response.json())
+    except Exception as e:
+        logger.error(f"Failed to get the network state from the host api: {e}")
+        return None

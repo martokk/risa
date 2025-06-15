@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.frontend.handlers.character import character
 from app.frontend.handlers.dashboard import dashboard
+from app.frontend.handlers.root import root
 from app.frontend.handlers.sd_base_model import sd_base_model
 from app.frontend.handlers.sd_checkpoint import sd_checkpoint
 from app.frontend.handlers.sd_extra_network import sd_extra_network
@@ -9,7 +10,6 @@ from app.frontend.handlers.state import state
 from app.frontend.handlers.tools import dataset_tagger, safetensors_import_helper
 from framework.frontend.handlers.jobs import jobs
 from framework.frontend.handlers.login import login
-from framework.frontend.handlers.root import root
 from framework.frontend.handlers.user import user
 
 
