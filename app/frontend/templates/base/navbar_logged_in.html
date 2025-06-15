@@ -12,57 +12,63 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
                 <!-- Characters -->
-                <li class="nav-item">
-                    <a class="nav-link" href="/characters">Characters</a>
-                </li>
+                {% if ENV_NAME in ["dev", "local"] %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/characters">Characters</a>
+                    </li>
+                {% endif %}
 
                 <!-- Manage -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        Manage
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item" href="/sd-base-models">SD Base Models</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/sd-checkpoints">SD Checkpoints</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/sd-extra-networks">SD Extra Networks</a>
-                        </li>
-    
+                {% if ENV_NAME in ["dev", "local"] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Manage
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/sd-base-models">SD Base Models</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/sd-checkpoints">SD Checkpoints</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/sd-extra-networks">SD Extra Networks</a>
+                            </li>
+        
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            
                         
-                        <li><hr class="dropdown-divider"></li>
-                        
-                      
-                    </ul>
-                </li>
+                        </ul>
+                    </li>
+                {% endif %}
 
                 <!-- Safetensor Import Helper -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Safetensor Import Helper
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
-                        <li>
-                            <a class="dropdown-item" href="/tools/safetensor-import-helper">All Models</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=flux">Flux</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=illustrious">Illustrious</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=sdxl">SDXL</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=pony">Pony</a>
-                        </li>
-                    </ul>
-                </li>
+                {% if ENV_NAME in ["dev", "local"] %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Safetensor Import Helper
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/tools/safetensor-import-helper">All Models</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=flux">Flux</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=illustrious">Illustrious</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=sdxl">SDXL</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=pony">Pony</a>
+                            </li>
+                        </ul>
+                    </li>
+                {% endif %}
 
                 <!-- Tools -->
                 <li class="nav-item dropdown">
@@ -71,13 +77,18 @@
                         Tools
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                        {% if ENV_NAME in ["dev", "local"] %}
+                            <li>
+                                <a class="dropdown-item" href="/tools/dataset-tagger/setup">Dataset Tagger</a>
+                            </li>
+                        {% endif %}
 
-                        <li>
-                            <a class="dropdown-item" href="/tools/dataset-tagger/setup">Dataset Tagger</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="/dashboard">Dashboard</a>
-                        </li>
+                        {% if ENV_NAME in ["dev", "playground"] %}
+                            <li>
+                                <a class="dropdown-item" href="/dashboard">Dashboard</a>
+                            </li>
+                        {% endif %}
+
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="/jobs">Job Queue</a>
@@ -94,9 +105,11 @@
                         <li>
                             <a class="dropdown-item" href="/state/instance">Instance State</a>
                         </li>
-                        <li>
-                            <a class="dropdown-item" href="/state/network">Network State</a>
-                        </li>
+                        {% if ENV_NAME in ["dev", "host"] %}
+                            <li>
+                                <a class="dropdown-item" href="/state/network">Network State</a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </li>
 
