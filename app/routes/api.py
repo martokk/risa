@@ -5,22 +5,29 @@ from app.api.v1.endpoints import (
     character,
     export,
     idle_watcher,
-    job_queue,
-    job_queue_ws,
     sd_base_model,
     sd_checkpoint,
     sd_extra_network,
     state,
-    users,
 )
-from app.routes.restrict_to_env import restrict_to
+from framework.api.v1.endpoints import job_queue_ws, users
+from framework.api.v1.endpoints.job_queue import router as job_queue_router
+from framework.routes.restrict_to_env import restrict_to
 
 
 api_router = APIRouter()
 
-api_router.include_router(state.router, tags=["State"])
-api_router.include_router(job_queue.router, tags=["Job Queue"])
-api_router.include_router(idle_watcher.router, tags=["Idle Watcher"])
+
+def include_state_router():
+    api_router.include_router(state.router, tags=["State"])
+
+
+def include_job_queue_router():
+    api_router.include_router(job_queue_router, tags=["Job Queue"])
+
+
+def include_idle_watcher_router():
+    api_router.include_router(idle_watcher.router, tags=["Idle Watcher"])
 
 
 @restrict_to("host")
@@ -58,4 +65,18 @@ def include_app_manager_router():
     api_router.include_router(app_manager.router, tags=["App Manager"])
 
 
-api_router.include_router(job_queue_ws.router, tags=["Job Queue WS"])
+def include_job_queue_ws_router():
+    api_router.include_router(job_queue_ws.router, tags=["Job Queue WS"])
+
+
+include_state_router()
+include_job_queue_router()
+include_idle_watcher_router()
+include_export_router()
+include_users_router()
+include_character_router()
+include_sd_base_model_router()
+include_sd_checkpoint_router()
+include_sd_extra_network_router()
+include_app_manager_router()
+include_job_queue_ws_router()

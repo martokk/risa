@@ -3,9 +3,9 @@ from datetime import UTC, datetime
 import httpx
 
 from app import crud, logger, models, settings
-from app.core.db import get_db
 from app.models.core.state import InstanceState, NetworkState
-from app.routes.restrict_to_env import restrict_to
+from framework.core.db import get_db
+from framework.routes.restrict_to_env import restrict_to
 
 
 async def _get_instance_state() -> InstanceState:

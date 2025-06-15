@@ -5,9 +5,9 @@ from fastapi.responses import HTMLResponse
 from sqlmodel import Session
 
 from app import crud
-from app.core.db import get_db
-from app.frontend.templates import templates
-from app.frontend.templates.context import get_template_context
+from framework.core.db import get_db
+from framework.frontend.templates import templates
+from framework.frontend.templates.context import get_template_context
 
 
 router = APIRouter(tags=["SD Base Models"])

@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
 from app import crud, logger, models
-from app.api.deps import get_current_active_user
-from app.core.db import get_db
+from framework.api.deps import get_current_active_user
+from framework.core.db import get_db
 
 
 router = APIRouter(prefix="/api/v1/sd-extra-networks", tags=["SD Extra Networks"])

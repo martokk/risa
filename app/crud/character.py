@@ -4,8 +4,7 @@ from typing import Any
 from sqlmodel import Session
 
 from app import models
-
-from .base import BaseCRUD
+from framework.crud.base import BaseCRUD
 
 
 class CharacterCRUD(

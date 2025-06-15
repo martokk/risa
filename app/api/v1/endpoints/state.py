@@ -5,10 +5,10 @@ from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
 from app import crud, models
-from app.core.api_key import get_api_key
-from app.core.db import get_db
 from app.logic import state
-from app.routes.restrict_to_env import restrict_to
+from framework.core.api_key import get_api_key
+from framework.core.db import get_db
+from framework.routes.restrict_to_env import restrict_to
 
 
 # Create a router that bypasses global auth

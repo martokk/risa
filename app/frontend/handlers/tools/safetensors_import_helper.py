@@ -8,11 +8,11 @@ from pydantic import BaseModel
 from sqlmodel import Session
 
 from app import crud
-from app.core.db import get_db
-from app.frontend.templates import templates
-from app.frontend.templates.context import get_template_context
 from app.models.sd_extra_networks import Safetensor
 from app.paths import HUB_MODELS_PATH
+from framework.core.db import get_db
+from framework.frontend.templates import templates
+from framework.frontend.templates.context import get_template_context
 
 
 FLUX_PATH = HUB_MODELS_PATH / "FLUX"

@@ -3,8 +3,8 @@ import subprocess
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app import models
-from app.api.deps import get_current_active_user
 from app.logic.dashboard import get_config
+from framework.api.deps import get_current_active_user
 
 
 router = APIRouter(prefix="/app_manager", tags=["App Manager"])
