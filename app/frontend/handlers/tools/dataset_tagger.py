@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session
 from starlette.templating import _TemplateResponse
 
-from app import crud, logger
+from app import crud, logger, paths
 from framework.core.db import get_db
 from framework.frontend.templates import templates
 from framework.frontend.templates.context import get_template_context
@@ -351,7 +351,7 @@ async def get_dataset_tagger_workflow_page(
         raise HTTPException(status_code=400, detail=f"Folder not found: {folder_path}")
 
     try:
-        walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
+        walkthrough_config_path = paths.DATASET_TAGGER_WALKTHROUGH_PATH
         with open(walkthrough_config_path) as f:
             yaml_data = yaml.safe_load(f)
         walkthrough_config = WalkthroughConfig(**yaml_data)
@@ -1015,7 +1015,7 @@ async def post_dataset_tagger_process_tag(
 
         selected_images = [img.strip() for img in selected_images_input.split(",") if img.strip()]
 
-        walkthrough_config_path = DATASET_TAGGER_WALKTHROUGH_PATH
+        walkthrough_config_path = paths.DATASET_TAGGER_WALKTHROUGH_PATH
         walkthrough_config: WalkthroughConfig | None = None
         if not walkthrough_config_path.is_file():
             logger.error(

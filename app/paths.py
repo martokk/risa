@@ -3,6 +3,7 @@ from pathlib import Path
 
 from app.models.settings import get_settings
 from framework.paths import *
+from framework.paths import DATA_PATH, ENV_FILE
 
 
 # Load ENV File - Needed for Settings
@@ -13,7 +14,7 @@ HUEY_DB_PATH = (
 )
 JOB_DB_PATH = DATA_PATH / "jobs.json"
 DASHBOARD_CONFIG_FILE = Path(settings.DASHBOARD_CONFIG_PATH)
-DATASET_TAGGER_WALKTHROUGH_PATH = DATA_PATH / "dataset_tagger_walkthrough.yaml"
+DATASET_TAGGER_WALKTHROUGH_PATH = Path(settings.DATASET_TAGGER_WALKTHROUGH_PATH)
 
 
 # HUB PATHS

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
 from app import models
+from app.logic import state
 from app.logic.dashboard import get_config
 from framework.frontend.deps import get_current_active_user
 from framework.frontend.templates import templates
@@ -23,7 +24,13 @@ async def dashboard_page(
     config = get_config()
     apps = config["apps"]
 
+    # Fetch instance and network state for dashboard
+    instance_state = await state.get_instance_state()
+    network_state = await state.get_network_state_from_host()
+
     context["apps"] = apps
+    context["instance_state"] = instance_state
+    context["network_state"] = network_state
     return templates.TemplateResponse(
         "dashboard/dashboard.html",
         context,

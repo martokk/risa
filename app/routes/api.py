@@ -26,6 +26,7 @@ def include_job_queue_router():
     api_router.include_router(job_queue_router, tags=["Job Queue"])
 
 
+@restrict_to("playground")
 def include_idle_watcher_router():
     api_router.include_router(idle_watcher.router, tags=["Idle Watcher"])
 

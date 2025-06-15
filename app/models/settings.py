@@ -9,6 +9,7 @@ class Settings(PythonFastAPIBaseSettings):
     HUB_PATH: str = ""
     EXPORT_API_KEY: str = ""
     DASHBOARD_CONFIG_PATH: str = ""
+    DATASET_TAGGER_WALKTHROUGH_PATH: str = ""
 
     # Job Queue
     HUEY_SQLITE_PATH: str = ""
