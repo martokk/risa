@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 import httpx
 
@@ -10,7 +10,7 @@ from framework.routes.restrict_to_env import restrict_to
 
 async def _get_instance_state() -> InstanceState:
     id = settings.ENV_NAME
-    last_updated = datetime.now(tz=UTC)
+    last_updated = datetime.now(tz=timezone.utc)
     project_name = settings.PROJECT_NAME
     base_domain = settings.BASE_DOMAIN
 
@@ -57,7 +57,7 @@ async def get_network_state_from_db() -> NetworkState:
     host = await crud.instance_state.get(db, id="host")
 
     return NetworkState(
-        last_updated=datetime.now(tz=UTC),
+        last_updated=datetime.now(tz=timezone.utc),
         dev=dev,
         local=local,
         playground=playground,
