@@ -10,7 +10,7 @@ from huey import crontab
 from tinydb import TinyDB
 
 from app import logger, paths, settings
-from framework import models
+from framework import schemas
 from framework.core.huey import huey
 from framework.logic import job_runner
 from framework.services import job_queue
@@ -44,7 +44,7 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
     # job_queue.update_job_status(job_id, models.JobStatus.running)
     try:
         print("Updating job status to 'running' and broadcasting...")
-        post_job_status_update(job_id, models.JobStatus.running.value)
+        post_job_status_update(job_id, schemas.JobStatus.running.value)
         logger.info(f"Successfully updated job {job_id} status to 'running' and broadcasted.")
     except Exception as e:
         logger.error(f"Failed to broadcast running status: {e}")
@@ -60,7 +60,7 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
     job_succeeded = False
     try:
         logger.info(f"Executing job {job.id} of type {job.type.value}")
-        if job.type == models.JobType.command:
+        if job.type == schemas.JobType.command:
             try:
                 job_runner.run_command_job(job)
                 job_succeeded = True
@@ -68,11 +68,11 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
                 if "died with <Signals.SIGKILL: 9>" in str(e):
                     logger.error(f"Job {job.id} was killed by SIGKILL signal")
                     # Handle SIGKILL specifically - could add custom handling here
-                    post_job_status_update(str(job.id), models.JobStatus.pending.value)
+                    post_job_status_update(str(job.id), schemas.JobStatus.pending.value)
                     job_succeeded = False
                 else:
                     raise  # Re-raise other exceptions
-        elif job.type == models.JobType.api_post:
+        elif job.type == schemas.JobType.api_post:
             job_runner.run_api_post_job(job)
             job_succeeded = True
         logger.info(f"Job {job.id} execution part finished.")
@@ -81,7 +81,7 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
         logger.error(f"Job {job.id} failed with exception: {e}", exc_info=True)
         # job_queue.update_job_status(str(job.id), models.JobStatus.failed)
         try:
-            post_job_status_update(str(job.id), models.JobStatus.failed.value)
+            post_job_status_update(str(job.id), schemas.JobStatus.failed.value)
         except Exception as e:
             logger.error(f"Failed to broadcast failed status: {e}")
 
@@ -90,7 +90,7 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
             logger.info(f"Job {job.id} succeeded. Updating status to 'done'.")
             # job_queue.update_job_status(str(job.id), models.JobStatus.done)
             try:
-                post_job_status_update(str(job.id), models.JobStatus.done.value)
+                post_job_status_update(str(job.id), schemas.JobStatus.done.value)
             except Exception as e:
                 logger.error(f"Failed to broadcast done status: {e}")
         logger.info(f"--- HUEY WORKER: FINISHED JOB TASK (v5) for job {job.id} ---")
@@ -110,7 +110,7 @@ def enqueue_hourly_jobs():
             new_job = job.model_copy(
                 update={
                     "id": uuid4(),  # Generate a new ID
-                    "status": models.JobStatus.queued,
+                    "status": schemas.JobStatus.queued,
                     "recurrence": None,  # The spawned job is not recurring
                     "created_at": datetime.now(),
                     "retry_count": 0,
@@ -133,7 +133,7 @@ def enqueue_daily_jobs():
             new_job = job.model_copy(
                 update={
                     "id": uuid4(),  # Generate a new ID
-                    "status": models.JobStatus.queued,
+                    "status": schemas.JobStatus.queued,
                     "recurrence": None,  # The spawned job is not recurring
                     "created_at": datetime.now(),
                     "retry_count": 0,
