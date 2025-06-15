@@ -189,7 +189,12 @@ def is_consumer_running() -> bool:
             os.kill(pid, 0)  # Check if process exists
 
             is_running = True
-        except Exception:
+        except ProcessLookupError:
+            logger.warning("PID file exists, but process does not.")
+            os.remove(HUEY_PID_FILE)
+            is_running = False
+        except Exception as e:
+            logger.error(f"Error checking Huey consumer process: {e}")
             is_running = False
     else:
         is_running = False
@@ -243,6 +248,10 @@ async def start_consumer_process() -> dict[str, Any]:
         )
         pid_bytes, _ = proc.communicate()
         pid = pid_bytes.decode().strip()
+
+        # Add a small delay to ensure process is fully started
+        await asyncio.sleep(0.5)
+
         with open(HUEY_PID_FILE, "w") as f:
             f.write(pid)
         await broadcast_consumer_status("running")
@@ -257,6 +266,7 @@ async def stop_consumer_process() -> dict[str, Any]:
     Returns a dict with success and message.
     """
     if not HUEY_PID_FILE.exists():
+        print("HUEY_PID_FILE does not exist")
         await broadcast_consumer_status("stopped")
         return {"success": False, "message": "Huey consumer is not running."}
     try:
@@ -264,6 +274,7 @@ async def stop_consumer_process() -> dict[str, Any]:
             pid = int(f.read().strip())
         os.kill(pid, signal.SIGTERM)
         os.remove(HUEY_PID_FILE)
+        print("HUEY_PID_FILE removed")
         await broadcast_consumer_status("stopped")
         return {"success": True, "message": f"Huey consumer with PID {pid} stopped."}
     except Exception as e:
