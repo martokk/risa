@@ -28,7 +28,7 @@ UPLOAD_PATH = DATA_PATH / "uploads"
 JOB_LOGS_PATH = LOGS_PATH / "jobs"
 
 # ENV File
-RISA_ENV_FILE = os.environ.get("RISA_ENV_FILE")
+RISA_ENV_FILE = os.environ.get("ENV_FILE")
 
 ENV_FILES_PATHS = [
     Path(RISA_ENV_FILE) if RISA_ENV_FILE else None,
@@ -38,12 +38,14 @@ ENV_FILES_PATHS = [
 ENV_FILE = None
 for env_file_path in ENV_FILES_PATHS:
     if env_file_path and env_file_path.exists():
+        print(f"Found ENV file at {env_file_path}")
         ENV_FILE = env_file_path
         break
 
 if not ENV_FILE:
     print("No ENV file found, using default 'framework' .env file.")
     ENV_FILE = FRAMEWORK_PATH / "data" / ".env"
+print(f"ENV_FILE={ENV_FILE}")
 
 # Files
 DATABASE_FILE = DATA_PATH / "database.sqlite3"
