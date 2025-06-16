@@ -36,15 +36,17 @@ ENV_FILES_PATHS = [
     DATA_PATH / ".env",
 ]
 ENV_FILE = None
+
+if not ENV_FILE:
+    ENV_FILE = FRAMEWORK_PATH / "data" / ".env"
+
 for env_file_path in ENV_FILES_PATHS:
     if env_file_path and env_file_path.exists():
         print(f"Found ENV file at {env_file_path}")
         ENV_FILE = env_file_path
         break
 
-if not ENV_FILE:
-    print("No ENV file found, using default 'framework' .env file.")
-    ENV_FILE = FRAMEWORK_PATH / "data" / ".env"
+
 print(f"ENV_FILE={ENV_FILE}")
 
 # Files
