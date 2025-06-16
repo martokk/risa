@@ -46,8 +46,8 @@ async def dashboard_page(
     context["apps"] = apps
     context["instance_state"] = instance_state
     context["network_state"] = network_state
-    context["characters"] = characters
-    context["checkpoints"] = checkpoints
+    context["characters"] = characters or []
+    context["checkpoints"] = checkpoints or []
     # Add RunPod info
     try:
         context["runpod_id"] = runpod.get_runpod_id()
