@@ -6,12 +6,16 @@ from pydantic import BaseModel, root_validator
 from safetensors import safe_open
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
-from app.models.settings import Settings
+from app.models.settings import get_settings
+from framework.paths import ENV_FILE
 
 
 if TYPE_CHECKING:
     from .character import Character
     from .sd_base_model import SDBaseModel
+
+
+settings = get_settings(env_file_path=ENV_FILE)
 
 
 class SafetensorJSON(BaseModel):
@@ -30,7 +34,7 @@ class SafetensorJSON(BaseModel):
 
 class Safetensor(BaseModel):
     path: Path
-    env_name: str = Settings().ENV_NAME
+    env_name: str = settings.ENV_NAME
 
     @property
     def name(self) -> str:
