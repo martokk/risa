@@ -83,14 +83,14 @@ async def handle_login(
         key="access_token",
         value=f"Bearer {tokens.access_token}",
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
     )
     response.set_cookie(
         key="refresh_token",
         value=f"Bearer {tokens.refresh_token}",
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
     )
 
@@ -115,7 +115,7 @@ async def logout() -> Response:
         key="alerts",
         value=alerts.model_dump_json(),
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         max_age=5,
     )
@@ -204,7 +204,7 @@ async def logout() -> Response:
 #             alerts.success.append("Registration successful")
 #             redirect_response = RedirectResponse("/", status_code=status.HTTP_302_FOUND)
 #             redirect_response.set_cookie(
-#                 key="alerts", value=alerts.json(), httponly=True, secure=True, samesite="lax",
+#                 key="alerts", value=alerts.json(), httponly=True, secure=False, samesite="lax",
 #                 max_age=5
 #             )
 #             return redirect_response
