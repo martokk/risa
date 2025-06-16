@@ -43,6 +43,7 @@ COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 
 # Copying in our app
 COPY /app /app
+COPY /framework /framework
 COPY /start.sh /start.sh
 COPY /migrations /migrations
 COPY /alembic.ini /alembic.ini
@@ -81,6 +82,7 @@ COPY --from=builder-base $VENV_PATH $VENV_PATH
 
 # Copying in our app
 COPY /app /app
+COPY /framework /framework
 COPY /start.sh /start.sh
 COPY /migrations /migrations
 COPY /alembic.ini /alembic.ini
