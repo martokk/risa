@@ -42,6 +42,7 @@ for env_file_path in ENV_FILES_PATHS:
         break
 
 if not ENV_FILE:
+    print("No ENV file found, using default 'framework' .env file.")
     ENV_FILE = FRAMEWORK_PATH / "data" / ".env"
 
 # Files

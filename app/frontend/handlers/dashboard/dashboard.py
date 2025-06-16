@@ -31,6 +31,17 @@ async def dashboard_page(
     context["apps"] = apps
     context["instance_state"] = instance_state
     context["network_state"] = network_state
+    context["characters"] = characters
+    context["checkpoints"] = checkpoints
+    # Add RunPod info
+    try:
+        context["runpod_id"] = runpod.get_runpod_id()
+    except Exception:
+        context["runpod_id"] = "N/A"
+    try:
+        context["gpu_name"] = runpod.get_runpod_gpu_name()
+    except Exception:
+        context["gpu_name"] = "N/A"
     return templates.TemplateResponse(
         "dashboard/dashboard.html",
         context,
