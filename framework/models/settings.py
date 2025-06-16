@@ -5,9 +5,6 @@ from pydantic_settings import BaseSettings
 
 
 class PythonFastAPIBaseSettings(BaseSettings):
-    class Config:
-        env_prefix = "RISA_"
-
     # Environment Settings #
     ENV_NAME: str = "invalid_default_value"
     DEBUG: bool = True
