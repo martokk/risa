@@ -9,6 +9,9 @@ class PythonFastAPIBaseSettings(BaseSettings):
     ENV_NAME: str = "invalid_default_value"
     DEBUG: bool = True
 
+    # THEME
+    ACCENT: str = "#0000ff"
+
     # Log
     LOG_LEVEL: str = "INFO"
 
@@ -79,8 +82,6 @@ class PythonFastAPIBaseSettings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     GROQ_API_KEY: str = ""
     GOOGLE_API_KEY: str = ""
-
-    # Phidata Playground API Key
     PHI_API_KEY: str = ""
 
     @property
