@@ -73,7 +73,11 @@
 	<link rel="stylesheet" href="/static/css/components/inline-editor.css">
 
 	<!-- Theme style -->
-	
+	<style>
+		:root {
+		--accent: {{ accent or '#0000ff' }};
+		}
+	</style>
 
 	{% block head %}
 	{% endblock head %}

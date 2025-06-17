@@ -17,6 +17,8 @@
 
 
 
+
+
 /* Default styles */
 .container-fluid {
     max-width: 768px;
@@ -132,4 +134,55 @@ h6 {
 .form-group input[type="checkbox"] {
     width: 1.25rem;
     height: 1.25rem;
+}
+
+
+/* Accent Color Utilities */
+:root {
+    --accent-subtle: color-mix(in srgb, var(--accent) 65%, black);
+    --accent-light: color-mix(in srgb, var(--accent) 50%, white);
+}
+
+.accent {
+    color: var(--accent) !important;
+}
+
+.accent-subtle {
+    color: var(--accent-subtle) !important;
+}
+
+.bg-accent {
+    background-color: var(--accent) !important;
+}
+
+.bg-accent-subtle {
+    background-color: var(--accent-subtle) !important;
+}
+
+.border-accent {
+    border-color: var(--accent) !important;
+}
+
+.border-accent-subtle {
+    border-color: var(--accent-subtle) !important;
+}
+
+.text-accent {
+    color: var(--accent) !important;
+}
+
+.text-accent-light {
+    color: var(--accent-light) !important;
+}
+
+.text-accent-subtle {
+    color: var(--accent-subtle) !important;
+}
+
+.card-header {
+    color: var(--accent) !important;
+}
+
+.card {
+    border-color: var(--accent) !important;
 }

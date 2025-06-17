@@ -39,7 +39,7 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals["BASE_URL"] = settings.BASE_URL
     templates.env.globals["VERSION"] = settings.VERSION
     templates.env.globals["current_year"] = datetime.now(timezone.utc).year
-
+    templates.env.globals["accent"] = settings.ACCENT
     return templates
 
 
