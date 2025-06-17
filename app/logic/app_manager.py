@@ -22,7 +22,7 @@ class AppManagerApp(BaseModel):
             return False
 
         try:
-            command = f"lsof -i:{self.port_connect}"
+            command = f"bash -c 'echo > /dev/tcp/172.27.0.1/{self.port_connect}'"
             subprocess.run(command, shell=True, check=True, capture_output=True)
             print(f"Application {self.name} is running on port {self.port_connect}")
             return True
