@@ -13,6 +13,7 @@ class PythonFastAPIBaseSettings(BaseSettings):
     LOG_LEVEL: str = "INFO"
 
     # Database
+    DB_URL: str = "sqlite:///"
     DATABASE_ECHO: bool = False
 
     # Server
