@@ -670,3 +670,5 @@ app/data/database.sqlite3.old
 app/data/database.sqlite3.backup
 
 app/data/
+
+.ai/
