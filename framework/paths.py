@@ -50,6 +50,6 @@ for env_file_path in ENV_FILES_PATHS:
 print(f"ENV_FILE={ENV_FILE}")
 
 # Files
-DATABASE_FILE = DATA_PATH / "database.sqlite3"
+# DATABASE_FILE = DATA_PATH / "database.sqlite3"
 LOG_FILE = LOGS_PATH / "log.log"
 ERROR_LOG_FILE = LOGS_PATH / "error_log.log"

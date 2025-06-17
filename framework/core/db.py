@@ -6,18 +6,17 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from sqlmodel import Session, SQLModel, create_engine
 
-from app import logger, paths, settings
+from app import logger, settings
 from app.logic.init_db import (
     initialize_project_specific_data as _initialize_project_specific_data,
 )
 from framework import crud, models
 
 
-db_url = f"sqlite:///{paths.DATABASE_FILE}"
 engine = create_engine(
-    db_url,
+    url=settings.DB_URL,
     echo=settings.DATABASE_ECHO,
-    connect_args={"check_same_thread": False},
+    # connect_args={"check_same_thread": False},  # For SQLite / Not for PostgreSQL
     pool_pre_ping=True,
     poolclass=QueuePool,
     pool_size=20,
