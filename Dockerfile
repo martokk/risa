@@ -21,6 +21,7 @@ FROM python-base as builder-base
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   curl \
+  lsof \
   && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry - respects $POETRY_VERSION & $POETRY_HOME

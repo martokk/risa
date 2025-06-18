@@ -4,6 +4,7 @@ from app.api.v1.endpoints import (
     app_manager,
     character,
     export,
+    hub,
     idle_watcher,
     sd_base_model,
     sd_checkpoint,
@@ -70,6 +71,10 @@ def include_job_queue_ws_router():
     api_router.include_router(job_queue_ws.router, tags=["Job Queue WS"])
 
 
+def include_hub_router():
+    api_router.include_router(hub.router, tags=["Tools"])
+
+
 include_state_router()
 include_job_queue_router()
 include_idle_watcher_router()
@@ -81,3 +86,4 @@ include_sd_checkpoint_router()
 include_sd_extra_network_router()
 include_app_manager_router()
 include_job_queue_ws_router()
+include_hub_router()

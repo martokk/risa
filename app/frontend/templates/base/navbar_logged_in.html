@@ -40,43 +40,13 @@
                     </ul>
                 </li>
 
-                <!-- Safetensor Import Helper -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Safetensor Import Helper
-                    </a>
-                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
-                        <li>
-                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper">All Models</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=flux">Flux</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=illustrious">Illustrious</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=sdxl">SDXL</a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=pony">Pony</a>
-                        </li>
-                    </ul>
-                </li>
-
                 <!-- rPLAYGROUND -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         rPLAYGROUND
                     </a>
                     <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
-                        <li>
-                            <a class="dropdown-item" href="">rPLAYGROUND</a>
-                        </li>
-                        
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
+ 
 
                         <li>
                             <a class="dropdown-item" href="">A1111 WebUI</a>
@@ -132,11 +102,15 @@
                         </li>
                 
                         <li>
-                            <a class="dropdown-item" href="http://localhost:5000/dashboard">Dashboard</a>
+                            <a class="dropdown-item text-secondary fst-italic" href="">rPLAYGROUND</a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item text-secondary fst-italic" href="http://localhost:5000/dashboard">Dashboard (rPLAYGROUND)</a>
                         </li>
                 
                         <li>
-                            <a class="dropdown-item" href="http://localhost:5000/jobs">Job Queue</a>
+                            <a class="dropdown-item text-secondary fst-italic" href="http://localhost:5000/jobs">Job Queue (rPLAYGROUND)</a>
                         </li>
                 
                     </ul>
@@ -150,9 +124,7 @@
                     </a>
                     <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
 
-                        <li>
-                            <a class="dropdown-item" href="http://localhost:5000/">rLOCAL</a>
-                        </li>
+                   
                         
                         <li>
                             <hr class="dropdown-divider">
@@ -161,17 +133,47 @@
                         <li>
                             <a class="dropdown-item" href="http://localhost:5000/tools/dataset-tagger/setup">Dataset Tagger</a>
                         </li>
+
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/fix-civitai-download-filenames">Fix Civitai Filenames</a>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper">Import Helper: All</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=flux">Import Helper: Flux</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item"
+                                href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=illustrious">Import Helper: Illustrious</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=sdxl">Import Helper: SDXL</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=pony">Import Helper: Pony</a>
+                        </li>
+
                 
                         <li>
                             <hr class="dropdown-divider">
                         </li>
 
                         <li>
-                            <a class="dropdown-item" href="http://localhost:5000/dashboard">Dashboard (rLOCAL)</a>
+                            <a class="dropdown-item text-secondary fst-italic" href="http://localhost:5000/">rLOCAL</a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item text-secondary fst-italic" href="http://localhost:5000/dashboard">Dashboard (rLOCAL)</a>
                         </li>
                 
                         <li>
-                            <a class="dropdown-item" href="http://localhost:5000/jobs">Job Queue (rLOCAL)</a>
+                            <a class="dropdown-item text-secondary fst-italic" href="http://localhost:5000/jobs">Job Queue (rLOCAL)</a>
                         </li>
 
                     </ul>
@@ -184,63 +186,44 @@
                     </a>
                     <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
 
-                        <li>
-                            <a class="dropdown-item" href="http://risahost.duckdns.org:5000/">rHOST</a>
-                        </li>
 
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                
+
                         <li>
-                            <a class="dropdown-item" href="http://risahost.duckdns.org:5000/dashboard">Dashboard (rHOST)</a>
+                            <a class="dropdown-item text-secondary fst-italic" href="http://risahost.duckdns.org:5000/">rHOST</a>
                         </li>
                 
                         <li>
-                            <a class="dropdown-item" href="http://risahost.duckdns.org:5000/jobs">Job Queue (rHOST)</a>
+                            <a class="dropdown-item text-secondary fst-italic" href="http://risahost.duckdns.org:5000/dashboard">Dashboard (rHOST)</a>
+                        </li>
+                
+                        <li>
+                            <a class="dropdown-item text-secondary fst-italic" href="http://risahost.duckdns.org:5000/jobs">Job Queue (rHOST)</a>
                         </li>
                 
                     </ul>
                 </li>
 
-                <!-- Tools -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        Tools
-                    </a>
-                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
-                            <li>
-                                <a class="dropdown-item" href="http://localhost:5000/tools/dataset-tagger/setup">Dataset Tagger</a>
-                            </li>
 
-                            <li>
-                                <a class="dropdown-item" href="http://risahost.duckdns.org:5000/dashboard">Dashboard</a>
-                            </li>
 
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item" href="/jobs">Job Queue</a>
-                        </li>
-                    </ul>
-                </li>
-
-                <!-- State Dropdown -->
+                <!-- Network Dropdown -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        State
+                        Network
                     </a>
-                    <ul class="dropdown-menu border-accent" aria-labelledby="stateDropdown">
+                    <ul class="dropdown-menu border-accent" aria-labelledby="networkDropdown">
                         <li>
                             <a class="dropdown-item" href="/state/instance">Instance State</a>
                         </li>
-                        {% if ENV_NAME in ["dev", "host"] %}
-                            <li>
-                                <a class="dropdown-item" href="/state/network">Network State</a>
-                            </li>
-                        {% endif %}
+                        <li>
+                            <a class="dropdown-item" href="/state/network">Network State</a>
+                        </li>
                     </ul>
                 </li>
+
+                
 
                 
 {# 

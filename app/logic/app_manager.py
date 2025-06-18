@@ -1,4 +1,5 @@
 import subprocess
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -31,10 +32,27 @@ class AppManagerApp(BaseModel):
             logger.error(f"Error checking app content: {e}")
             return False
 
-    def kill(self) -> None:
+    def start(self) -> dict[str, Any]:
+        """Starts the application."""
+        if not self.command_start:
+            raise ValueError("command is not set.")
+
+        try:
+            subprocess.run(self.command_start, shell=True, check=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            raise ValueError(
+                "Failed to start the application. Command: {self.command_start}"
+            ) from e
+
+        return {
+            "success": True,
+            "message": f"Started {self.name} at {self.port_connect}",
+        }
+
+    def kill(self) -> dict[str, Any]:
         """Kills the application."""
         command = (
-            f"fuser -k {self.port_connect}/tcp" if not self.command_stop else self.command_stop
+            f"fuser -k {self.port_internal}/tcp" if not self.command_stop else self.command_stop
         )
 
         # Run kill command
@@ -43,9 +61,17 @@ class AppManagerApp(BaseModel):
 
         try:
             subprocess.run(command, shell=True, check=True, capture_output=True)
-        except subprocess.CalledProcessError:
-            raise ValueError("Failed to kill the application. Command: {command}")
+        except subprocess.CalledProcessError as e:
+            raise ValueError(f"Failed to kill the application. Command: {command}") from e
 
         # Check if the application is killed
         if self.is_running:
             raise ValueError("Failed to kill the application. Needs debug.")
+
+        return {
+            "success": True,
+            "message": f"Killed {self.name} at {self.port_internal}",
+        }
+
+    def stop(self) -> dict[str, bool]:
+        return self.kill()

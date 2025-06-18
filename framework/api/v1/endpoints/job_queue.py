@@ -29,23 +29,23 @@ async def create_job(db: Session = Depends(get_db), job_in: models.Job = Body(..
     """
     Create a new job and add it to the queue.
     """
-    return crud.job.create(db, obj_in=job_in)
+    return await crud.job.create(db, obj_in=job_in)
 
 
 @router.get("/", response_model=list[models.Job])
-def list_jobs(db: Session = Depends(get_db)) -> list[models.Job]:
+async def list_jobs(db: Session = Depends(get_db)) -> list[models.Job]:
     """
     Retrieve a list of all jobs.
     """
-    return crud.job.get_all(db)
+    return await crud.job.get_all(db)
 
 
 @router.get("/{job_id}", response_model=models.Job)
-def get_job(job_id: UUID, db: Session = Depends(get_db)) -> models.Job:
+async def get_job(job_id: UUID, db: Session = Depends(get_db)) -> models.Job:
     """
     Retrieve a single job by its ID.
     """
-    return crud.job.get(db, id=job_id)
+    return await crud.job.get(db, id=job_id)
 
 
 @router.delete("/{job_id}", status_code=204)
@@ -53,7 +53,7 @@ async def delete_job(job_id: str, db: Session = Depends(get_db)) -> None:
     """
     Delete a job.
     """
-    return crud.job.delete(db, id=job_id)
+    return await crud.job.delete(db, id=job_id)
 
 
 @router.put("/{job_id}", response_model=models.Job)
@@ -63,7 +63,7 @@ async def update_job(
     """
     Update a job's properties.
     """
-    return crud.job.update(db, id=job_id, obj_in=job_in)
+    return await crud.job.update(db, id=job_id, obj_in=job_in)
 
 
 @router.put("/{job_id}/status")
@@ -81,7 +81,7 @@ async def update_job_status(job_id: str, body: dict = Body(...)) -> JSONResponse
         raise HTTPException(status_code=400, detail=f"Invalid status: {status_value}")
 
     # Update the job status in the database
-    job_queue.update_job_status(job_id=job_id, status=status)
+    await job_queue.update_job_status(job_id=job_id, status=status)
 
     return JSONResponse(
         content={"success": True, "message": f"Job {job_id} status updated to {status.value}"}
@@ -101,7 +101,7 @@ async def kill_job(job_id: str, db: Session = Depends(get_db)) -> dict[str, Any]
     Raises:
         HTTPException: If the job could not be killed.
     """
-    result = kill_job_process(job_id, db)
+    result = await kill_job_process(job_id, db)
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result
@@ -113,10 +113,12 @@ async def retry_job(job_id: str, db: Session = Depends(get_db)) -> dict[str, Any
     Retries a job by setting its status to 'Queued' and re-enqueuing it.
     """
     logger.info(f"Received request to retry job: {job_id}")
-    job = crud.job.get(db, id=job_id)
+    job = await crud.job.get(db, id=job_id)
 
     # Update status to 'Queued' to provide immediate and accurate feedback.
-    db_job = crud.job.update(db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.queued))
+    db_job = await crud.job.update(
+        db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.queued)
+    )
 
     # Enqueue the task, ensuring we pass the ID as a string.
     execute_tasks.execute_job_task(str(job.id), priority=job.priority)
