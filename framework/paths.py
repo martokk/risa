@@ -51,5 +51,6 @@ print(f"ENV_FILE={ENV_FILE}")
 
 # Files
 # DATABASE_FILE = DATA_PATH / "database.sqlite3"
+PYPROJECT_FILE = PROJECT_PATH / "pyproject.toml"
 LOG_FILE = LOGS_PATH / "log.log"
 ERROR_LOG_FILE = LOGS_PATH / "error_log.log"
