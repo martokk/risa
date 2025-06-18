@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Any
 
 from sqlalchemy.engine.base import Engine
@@ -29,10 +30,27 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, clas
 
 def get_db() -> Generator[Session, None, None]:
     """
-    A generator function that creates a new database session.
+    A generator function that creates a new database session, used for FastAPI dependency injection.
 
     Yields:
         db: A new database session.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@contextmanager
+def get_db_context() -> Generator[Session, None, None]:
+    """
+    A context manager that creates a new database session, used outside of FastAPI's dependency injection.
+
+    Example:
+        with get_db_context() as db:
+            obj = crud.model.get(db, id=job_id)
+
     """
     db = SessionLocal()
     try:

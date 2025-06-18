@@ -48,11 +48,13 @@ async function apiRequest(endpoint, options = {}) {
 }
 
 // Usage
+import { toast } from '/static/js/toast.js';
+
 try {
     const data = await apiRequest('/api/users');
     renderUserList(data);
 } catch (error) {
-    showAlert('danger', error.message);
+    toast.show(error.message, 'danger');
 }
 
 // Good: Using reusable component functions
@@ -79,7 +81,7 @@ function initializeForm(formId, options = {}) {
             if (options.onError) {
                 options.onError(error);
             } else {
-                showAlert('danger', error.message);
+                toast.show(error.message, 'danger');
             }
         }
     });
@@ -191,11 +193,11 @@ async function handleSubmit(e) {
         const data = await submitForm(e.target);
         
         // Handle success
-        showAlert('success', 'Changes saved');
+        toast.show('Changes saved', 'success');
         updateUI(data);
     } catch (error) {
         // Handle errors
-        showAlert('danger', error.message);
+        toast.show(error.message, 'danger');
     } finally {
         // Always hide loading indicator
         showLoading(false);

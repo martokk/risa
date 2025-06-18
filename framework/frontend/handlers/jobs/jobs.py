@@ -2,10 +2,12 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
+from sqlmodel import Session
 
+from framework import crud
+from framework.core.db import get_db
 from framework.frontend.templates import templates
 from framework.frontend.templates.context import get_template_context
-from framework.services import job_queue
 
 
 router = APIRouter(tags=["jobs"])
@@ -14,6 +16,7 @@ router = APIRouter(tags=["jobs"])
 @router.get("/jobs", response_class=HTMLResponse)
 async def jobs_page(
     context: dict[str, Any] = Depends(get_template_context),
+    db: Session = Depends(get_db),
 ) -> HTMLResponse:
     """
     Renders the main job queue dashboard page.
@@ -24,7 +27,7 @@ async def jobs_page(
     Returns:
         An HTML response rendering the jobs page.
     """
-    jobs = job_queue.get_all_jobs()
+    jobs = await crud.job.get_all(db)
     # Sort jobs by status and priority for display
     status_order = {
         "running": 0,

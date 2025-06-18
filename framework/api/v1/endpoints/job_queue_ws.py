@@ -1,23 +1,28 @@
 import asyncio
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from sqlmodel import Session
 
-from framework.services import job_queue
-from framework.services.job_queue_ws_manager import job_queue_ws_manager
+from framework import crud
+from framework.core.db import get_db
+from framework.core.websocket import websocket_manager
+from framework.services import job_queue, job_queue_ws_manager
 
 
 router = APIRouter()
 
 
 @router.websocket("/ws/job-queue")
-async def websocket_job_queue(websocket: WebSocket) -> None:
-    await job_queue_ws_manager.connect(websocket)
+async def websocket_job_queue(websocket: WebSocket, db: Session = Depends(get_db)) -> None:
+    await job_queue_ws_manager.job_queue_ws_manager.connect(websocket)
+
     # Send initial state
+    jobs = await crud.job.get_all(db=db)
     consumer_status = "running" if job_queue.is_consumer_running() else "stopped"
     print(f"Consumer status: {consumer_status}")
     await websocket.send_json(
         {
-            "jobs": [j.model_dump(mode="json") for j in job_queue.get_all_jobs()],
+            "jobs": [j.model_dump(mode="json") for j in jobs],
             "consumer_status": consumer_status,
         }
     )
@@ -40,9 +45,9 @@ async def websocket_job_queue(websocket: WebSocket) -> None:
                 log_task = asyncio.create_task(stream_job_log(websocket, job_id))
             # Otherwise, just keep alive
     except WebSocketDisconnect:
-        job_queue_ws_manager.disconnect(websocket)
+        websocket_manager.disconnect(websocket)
     except Exception:
-        job_queue_ws_manager.disconnect(websocket)
+        websocket_manager.disconnect(websocket)
     finally:
         if log_task:
             log_task.cancel()

@@ -1,5 +1,3 @@
-from collections.abc import Generator
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import Session
@@ -7,7 +5,7 @@ from sqlmodel import Session
 from app import settings
 from framework import crud, models
 from framework.core import security
-from framework.core.db import SessionLocal
+from framework.core.db import get_db
 from framework.crud.exceptions import RecordNotFoundError
 
 
@@ -16,20 +14,6 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_PREFIX}/login/access-token",
     auto_error=False,
 )
-
-
-def get_db() -> Generator[Session, None, None]:
-    """
-    A generator function that creates a new database session.
-
-    Yields:
-        Session: A new database session.
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 async def get_current_user_id(token: str = Depends(reusable_oauth2)) -> str:

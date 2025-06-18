@@ -22,12 +22,13 @@ class AppManagerApp(BaseModel):
             return False
 
         try:
-            command = f"lsof -i:{self.port_connect}"
-            subprocess.run(command, shell=True, check=True, capture_output=True)
-            print(f"Application {self.name} is running on port {self.port_connect}")
-            return True
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            print(f"Application {self.name} is not running on port {self.port_connect}")
+            import requests
+
+            response = requests.get(f"http://localhost:{self.port_connect}/", timeout=5)
+            # Check for A1111 specific content
+            return self.name.lower() in response.text.lower()
+        except Exception as e:
+            logger.error(f"Error checking app content: {e}")
             return False
 
     def kill(self) -> None:

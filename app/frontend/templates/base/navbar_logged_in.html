@@ -1,5 +1,5 @@
 <nav
-    class="navbar navbar-expand-lg navbar-dark bg-accent">
+    class="navbar navbar-expand-lg navbar-dark bg-accent py-0">
     <div class="container-fluid">
         <a class="navbar-brand" href="/">{{ PROJECT_NAME }}{% if ENV_NAME != "production" %} ({{ ENV_NAME }}){% endif
             %}</a>
@@ -12,63 +12,196 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
                 <!-- Characters -->
-                {% if ENV_NAME in ["dev", "local"] %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/characters">Characters</a>
-                    </li>
-                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/characters">Characters</a>
+                </li>
 
                 <!-- Manage -->
-                {% if ENV_NAME in ["dev", "local"] %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            Manage
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" href="/sd-base-models">SD Base Models</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/sd-checkpoints">SD Checkpoints</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/sd-extra-networks">SD Extra Networks</a>
-                            </li>
-        
-                            
-                            <li><hr class="dropdown-divider"></li>
-                            
-                        
-                        </ul>
-                    </li>
-                {% endif %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        Manage
+                    </a>
+                    <ul class="dropdown-menu border-accent">
+                        <li>
+                            <a class="dropdown-item" href="/sd-base-models">SD Base Models</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/sd-checkpoints">SD Checkpoints</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/sd-extra-networks">SD Extra Networks</a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="/characters">Characters</a>
+                        </li>
+                    
+                    </ul>
+                </li>
 
                 <!-- Safetensor Import Helper -->
-                {% if ENV_NAME in ["dev", "local"] %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Safetensor Import Helper
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
-                            <li>
-                                <a class="dropdown-item" href="/tools/safetensor-import-helper">All Models</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=flux">Flux</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=illustrious">Illustrious</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=sdxl">SDXL</a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/tools/safetensor-import-helper/?sd_base_model_id=pony">Pony</a>
-                            </li>
-                        </ul>
-                    </li>
-                {% endif %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Safetensor Import Helper
+                    </a>
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper">All Models</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=flux">Flux</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=illustrious">Illustrious</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=sdxl">SDXL</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper/?sd_base_model_id=pony">Pony</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- rPLAYGROUND -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        rPLAYGROUND
+                    </a>
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
+                        <li>
+                            <a class="dropdown-item" href="">rPLAYGROUND</a>
+                        </li>
+                        
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">A1111 WebUI</a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">Kohya_ss GUI</a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">ComfyUI</a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">InvokeAI</a>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">TensorBoard</a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">Code Server</a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">Jupyter Lab</a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">WebDAV: File Server</a>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">TODO: LOG VIEWER</a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="">TODO: TERMINAL SPLIT SCREEN</a>
+                        </li>
+
+                
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/dashboard">Dashboard</a>
+                        </li>
+                
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/jobs">Job Queue</a>
+                        </li>
+                
+                    </ul>
+                </li>
+
+
+                <!-- rLOCAL -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        rLOCAL
+                    </a>
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
+
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/">rLOCAL</a>
+                        </li>
+                        
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/tools/dataset-tagger/setup">Dataset Tagger</a>
+                        </li>
+                
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/dashboard">Dashboard (rLOCAL)</a>
+                        </li>
+                
+                        <li>
+                            <a class="dropdown-item" href="http://localhost:5000/jobs">Job Queue (rLOCAL)</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                <!-- rHOST -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        rHOST
+                    </a>
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
+
+                        <li>
+                            <a class="dropdown-item" href="http://risahost.duckdns.org:5000/">rHOST</a>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                
+                        <li>
+                            <a class="dropdown-item" href="http://risahost.duckdns.org:5000/dashboard">Dashboard (rHOST)</a>
+                        </li>
+                
+                        <li>
+                            <a class="dropdown-item" href="http://risahost.duckdns.org:5000/jobs">Job Queue (rHOST)</a>
+                        </li>
+                
+                    </ul>
+                </li>
 
                 <!-- Tools -->
                 <li class="nav-item dropdown">
@@ -76,18 +209,14 @@
                         aria-expanded="false">
                         Tools
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
-                        {% if ENV_NAME in ["dev", "local"] %}
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
                             <li>
-                                <a class="dropdown-item" href="/tools/dataset-tagger/setup">Dataset Tagger</a>
+                                <a class="dropdown-item" href="http://localhost:5000/tools/dataset-tagger/setup">Dataset Tagger</a>
                             </li>
-                        {% endif %}
 
-                        {% if ENV_NAME in ["dev", "playground"] %}
                             <li>
-                                <a class="dropdown-item" href="/dashboard">Dashboard</a>
+                                <a class="dropdown-item" href="http://risahost.duckdns.org:5000/dashboard">Dashboard</a>
                             </li>
-                        {% endif %}
 
                         <li><hr class="dropdown-divider"></li>
                         <li>
@@ -101,7 +230,7 @@
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         State
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="stateDropdown">
+                    <ul class="dropdown-menu border-accent" aria-labelledby="stateDropdown">
                         <li>
                             <a class="dropdown-item" href="/state/instance">Instance State</a>
                         </li>

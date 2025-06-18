@@ -7,7 +7,6 @@ from sqlmodel import Session, SQLModel, select
 
 from app import logger
 from framework.crud.exceptions import DeleteError, RecordNotFoundError
-from framework.utils.asysnc import allow_sync
 
 
 ModelType = TypeVar("ModelType", bound=SQLModel)
@@ -15,7 +14,7 @@ ModelCreateType = TypeVar("ModelCreateType", bound=SQLModel)
 ModelUpdateType = TypeVar("ModelUpdateType", bound=SQLModel)
 
 
-class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
+class BaseCRUDSync(Generic[ModelType, ModelCreateType, ModelUpdateType]):
     def __init__(self, model: type[ModelType]) -> None:
         """
         Initialize the CRUD object.
@@ -25,8 +24,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         """
         self.model = model
 
-    @allow_sync
-    async def get_all(self, db: Session) -> list[ModelType]:
+    def get_all(self, db: Session) -> list[ModelType]:
         """
         Get all records for the model.
 
@@ -39,8 +37,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         statement = select(self.model)
         return list(db.exec(statement).all())
 
-    @allow_sync
-    async def get_first(self, db: Session) -> ModelType | None:
+    def get_first(self, db: Session) -> ModelType | None:
         """
         Get the first record from the table.
 
@@ -53,8 +50,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         statement = select(self.model)
         return db.exec(statement).first()
 
-    @allow_sync
-    async def get(self, db: Session, *args: BinaryExpression[Any], **kwargs: Any) -> ModelType:
+    def get(self, db: Session, *args: BinaryExpression[Any], **kwargs: Any) -> ModelType:
         """
         Get a record by its primary key(s).
 
@@ -78,8 +74,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
             )
         return result
 
-    @allow_sync
-    async def get_or_none(
+    def get_or_none(
         self, db: Session, *args: BinaryExpression[Any], **kwargs: Any
     ) -> ModelType | None:
         """
@@ -94,13 +89,12 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
             The matching record, or None.
         """
         try:
-            result = await self.get(db, *args, **kwargs)
+            result = self.get(db, *args, **kwargs)
         except RecordNotFoundError:
             return None
         return result
 
-    @allow_sync
-    async def get_multi(
+    def get_multi(
         self,
         db: Session,
         *args: BinaryExpression[Any],
@@ -125,8 +119,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         statement = select(self.model).filter(*args).filter_by(**kwargs).offset(skip).limit(limit)
         return list(db.exec(statement).fetchmany())
 
-    @allow_sync
-    async def create(self, db: Session, *, obj_in: ModelCreateType, **kwargs: Any) -> ModelType:
+    def create(self, db: Session, *, obj_in: ModelCreateType, **kwargs: Any) -> ModelType:
         """
         Create a new record.
 
@@ -156,8 +149,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
             db.rollback()
             raise
 
-    @allow_sync
-    async def update(
+    def update(
         self,
         db: Session,
         *args: BinaryExpression[Any],
@@ -188,7 +180,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         if db_obj is None:
             if not args and not kwargs:
                 raise ValueError("crud.base.update() Must provide at least one filter or db_obj")
-            db_obj = await self.get(db, *args, **kwargs)
+            db_obj = self.get(db, *args, **kwargs)
 
         obj_in_values = obj_in.model_dump(exclude_unset=exclude_unset, exclude_none=exclude_none)
         db_obj_values = db_obj.model_dump()
@@ -200,8 +192,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         db.refresh(db_obj)
         return db_obj
 
-    @allow_sync
-    async def remove(self, db: Session, *args: BinaryExpression[Any], **kwargs: Any) -> None:
+    def remove(self, db: Session, *args: BinaryExpression[Any], **kwargs: Any) -> None:
         """
         Delete a record.
 
@@ -213,15 +204,14 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         Raises:
             DeleteError: If an error occurs while deleting the record.
         """
-        db_obj = await self.get(db, *args, **kwargs)
+        db_obj = self.get(db, *args, **kwargs)
         try:
             db.delete(db_obj)
             db.commit()
         except Exception as exc:
             raise DeleteError("Error while deleting") from exc
 
-    @allow_sync
-    async def count(self, db: Session, *args: BinaryExpression[Any], **kwargs: Any) -> int:
+    def count(self, db: Session, *args: BinaryExpression[Any], **kwargs: Any) -> int:
         """
         Get the total count of records for the model.
 
