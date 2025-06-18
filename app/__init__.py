@@ -1,12 +1,12 @@
 import toml
 
 from app.models.settings import get_settings
-from app.paths import ENV_FILE as _ENV_FILE
+from app.paths import ENV_FILE as _ENV_FILE, PYPROJECT_FILE
 from framework.core.logger import setup_logger
 
 
 def get_app_version() -> str:
-    pyproject = toml.load("pyproject.toml")
+    pyproject = toml.load(PYPROJECT_FILE)
     return str(pyproject["tool"]["poetry"]["version"])
 
 
