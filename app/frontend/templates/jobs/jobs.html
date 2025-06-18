@@ -55,7 +55,7 @@
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Jobs</h3>
+        <h3>Jobs ({{ ENV_NAME }})</h3>
         <div class="d-flex align-items-center">
             <span id="consumerStatusBadge" class="ms-2 me-2"></span>
             <div class="btn-group me-2" role="group">
@@ -157,6 +157,8 @@
             <div class="modal-body">
                 <form id="jobForm">
                     <input type="hidden" id="jobId" name="id">
+                    <input type="hidden" id="jobEnvName" name="env_name" value="{{ ENV_NAME }}">
+
                     <div class="mb-3">
                         <label for="jobName" class="form-label">Job Name</label>
                         <input type="text" class="form-control" id="jobName" name="name">

@@ -17,14 +17,14 @@ async def start_app(
 ) -> dict[str, str]:
     """Start an application."""
     config = get_config()
-    app_config = next((app for app in config["apps"] if app.name == app_name), None)
+    app = next((app for app in config["apps"] if app.name == app_name), None)
 
-    if not app_config:
+    if not app:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
 
     try:
         # Using Popen to run in the background
-        subprocess.Popen(app_config["start_command"], shell=True)
+        app.start()
         return {"status": "starting", "app_name": app_name}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
@@ -37,13 +37,13 @@ async def stop_app(
 ) -> dict[str, str]:
     """Stop an application."""
     config = get_config()
-    app_config = next((app for app in config["apps"] if app.name == app_name), None)
+    app = next((app for app in config["apps"] if app.name == app_name), None)
 
-    if not app_config:
+    if not app:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
 
     try:
-        subprocess.run(app_config["stop_command"], shell=True, check=True)
+        app.stop()
         return {"status": "stopped", "app_name": app_name}
     except subprocess.CalledProcessError as e:
         # If the process isn't running, the stop command might fail. This is not necessarily an error we want to bubble up.

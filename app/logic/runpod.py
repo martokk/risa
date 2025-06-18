@@ -33,7 +33,10 @@ def get_runpod_pod_id() -> str | None:
 
 
 def get_runpod_gpu_name() -> str | None:
-    return os.environ.get("RUNPOD_GPU_NAME")
+    raw_gpu_name = os.environ.get("RUNPOD_GPU_NAME")
+    if raw_gpu_name:
+        return raw_gpu_name.replace("NVIDIA ", "").replace("+", " ")
+    return None
 
 
 def get_runpod_public_ip() -> str | None:

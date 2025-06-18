@@ -1,0 +1,31 @@
+{% extends "tools/tool_base.html" %}
+
+
+<!-- Tool Name -->
+{% block title %}Fix Civitai Download Filenames{% endblock %}
+{% block tool_name %}Fix Civitai Download Filenames{% endblock %}
+
+<!-- Tool Description -->
+{% block tool_description %}
+    Models downloaded by the Civitai Extension for A1111 append a 6 or 7 digit model id to the end of the filename. This script removes those numbers.
+{% endblock %}
+
+<!-- Tool Input Form -->
+{% block tool_input_form %}
+<div class="card col-3 border-info">
+    <div class="card-header bg-info text-black">
+        <h5 class="card-title mb-0">Fix Civitai Download Filenames</h5>
+    </div>
+    <div class="card-body bg-info-subtle">
+        <form id="FixCivitaiDownloadFilenamesForm">
+            <div class="mb-3">
+                <label for="hubPath" class="form-label">Hub Path</label>
+                <input type="text" class="form-control" id="hubPath" placeholder="Enter the path to the hub">
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+
