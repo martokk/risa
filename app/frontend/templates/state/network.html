@@ -63,9 +63,99 @@
                         <td>{{ network_state.host.base_domain }}</td>
                     </tr>
 
+                    <!-- Theme -->
+                    <tr>
+                        <td>Accent</td>
+                        <td>{{ network_state.dev.accent }}</td>
+                        <td>{{ network_state.local.accent }}</td>
+                        <td>{{ network_state.playground.accent }}</td>
+                        <td>{{ network_state.host.accent }}</td>
+                    </tr>
+
+                    <!-- System Status -->
+                    <tr>
+                        <td>GPU Usage</td>
+                        <td>{{ network_state.dev.gpu_usage }}</td>
+                        <td>{{ network_state.local.gpu_usage }}</td>
+                        <td>{{ network_state.playground.gpu_usage }}</td>
+                        <td>{{ network_state.host.gpu_usage }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>GPU Memory Used</td>
+                        <td>{{ network_state.dev.gpu_memory_used }}</td>
+                        <td>{{ network_state.local.gpu_memory_used }}</td>
+                        <td>{{ network_state.playground.gpu_memory_used }}</td>
+                        <td>{{ network_state.host.gpu_memory_used }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>CPU Usage</td>
+                        <td>{{ network_state.dev.cpu_usage }}</td>
+                        <td>{{ network_state.local.cpu_usage }}</td>
+                        <td>{{ network_state.playground.cpu_usage }}</td>
+                        <td>{{ network_state.host.cpu_usage }}</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Total Disk Space</td>
+                        <td>{{ network_state.dev.total_disk_space }}</td>
+                        <td>{{ network_state.local.total_disk_space }}</td>
+                        <td>{{ network_state.playground.total_disk_space }}</td>
+                        <td>{{ network_state.host.total_disk_space }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Used Disk Space</td>
+                        <td>{{ network_state.dev.used_disk_space }}</td>
+                        <td>{{ network_state.local.used_disk_space }}</td>
+                        <td>{{ network_state.playground.used_disk_space }}</td>
+                        <td>{{ network_state.host.used_disk_space }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Free Disk Space</td>
+                        <td>{{ network_state.dev.free_disk_space }}</td>
+                        <td>{{ network_state.local.free_disk_space }}</td>
+                        <td>{{ network_state.playground.free_disk_space }}</td>
+                        <td>{{ network_state.host.free_disk_space }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Disk Usage</td>
+                        <td>{{ network_state.dev.disk_usage }}</td>
+                        <td>{{ network_state.local.disk_usage }}</td>
+                        <td>{{ network_state.playground.disk_usage }}</td>
+                        <td>{{ network_state.host.disk_usage }}</td>
+                    </tr>
+
+                    <!-- Runpod -->
+                    <tr>
+                        <td>Runpod Pod ID</td>
+                        <td>{{ network_state.dev.runpod_pod_id }}</td>
+                        <td>{{ network_state.local.runpod_pod_id }}</td>
+                        <td>{{ network_state.playground.runpod_pod_id }}</td>
+                        <td>{{ network_state.host.runpod_pod_id }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Runpod Public IP</td>
+                        <td>{{ network_state.dev.runpod_public_ip }}</td>
+                        <td>{{ network_state.local.runpod_public_ip }}</td>
+                        <td>{{ network_state.playground.runpod_public_ip }}</td>
+                        <td>{{ network_state.host.runpod_public_ip }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Runpod GPU Name</td>
+                        <td>{{ network_state.dev.runpod_gpu_name }}</td>
+                        <td>{{ network_state.local.runpod_gpu_name }}</td>
+                        <td>{{ network_state.playground.runpod_gpu_name }}</td>
+                        <td>{{ network_state.host.runpod_gpu_name }}</td>
+                    </tr>
+
                 </tbody>
             </table>
-
         </div>
 
         

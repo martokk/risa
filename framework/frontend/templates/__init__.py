@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from fastapi.templating import Jinja2Templates
 
 from app import paths, settings
+from app.frontend.templates import hook_get_templates
 from framework.frontend.templates.filters import (
     filter_humanize,
     filter_markdown,
@@ -39,7 +40,9 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals["BASE_URL"] = settings.BASE_URL
     templates.env.globals["VERSION"] = settings.VERSION
     templates.env.globals["current_year"] = datetime.now(timezone.utc).year
-    templates.env.globals["accent"] = settings.ACCENT
+    templates.env.globals["ACCENT"] = settings.ACCENT
+
+    templates = hook_get_templates(templates)
     return templates
 
 

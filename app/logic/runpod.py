@@ -28,9 +28,13 @@ def convert_local_checkpoint_path_to_runpod_path(local_path: str) -> str:
     return runpod_path
 
 
-def get_runpod_id() -> str:
-    return os.environ["RUNPOD_POD_ID"]
+def get_runpod_pod_id() -> str | None:
+    return os.environ.get("RUNPOD_POD_ID")
 
 
-def get_runpod_gpu_name() -> str:
-    return os.environ["RUNPOD_POD_GPU_NAME"]
+def get_runpod_gpu_name() -> str | None:
+    return os.environ.get("RUNPOD_GPU_NAME")
+
+
+def get_runpod_public_ip() -> str | None:
+    return os.environ.get("RUNPOD_PUBLIC_IP")

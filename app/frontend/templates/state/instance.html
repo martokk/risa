@@ -46,6 +46,70 @@
                         <td>{{ instance_state.base_domain }}</td>
                     </tr>
 
+                    <!-- Last Updated -->
+                    <tr>
+                        <td>Last Updated</td>
+                        <td>{{ instance_state.last_updated }}</td>
+                    </tr>
+
+                    <!-- Theme -->
+                    <tr>
+                        <td>Accent</td>
+                        <td>{{ instance_state.accent }}</td>
+                    </tr>
+
+                    <!-- System Status -->
+                    <tr>
+                        <td>GPU Usage</td>
+                        <td>{{ instance_state.gpu_usage }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>GPU Memory Used</td>
+                        <td>{{ instance_state.gpu_memory_used }}</td>
+                    </tr>
+                    
+                    <tr>
+                        <td>CPU Usage</td>
+                        <td>{{ instance_state.cpu_usage }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Total Disk Space</td>
+                        <td>{{ instance_state.total_disk_space }}</td>
+                    </tr>
+                    
+                    <tr></tr>
+                        <td>Used Disk Space</td>
+                        <td>{{ instance_state.used_disk_space }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Free Disk Space</td>
+                        <td>{{ instance_state.free_disk_space }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Disk Usage</td>
+                        <td>{{ instance_state.disk_usage }}</td>
+                    </tr>
+
+                    <!-- Runpod -->
+                    <tr>
+                        <td>Runpod Pod ID</td>
+                        <td>{{ instance_state.runpod_pod_id }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Runpod Public IP</td>
+                        <td>{{ instance_state.runpod_public_ip }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Runpod GPU Name</td>
+                        <td>{{ instance_state.runpod_gpu_name }}</td>
+                    </tr>
+                    
                 </tbody>
             </table>
         </div>

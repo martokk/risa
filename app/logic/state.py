@@ -3,8 +3,10 @@ from datetime import datetime, timezone
 from sqlmodel import Session
 
 from app import crud, models, settings
+from app.logic.runpod import get_runpod_gpu_name, get_runpod_pod_id, get_runpod_public_ip
 from app.models.core.state import InstanceState, NetworkState
 from framework.core.db import get_db_context
+from framework.utils.system_status import get_cpu_stats, get_disk_stats, get_gpu_stats
 
 
 async def _get_instance_state() -> InstanceState:
@@ -13,11 +15,44 @@ async def _get_instance_state() -> InstanceState:
     project_name = settings.PROJECT_NAME
     base_domain = settings.BASE_DOMAIN
 
+    # Theme
+    accent = settings.ACCENT
+
+    # System Status
+    gpu_stats = get_gpu_stats()
+    gpu_usage = gpu_stats["gpu_usage"]
+    gpu_memory_used = gpu_stats["gpu_memory_used"]
+
+    cpu_stats = get_cpu_stats()
+    cpu_usage = cpu_stats["cpu_usage"]
+
+    disk_stats = get_disk_stats()
+    total_disk_space = disk_stats["total_disk_space"]
+    used_disk_space = disk_stats["used_disk_space"]
+    free_disk_space = disk_stats["free_disk_space"]
+    disk_usage = disk_stats["disk_usage"]
+
+    # Runpod
+    runpod_gpu_name = get_runpod_gpu_name()
+    runpod_pod_id = get_runpod_pod_id()
+    runpod_public_ip = get_runpod_public_ip()
+
     return InstanceState(
         id=id,
         last_updated=last_updated,
         project_name=project_name,
         base_domain=base_domain,
+        accent=accent,
+        gpu_usage=gpu_usage,
+        gpu_memory_used=gpu_memory_used,
+        cpu_usage=cpu_usage,
+        total_disk_space=total_disk_space,
+        used_disk_space=used_disk_space,
+        free_disk_space=free_disk_space,
+        disk_usage=disk_usage,
+        runpod_gpu_name=runpod_gpu_name,
+        runpod_pod_id=runpod_pod_id,
+        runpod_public_ip=runpod_public_ip,
     )
 
 
@@ -66,13 +101,11 @@ async def update_instance_state() -> InstanceState:
     return instance_state
 
 
-async def get_network_state() -> NetworkState:
-    with get_db_context() as db:
-        dev = await crud.instance_state.get(db, id="dev")
-        local = await crud.instance_state.get(db, id="local")
-        playground = await crud.instance_state.get(db, id="playground")
-        host = await crud.instance_state.get(db, id="host")
-
+def get_network_state(db: Session) -> NetworkState:
+    dev = crud.sync.instance_state.get(db, id="dev")
+    local = crud.sync.instance_state.get(db, id="local")
+    playground = crud.sync.instance_state.get(db, id="playground")
+    host = crud.sync.instance_state.get(db, id="host")
     return NetworkState(
         last_updated=datetime.now(tz=timezone.utc),
         dev=dev,

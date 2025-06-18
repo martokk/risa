@@ -9,6 +9,23 @@ class InstanceStateBase(SQLModel):
     project_name: str
     base_domain: str
 
+    # Theme
+    accent: str | None = None
+
+    # System Status
+    gpu_usage: float | None = None
+    gpu_memory_used: float | None = None
+    cpu_usage: float | None = None
+    total_disk_space: int | None = None
+    used_disk_space: int | None = None
+    free_disk_space: int | None = None
+    disk_usage: float | None = None
+
+    # Runpod
+    runpod_gpu_name: str | None = None
+    runpod_pod_id: str | None = None
+    runpod_public_ip: str | None = None
+
 
 class InstanceState(InstanceStateBase, table=True):
     pass

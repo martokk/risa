@@ -8,58 +8,24 @@ T = TypeVar("T")
 
 
 def allow_sync(func: Callable[..., Any]) -> Callable[..., Any]:
-    """Decorator to run an async function synchronously.
-
-    This utility allows running any async function in a synchronous context
-    by managing the event loop internally. If called from within an async context,
-    it will execute the function directly without trying to create a new event loop.
-
-    Args:
-        func: The async function to be wrapped
-
-    Returns:
-        A function that can be called both synchronously and asynchronously
-
-    Example:
-        @allow_sync
-        async def my_async_function(x: int) -> int:
-            return x + 1
-
-        # Can now be called synchronously
-        result = my_async_function(5)  # Returns 6
-    """
+    """Decorator to run an async function synchronously if called from sync code, or return a coroutine if called from async code."""
 
     @wraps(func)
-    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
-        """Async wrapper that executes the function directly."""
-        return await func(*args, **kwargs)
-
-    @wraps(func)
-    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-        """Sync wrapper that manages the event loop."""
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            # Create new event loop if one doesn't exist
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-        # Check if we're already in an event loop
-        try:
+            # If we're in an event loop, return the coroutine for the caller to await
             asyncio.get_running_loop()
-            # We're in an event loop, so we need to create a new one
-            new_loop = asyncio.new_event_loop()
-            return new_loop.run_until_complete(func(*args, **kwargs))
+            return func(*args, **kwargs)
         except RuntimeError:
-            # No running loop, use the current one
-            return loop.run_until_complete(func(*args, **kwargs))
+            # No running event loop, so run the coroutine to completion
+            loop = asyncio.new_event_loop()
+            try:
+                asyncio.set_event_loop(loop)
+                return loop.run_until_complete(func(*args, **kwargs))
+            finally:
+                loop.close()
 
-    # Return the appropriate wrapper based on the context
-    try:
-        asyncio.get_running_loop()
-        return async_wrapper
-    except RuntimeError:
-        return sync_wrapper
+    return wrapper
 
 
 def allow_sync_func(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
