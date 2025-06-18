@@ -34,7 +34,6 @@ async def periodic_instance_state_update() -> None:
     """Periodically update the instance state."""
     while True:
         try:
-            logger.info("Updating instance state...")
             await update_instance_state()
             logger.info("Instance state updated.")
         except Exception as e:

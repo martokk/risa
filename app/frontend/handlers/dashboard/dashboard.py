@@ -41,7 +41,7 @@ async def dashboard_page(
 
     # Fetch instance and network state for dashboard
     instance_state = await state.get_instance_state()
-    network_state = await state.get_network_state_from_host()
+    network_state = await state.get_network_state()
 
     context["apps"] = apps
     context["instance_state"] = instance_state

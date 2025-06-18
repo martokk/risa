@@ -7,6 +7,7 @@ from sqlmodel import Session, SQLModel, select
 
 from app import logger
 from framework.crud.exceptions import DeleteError, RecordNotFoundError
+from framework.utils.asysnc import allow_sync
 
 
 ModelType = TypeVar("ModelType", bound=SQLModel)
@@ -24,6 +25,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         """
         self.model = model
 
+    @allow_sync
     async def get_all(self, db: Session) -> list[ModelType]:
         """
         Get all records for the model.
@@ -37,6 +39,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         statement = select(self.model)
         return list(db.exec(statement).all())
 
+    @allow_sync
     async def get_first(self, db: Session) -> ModelType | None:
         """
         Get the first record from the table.
@@ -50,6 +53,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         statement = select(self.model)
         return db.exec(statement).first()
 
+    @allow_sync
     async def get(self, db: Session, *args: BinaryExpression[Any], **kwargs: Any) -> ModelType:
         """
         Get a record by its primary key(s).
@@ -74,6 +78,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
             )
         return result
 
+    @allow_sync
     async def get_or_none(
         self, db: Session, *args: BinaryExpression[Any], **kwargs: Any
     ) -> ModelType | None:
@@ -94,6 +99,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
             return None
         return result
 
+    @allow_sync
     async def get_multi(
         self,
         db: Session,
@@ -119,6 +125,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         statement = select(self.model).filter(*args).filter_by(**kwargs).offset(skip).limit(limit)
         return list(db.exec(statement).fetchmany())
 
+    @allow_sync
     async def create(self, db: Session, *, obj_in: ModelCreateType, **kwargs: Any) -> ModelType:
         """
         Create a new record.
@@ -149,6 +156,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
             db.rollback()
             raise
 
+    @allow_sync
     async def update(
         self,
         db: Session,
@@ -192,6 +200,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         db.refresh(db_obj)
         return db_obj
 
+    @allow_sync
     async def remove(self, db: Session, *args: BinaryExpression[Any], **kwargs: Any) -> None:
         """
         Delete a record.
@@ -211,6 +220,7 @@ class BaseCRUD(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         except Exception as exc:
             raise DeleteError("Error while deleting") from exc
 
+    @allow_sync
     async def count(self, db: Session, *args: BinaryExpression[Any], **kwargs: Any) -> int:
         """
         Get the total count of records for the model.

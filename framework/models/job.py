@@ -7,7 +7,8 @@ from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from sqlalchemy import JSON
+from sqlmodel import Field, SQLModel
 
 
 class JobType(str, Enum):
@@ -38,25 +39,33 @@ class JobStatus(str, Enum):
     cancelled = "cancelled"
 
 
-class Job(BaseModel):
+class JobBase(SQLModel):
     """The core Job model for data transfer and validation."""
 
-    id: UUID = Field(default_factory=uuid4)
-    name: str = ""
-    type: JobType
-    command: str
-    meta: dict[str, Any] | None = None
-    pid: int | None = None
-    priority: Priority = Priority.normal
-    status: JobStatus = JobStatus.pending
-    retry_count: int = 0
+    id: UUID = Field(default_factory=uuid4, primary_key=True, index=True)
+    env_name: str = Field(default="dev")
+    name: str = Field(default="")
+    type: JobType = Field(default=JobType.command)
+    command: str = Field(default="")
+    meta: dict[str, Any] = Field(default_factory=dict, sa_type=JSON)
+    pid: int | None = Field(default=None)
+    priority: Priority = Field(default=Priority.normal)
+    status: JobStatus = Field(default=JobStatus.pending)
+    retry_count: int = Field(default=0)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    recurrence: str | None = None  # e.g., "hourly", "daily"
+    recurrence: str | None = Field(default=None)
 
 
-class JobUpdate(BaseModel):
+class Job(JobBase, table=True):
+    """The Job model for the database."""
+
+    pass
+
+
+class JobUpdate(SQLModel):
     """Pydantic model for updating a job."""
 
+    env_name: str | None = None
     name: str | None = None
     command: str | None = None
     meta: dict[str, Any] | None = None
@@ -65,3 +74,15 @@ class JobUpdate(BaseModel):
     status: JobStatus | None = None
     retry_count: int | None = None
     recurrence: str | None = None
+
+
+class JobCreate(JobBase):
+    """Pydantic model for creating a job."""
+
+    pass
+
+
+class JobRead(JobBase):
+    """Pydantic model for reading a job."""
+
+    pass

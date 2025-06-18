@@ -2,8 +2,8 @@ import asyncio
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from framework.core.websocket import websocket_manager
 from framework.services import job_queue
-from framework.services.job_queue_ws_manager import job_queue_ws_manager
 
 
 router = APIRouter()
@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.websocket("/ws/job-queue")
 async def websocket_job_queue(websocket: WebSocket) -> None:
-    await job_queue_ws_manager.connect(websocket)
+    await websocket_manager.connect(websocket)
     # Send initial state
     consumer_status = "running" if job_queue.is_consumer_running() else "stopped"
     print(f"Consumer status: {consumer_status}")
@@ -40,9 +40,9 @@ async def websocket_job_queue(websocket: WebSocket) -> None:
                 log_task = asyncio.create_task(stream_job_log(websocket, job_id))
             # Otherwise, just keep alive
     except WebSocketDisconnect:
-        job_queue_ws_manager.disconnect(websocket)
+        websocket_manager.disconnect(websocket)
     except Exception:
-        job_queue_ws_manager.disconnect(websocket)
+        websocket_manager.disconnect(websocket)
     finally:
         if log_task:
             log_task.cancel()

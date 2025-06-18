@@ -39,7 +39,7 @@ async def network_state_page(
 ) -> HTMLResponse:
     """Serves the network state page."""
 
-    network_state = await state.get_network_state_from_host()
+    network_state = await state.get_network_state()
     context["network_state"] = network_state
 
     return templates.TemplateResponse(

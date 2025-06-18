@@ -49,7 +49,7 @@ async def get_network_state(
     Returns:
         Dictionary containing the network state
     """
-    network_state = await state.get_network_state_from_db()
+    network_state = await state.get_network_state()
 
     return network_state.model_dump(mode="json")
 

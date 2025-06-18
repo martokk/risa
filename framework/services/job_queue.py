@@ -9,29 +9,25 @@ import signal
 import subprocess
 from typing import Any
 
-from tinydb import Query, TinyDB
-
 from app import logger, paths
-from framework import schemas
-from framework.services.job_queue_ws_manager import job_queue_ws_manager
-from framework.tasks import job_tasks
+from framework import crud, models, schemas
+from framework.core.db import get_db_context
+from framework.core.websocket import websocket_manager
+from framework.tasks import execute_tasks
 
-
-# Initialize the TinyDB database for jobs
-db = TinyDB(paths.JOB_DB_PATH)
 
 HUEY_PID_FILE = paths.DATA_PATH / "huey_consumer.pid"
 
 
 async def broadcast_consumer_status(status: str) -> None:
-    await job_queue_ws_manager.broadcast(
+    await websocket_manager.broadcast(
         {
             "consumer_status": status,
         }
     )
 
 
-def add_job_to_queue(job: schemas.Job) -> schemas.Job:
+def add_job_to_queue(job: models.Job) -> models.Job:
     """
     Adds a new job to the persistent job database.
 
@@ -42,30 +38,31 @@ def add_job_to_queue(job: schemas.Job) -> schemas.Job:
         The job model instance that was saved.
     """
     logger.info(f"Adding job {job.id} to the job database.")
-    db.insert(job.model_dump(mode="json"))
+    with get_db_context() as db:
+        crud.job.create(db, obj_in=job)
     return job
 
 
-def get_all_jobs() -> list[schemas.Job]:
+def get_all_jobs() -> list[models.Job]:
     """
     Retrieves a list of all jobs from the database.
     """
-    all_jobs_data = db.all()
-    return [schemas.Job(**job_data) for job_data in all_jobs_data]
+    with get_db_context() as db:
+        return crud.job.get_all(db)
 
 
-def get_job_by_id(job_id: str) -> schemas.Job | None:
+def get_job_by_id(job_id: str) -> models.Job | None:
     """
     Retrieves a single job by its ID.
     """
     JobQuery = Query()
     job_data = db.get(JobQuery.id == job_id)
     if job_data:
-        return schemas.Job(**job_data)
+        return models.Job(**job_data)
     return None
 
 
-def update_job_status(job_id: str, status: schemas.JobStatus) -> None:
+def update_job_status(job_id: str, status: models.JobStatus) -> None:
     """
     Updates the status of a single job in a robust way.
 
@@ -78,7 +75,7 @@ def update_job_status(job_id: str, status: schemas.JobStatus) -> None:
 
     if job_doc:
         # Load the document into a Pydantic model
-        job = schemas.Job(**job_doc)
+        job = models.Job(**job_doc)
         # Update the status
         job.status = status
         # Write the entire updated object back to the DB
@@ -88,7 +85,7 @@ def update_job_status(job_id: str, status: schemas.JobStatus) -> None:
 
         loop = asyncio.get_event_loop()
         if loop.is_running():
-            coro = job_queue_ws_manager.broadcast(
+            coro = websocket_manager.broadcast(
                 {
                     "jobs": [j.model_dump(mode="json") for j in get_all_jobs()],
                     "consumer_status": "running" if is_consumer_running() else "stopped",
@@ -97,7 +94,7 @@ def update_job_status(job_id: str, status: schemas.JobStatus) -> None:
             asyncio.ensure_future(coro)
         else:
             loop.run_until_complete(
-                job_queue_ws_manager.broadcast(
+                websocket_manager.broadcast(
                     {
                         "jobs": [j.model_dump(mode="json") for j in get_all_jobs()],
                         "consumer_status": "running" if is_consumer_running() else "stopped",
@@ -121,7 +118,7 @@ def remove_job_from_queue(job_id: str) -> bool:
     return len(result) > 0
 
 
-def trigger_next_job() -> schemas.Job | None:
+def trigger_next_job() -> models.Job | None:
     """
     Finds the next job to run based on priority, and enqueues it in Huey.
 
@@ -133,7 +130,7 @@ def trigger_next_job() -> schemas.Job | None:
     all_jobs = get_all_jobs()
 
     # Filter for queued jobs
-    queued_jobs = [j for j in all_jobs if j.status == schemas.JobStatus.queued]
+    queued_jobs = [j for j in all_jobs if j.status == models.JobStatus.queued]
     if not queued_jobs:
         return None
 
@@ -148,7 +145,7 @@ def trigger_next_job() -> schemas.Job | None:
     )
 
     # Enqueue the job for execution in the background
-    job_tasks.execute_job_task(job_data=next_job.model_dump(), priority=next_job.priority.value)
+    execute_tasks.execute_job_task(job_data=next_job.model_dump(), priority=next_job.priority.value)
 
     # Update the job's status to "queued" in Huey (or "running" conceptually)
     # update_job_status(str(next_job.id), models.JobStatus.running)
@@ -156,7 +153,7 @@ def trigger_next_job() -> schemas.Job | None:
     return next_job
 
 
-async def update_job(job_id: str, job_in: schemas.Job | schemas.JobUpdate) -> schemas.Job | None:
+async def update_job(job_id: str, job_in: models.Job | models.JobUpdate) -> models.Job | None:
     """
     Updates a job in the database.
 
@@ -201,7 +198,7 @@ def is_consumer_running() -> bool:
 
     loop = asyncio.get_event_loop()
     if loop.is_running():
-        coro = job_queue_ws_manager.broadcast(
+        coro = websocket_manager.broadcast(
             {
                 "consumer_status": "running" if is_running else "stopped",
             }
@@ -209,7 +206,7 @@ def is_consumer_running() -> bool:
         asyncio.ensure_future(coro)
     else:
         loop.run_until_complete(
-            job_queue_ws_manager.broadcast(
+            websocket_manager.broadcast(
                 {
                     "consumer_status": "running" if is_running else "stopped",
                 }
@@ -296,16 +293,16 @@ def kill_job_process(job_id: str) -> dict[str, Any]:
         return {"success": False, "message": f"Job {job_id} not found."}
     pid = job.pid
     if not pid:
-        update_job_status(job_id, schemas.JobStatus.pending)
+        update_job_status(job_id, models.JobStatus.pending)
         return {"success": False, "message": f"No PID found for job {job_id}."}
     try:
         os.kill(int(pid), signal.SIGKILL)
 
-        update_job_status(job_id, schemas.JobStatus.pending)
+        update_job_status(job_id, models.JobStatus.pending)
 
         return {"success": True, "message": f"Job {job_id} (PID {pid}) killed."}
     except ProcessLookupError:
-        update_job_status(job_id, schemas.JobStatus.pending)
+        update_job_status(job_id, models.JobStatus.pending)
         return {"success": True, "message": f"Job {job_id} (PID {pid}) not found."}
     except Exception as e:
         return {"success": False, "message": f"Failed to kill job {job_id}: {e}"}
