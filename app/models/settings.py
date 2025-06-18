@@ -1,6 +1,7 @@
+import os
 from pathlib import Path
 
-from pydantic import validator
+from pydantic import root_validator, validator
 
 from framework.core.env import load_env
 from framework.models.settings import PythonFastAPIBaseSettings
@@ -25,6 +26,16 @@ class Settings(PythonFastAPIBaseSettings):
                 "EXPORT_API_KEY must be provided via environment variable or .env file"
             )
         return v
+
+    @root_validator(pre=True)
+    def set_base_domain(cls, values: dict) -> dict:
+        """Set BASE_DOMAIN based on ENV_NAME."""
+        env_name = values.get("ENV_NAME")
+        if env_name == "playground":
+            runpod_pod_id = os.environ.get("RUNPOD_POD_ID")
+            port = 1000
+            values["BASE_DOMAIN"] = f"{runpod_pod_id}-{port}.proxy.runpod.net"
+        return values
 
 
 def get_settings(env_file_path: Path | str, version: str | None = None) -> Settings:
