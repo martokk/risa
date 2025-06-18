@@ -16,7 +16,7 @@ class SystemStatus(BaseModel):
     free_disk_space: float
 
 
-def get_gpu_stats() -> dict[str, float]:
+def get_gpu_stats() -> dict[str, Any]:
     try:
         result = subprocess.run(
             [
@@ -36,7 +36,10 @@ def get_gpu_stats() -> dict[str, float]:
         }
         return status
     except Exception:
-        return {}
+        return {
+            "gpu_usage": None,
+            "gpu_memory_used": None,
+        }
 
 
 def get_cpu_stats() -> dict[str, float]:
