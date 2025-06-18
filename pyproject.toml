@@ -61,6 +61,7 @@ huey = {extras = ["sqlite"], version = "^2.5.3"}
 tinydb = "^4.8.2"
 debugpy = "^1.8.14"
 psycopg2-binary = "^2.9.10"
+toml = "^0.10.2"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "^1.7.10"
