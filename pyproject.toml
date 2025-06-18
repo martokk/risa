@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "app"
-version = "0.0.6"
+version = "0.0.7"
 description = "risa"
 readme = "README.md"
 authors = ["martokk <25113632+martokk@users.noreply.github.com>"]
