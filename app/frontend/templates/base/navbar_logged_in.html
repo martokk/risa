@@ -1,5 +1,5 @@
 <nav
-    class="navbar navbar-expand-lg navbar-dark bg-accent">
+    class="navbar navbar-expand-lg navbar-dark bg-accent py-0">
     <div class="container-fluid">
         <a class="navbar-brand" href="/">{{ PROJECT_NAME }}{% if ENV_NAME != "production" %} ({{ ENV_NAME }}){% endif
             %}</a>
@@ -22,7 +22,7 @@
                         aria-expanded="false">
                         Manage
                     </a>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu border-accent">
                         <li>
                             <a class="dropdown-item" href="/sd-base-models">SD Base Models</a>
                         </li>
@@ -45,7 +45,7 @@
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Safetensor Import Helper
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
                         <li>
                             <a class="dropdown-item" href="http://localhost:5000/tools/safetensor-import-helper">All Models</a>
                         </li>
@@ -69,7 +69,7 @@
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         rPLAYGROUND
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
                         <li>
                             <a class="dropdown-item" href="">rPLAYGROUND</a>
                         </li>
@@ -148,7 +148,7 @@
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         rLOCAL
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
 
                         <li>
                             <a class="dropdown-item" href="http://localhost:5000/">rLOCAL</a>
@@ -182,7 +182,7 @@
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         rHOST
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
 
                         <li>
                             <a class="dropdown-item" href="http://risahost.duckdns.org:5000/">rHOST</a>
@@ -209,7 +209,7 @@
                         aria-expanded="false">
                         Tools
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                    <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
                             <li>
                                 <a class="dropdown-item" href="http://localhost:5000/tools/dataset-tagger/setup">Dataset Tagger</a>
                             </li>
@@ -230,7 +230,7 @@
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         State
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="stateDropdown">
+                    <ul class="dropdown-menu border-accent" aria-labelledby="stateDropdown">
                         <li>
                             <a class="dropdown-item" href="/state/instance">Instance State</a>
                         </li>

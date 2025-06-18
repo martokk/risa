@@ -89,7 +89,7 @@ async def update_job_status(job_id: str, body: dict = Body(...)) -> JSONResponse
 
 
 @router.post("/{job_id}/kill")
-async def kill_job(job_id: str) -> dict[str, Any]:
+async def kill_job(job_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
     """Immediately kill a running job by its PID.
 
     Args:
@@ -101,7 +101,7 @@ async def kill_job(job_id: str) -> dict[str, Any]:
     Raises:
         HTTPException: If the job could not be killed.
     """
-    result = kill_job_process(job_id)
+    result = kill_job_process(job_id, db)
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result

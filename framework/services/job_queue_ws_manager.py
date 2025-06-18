@@ -5,4 +5,4 @@ class JobQueueConnectionManager(WebSocketManager):
     pass
 
 
-websocket_manager = JobQueueConnectionManager()
+job_queue_ws_manager = JobQueueConnectionManager()
