@@ -47,6 +47,7 @@ COPY /framework /framework
 COPY /start.sh /start.sh
 COPY /migrations /migrations
 COPY /alembic.ini /alembic.ini
+COPY /pyproject.toml /pyproject.toml
 RUN chmod +x /start.sh
 
 # venv already has runtime deps installed we get a quicker install
