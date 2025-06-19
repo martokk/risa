@@ -25,7 +25,9 @@ class AppManagerApp(BaseModel):
         try:
             import requests
 
-            response = requests.get(f"http://localhost:{self.port_connect}/", timeout=5)
+            response = requests.get(
+                f"http://127.0.0.1:{self.port_connect}/", timeout=2, allow_redirects=True
+            )
             # Check for A1111 specific content
             return self.name.lower() in response.text.lower()
         except Exception as e:

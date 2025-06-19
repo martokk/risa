@@ -19,5 +19,8 @@ def hook_get_templates(templates: Jinja2Templates) -> Jinja2Templates:
 
     templates.env.globals["RISA_PLAYGROUND_ACCENT"] = network_state.playground.accent
     templates.env.globals["RISA_PLAYGROUND_BASE_DOMAIN"] = network_state.playground.base_domain
+    templates.env.globals["RISA_PLAYGROUND_RUNPOD_POD_ID"] = (
+        f"https://{network_state.playground.runpod_pod_id}"
+    )
 
     return templates
