@@ -31,9 +31,15 @@
     </td>
     <td class="text-end">
         <div class="btn-group" role="group">
-            {% if job.status == 'pending' or job.status == 'queued' %}
+
+            {% if job.status == 'pending' %}
                 <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="startOrRetryJob(event, '{{ job.id }}')"><i class="fas fa-play"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
+
+            {% elif job.status == 'queued' %}
+                <button class="btn btn-sm btn-outline-warning" title="Unqueue Job" onclick="unqueueJob(event, '{{ job.id }}')" disabled><i class="fas fa-clock"></i></button>
+                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
+
             {% elif job.status == 'running' %}
                 <button class="btn btn-sm btn-outline-warning" title="Stop Job" onclick="stopJob(event, '{{ job.id }}')"><i class="fas fa-stop"></i></button>
                 <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i
@@ -42,10 +48,12 @@
             {% elif job.status == 'failed' %}
                 <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="startOrRetryJob(event, '{{ job.id }}')"><i class="fas fa-sync-alt"></i></button>
                 <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i class="fas fa-file-alt"></i></button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button
+                >
             {% elif job.status == 'done' %}
                 <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i class="fas fa-file-alt"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
+                
             {% endif %}
         </div>
     </td>
@@ -56,15 +64,22 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Jobs ({{ ENV_NAME }})</h3>
+
         <div class="d-flex align-items-center">
             <span id="consumerStatusBadge" class="ms-2 me-2"></span>
             <div class="btn-group me-2" role="group">
-                <button type="button" class="btn btn-outline-success" id="startConsumerBtn" title="Start Huey Consumer">
+                <button type="button" class="btn btn-outline-secondary" id="startConsumerBtn" title="Start Huey Consumer">
                     <i class="fas fa-play"></i>                 </button>
-                <button type="button" class="btn btn-outline-danger" id="stopConsumerBtn" title="Stop Huey Consumer">
+                <button type="button" class="btn btn-outline-secondary" id="stopConsumerBtn" title="Stop Huey Consumer">
                     <i class="fas fa-stop"></i>
                 </button>
+                <button type="button" class="btn btn-outline-secondary" id="viewLogBtn" title="View Log" disabled>
+                    <i class="fas fa-file-alt"></i>
+                </button>
             </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
             <button type="button" class="btn btn-primary ms-5" data-bs-toggle="modal" data-bs-target="#jobModal">
                 <i class="fas fa-plus"></i> Add Job
             </button>
@@ -409,9 +424,14 @@
             : job.status === 'failed' ? 'bg-danger'
             : 'bg-secondary';
         let actions = '';
-        if (job.status === 'pending' || job.status === 'queued') {
+        if (job.status === 'pending') {
             actions = `
-                <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="startOrRetryJob(event, '${job.id}')"><i class="fas fa-play"></i></button>
+                <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="startOrRetryJob(event, '${job.id}')"><i class="fas fa-plus"></i></button>
+                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
+            `;
+        } else if (job.status === 'queued') {
+            actions = `
+                <button class="btn btn-sm btn-outline-warning" title="Unqueue Job" onclick="unqueueJob(event, '${job.id}')" disabled><i class="fas fa-clock"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
             `;
         } else if (job.status === 'running') {
