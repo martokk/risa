@@ -1,5 +1,9 @@
 from fastapi.templating import Jinja2Templates
 
+from app.frontend.templates.filters import (
+    filter_humanize_network,
+    filter_humanize_network_text_color,
+)
 from app.logic.state import get_network_state
 from framework.core.db import get_db_context
 
@@ -8,6 +12,11 @@ def hook_get_templates(templates: Jinja2Templates) -> Jinja2Templates:
     with get_db_context() as db:
         network_state = get_network_state(db=db)
 
+    # Add custom filters to templates
+    templates.env.filters["humanize_network"] = filter_humanize_network
+    templates.env.filters["humanize_network_text_color"] = filter_humanize_network_text_color
+
+    # Add global variables to templates
     templates.env.globals["RISA_HOST_ACCENT"] = network_state.host.accent
     templates.env.globals["RISA_HOST_BASE_DOMAIN"] = network_state.host.base_domain
 

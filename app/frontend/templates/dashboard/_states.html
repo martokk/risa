@@ -19,7 +19,7 @@
                             <td>{{ instance_state.id }}</td>
                             <td>{{ instance_state.project_name }}</td>
                             <td>{{ instance_state.base_domain }}</td>
-                            <td>{{ instance_state.last_updated | humanize if instance_state.last_updated else '' }}</td>
+                            <td>{{ instance_state.last_updated | humanize_network if instance_state.last_updated else '' }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -48,7 +48,7 @@
                                 <td>{{ s.id if s else env }}</td>
                                 <td>{{ s.project_name if s else '' }}</td>
                                 <td>{{ s.base_domain if s else '' }}</td>
-                                <td>{{ s.last_updated | humanize if s and s.last_updated else '' }}</td>
+                                <td>{{ s.last_updated | humanize_network if s and s.last_updated else '' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
