@@ -30,7 +30,7 @@ from framework.services import notify
 #     )
 
 
-async def periodic_instance_state_update() -> None:
+async def recurring_task_to_update_instatnce_state() -> None:
     """Periodically update the instance state."""
     while True:
         try:
@@ -38,7 +38,7 @@ async def periodic_instance_state_update() -> None:
             logger.info("Instance state updated.")
         except Exception as e:
             logger.error(f"Error updating instance state: {e}")
-        await asyncio.sleep(5 * 60)  # 5 minutes
+        await asyncio.sleep(4 * 60)  # 4 minutes
 
 
 async def startup_event(db: Session | None = None) -> None:
@@ -66,16 +66,23 @@ async def startup_event(db: Session | None = None) -> None:
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup
     await startup_event()
-    start_idle_watcher()
 
-    # Start the periodic task
-    update_task = asyncio.create_task(periodic_instance_state_update())
+    # Start the idle watcher
+    if settings.ENV_NAME == "playground":
+        start_idle_watcher()
+
+    # Start the recurring task to update the instance state
+    update_task = asyncio.create_task(recurring_task_to_update_instatnce_state())
 
     yield
 
     # Shutdown
-    stop_idle_watcher()
+    if settings.ENV_NAME == "playground":
+        stop_idle_watcher()
+
+    # Cancel the recurring task to update the instance state
     update_task.cancel()
+
     with suppress(asyncio.CancelledError):
         await update_task
 
