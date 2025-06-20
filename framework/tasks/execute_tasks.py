@@ -24,6 +24,8 @@ def run_command_job(db: Session, db_job: models.Job) -> None:
     Args:
         job: The job to execute.
     """
+    logger.info(f"Recieved run_command_job() request for job `{db_job.name}` - `{db_job.id}`")
+
     log_file_name = f"job_{db_job.id}_retry_{db_job.retry_count}.txt"
     log_path = paths.JOB_LOGS_PATH / log_file_name
 
@@ -46,35 +48,35 @@ def run_command_job(db: Session, db_job: models.Job) -> None:
 
             # Update the job with the PID
             db_job.pid = process.pid
-            logger.info(f"Job `{db_job.id}` started with PID `{db_job.pid}`")
+            logger.info(f"Job {db_job.id}: Job started with PID {db_job.pid}")
 
-            crud.job.update(db, obj_in=models.JobUpdate(pid=db_job.pid), db_obj=db_job)
+            crud.job.sync.update(db, obj_in=models.JobUpdate(pid=db_job.pid), db_obj=db_job)
 
             # Read and write output in real-time
             if process.stdout:
                 for line in process.stdout:
                     log_file.write(line)
                     log_file.flush()  # Ensure immediate writing to disk
-                    logger.debug(f"Job {db_job.id} output: {line.strip()}")
+                    logger.debug(f"Job {db_job.id}: OUTPUT: {line.strip()}")
 
             # Wait for the process to complete
             return_code = process.wait()
 
             if return_code == 0:
-                logger.info(f"Job `{db_job.id}` executed successfully.")
+                logger.info(f"Job {db_job.id}: SUCCESSFULLY COMPLETED")
             else:
-                error_msg = f"Job `{db_job.id}` failed with exit code `{return_code}`"
+                error_msg = f"Job {db_job.id}: FAILED: exit code {return_code}"
                 logger.error(error_msg)
                 raise subprocess.CalledProcessError(return_code, db_job.command)
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"Job `{db_job.id}` failed: {str(e)}")
+        logger.error(f"Job {db_job.id}: FAILED: {str(e)}")
 
         with open(log_path, "a") as log_file:
-            log_file.write(f"Job `{db_job.id}` failed: {str(e)}\n")
+            log_file.write(f"Job {db_job.id}: FAILED: {str(e)}\n")
         raise  # Re-raise the exception to be caught by the Huey task
     except Exception as e:
-        logger.error(f"Unexpected error in job `{db_job.id}`: {str(e)}")
+        logger.error(f"Job {db_job.id}: UNEXPECTED ERROR: {str(e)}")
         raise
 
 
@@ -108,12 +110,10 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
     Version: 5
     """
     logger.info("\n\n\n")
-    logger.info(f"--- HUEY CONSUMER: EXECUTING JOB TASK (v5) for job_id: {job_id} ---")
+    logger.info(f"--- HUEY CONSUMER: EXECUTING JOB TASK for job_id: {job_id} ---")
 
     with get_db_context() as db:
         db_job = crud.job.get(db, id=job_id)
-
-    logger.info(f"Job Name: {db_job.name if db_job else 'None'}")
 
     if not db_job:
         logger.error(f"Huey Consumer could not find job with ID: {job_id}. Aborting task.")
@@ -121,14 +121,14 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
 
     job_succeeded = False
     try:
-        logger.info(f"Executing job {db_job.id} of type {db_job.type.value}")
+        logger.info(f"Job {db_job.id}: Requesting execution...")
         if db_job.type == models.JobType.command:
             try:
                 run_command_job(db=db, db_job=db_job)
                 job_succeeded = True
             except Exception as e:
                 if "died with <Signals.SIGKILL: 9>" in str(e):
-                    logger.error(f"Job {db_job.id} was killed by SIGKILL signal")
+                    logger.error(f"Job {db_job.id}: KILLED by SIGKILL signal")
                     # Handle SIGKILL specifically - could add custom handling here
 
                     # Update Status
@@ -142,10 +142,9 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
         elif db_job.type == models.JobType.api_post:
             run_api_post_job(db_job)
             job_succeeded = True
-        logger.info(f"Job {db_job.id} execution part finished.")
 
     except Exception as e:
-        logger.error(f"Job {db_job.id} failed with exception: {e}", exc_info=True)
+        logger.error(f"Job {db_job.id}: FAILED: {e}", exc_info=True)
 
         # Update Status
         with get_db_context() as db:
@@ -154,14 +153,14 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
 
     finally:
         if job_succeeded:
-            logger.info(f"Job {db_job.id} succeeded. Updating status to 'done'.")
-
             # Update Status
             with get_db_context() as db:
                 obj_in = models.JobUpdate(status=models.JobStatus.done)
                 db_job = crud.job.update(db, db_obj=db_job, obj_in=obj_in)
 
-        logger.info(f"--- HUEY CONSUMER: FINISHED JOB TASK (v5) for job {db_job.id} ---")
+            logger.info(f"Job {db_job.id}: Updated status to 'done'.")
+
+        logger.info(f"--- HUEY CONSUMER: FINISHED JOB TASK for job {db_job.id} ---")
 
 
 @huey.periodic_task(crontab(minute="0"))  # TODO: NOT IMPLEMENTED YET
