@@ -2,11 +2,13 @@
 This service monitors GPU activity and triggers jobs when the system is idle.
 """
 
+import asyncio
 import subprocess
 import threading
 import time
 
 from app import logger, settings
+from framework.core.db import get_db_context
 from framework.services import job_queue
 
 
@@ -71,7 +73,8 @@ class IdleWatcher(threading.Thread):
                         f"Idle timeout of {settings.IDLE_TIMEOUT_MINUTES} minutes reached. Triggering next job."
                     )
                     # Trigger the next job from the queue
-                    job_queue.trigger_next_job()
+                    with get_db_context() as db:
+                        asyncio.run(job_queue.trigger_next_job(db))
                     # Reset the idle timer after triggering a job to wait again
                     self.idle_start_time = None
             else:

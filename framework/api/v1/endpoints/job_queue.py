@@ -18,7 +18,6 @@ from framework.services.job_queue import (
     start_consumer_process,
     stop_consumer_process,
 )
-from framework.tasks import execute_tasks
 
 
 router = APIRouter(prefix="/jobs", tags=["Job Queue"])
@@ -120,8 +119,8 @@ async def retry_job(job_id: str, db: Session = Depends(get_db)) -> dict[str, Any
         db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.queued)
     )
 
-    # Enqueue the task, ensuring we pass the ID as a string.
-    execute_tasks.execute_job_task(str(job.id), priority=job.priority)
+    # # Enqueue the task, ensuring we pass the ID as a string.
+    # execute_tasks.execute_job_task(str(job.id), priority=job.priority)
 
     logger.info(f"Job {job_id} has been re-enqueued with status 'Queued'.")
     return {"message": "Job has been re-enqueued."}

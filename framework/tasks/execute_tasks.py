@@ -14,7 +14,43 @@ from app import logger, paths
 from framework import crud, models
 from framework.core.db import get_db_context
 from framework.core.huey import huey
-from framework.services import job_queue
+
+
+def trigger_next_queued_job() -> None:
+    """
+    Finds the next queued job and triggers it for execution.
+    This function is called after a job completes to ensure continuous processing.
+    """
+    logger.info("--- HUEY CONSUMER: Checking for next queued job ---")
+
+    with get_db_context() as db:
+        # Get all jobs and filter for queued status
+        all_jobs = crud.job.sync.get_all(db)
+        queued_jobs = [j for j in all_jobs if j.status == models.JobStatus.queued]
+
+        if not queued_jobs:
+            logger.info("No queued jobs found. Waiting for new jobs...")
+            return
+
+        # Sort by priority: highest -> high -> normal -> low -> lowest
+        priority_order = {
+            models.job.Priority.highest: 0,
+            models.job.Priority.high: 1,
+            models.job.Priority.normal: 2,
+            models.job.Priority.low: 3,
+            models.job.Priority.lowest: 4,
+        }
+        queued_jobs.sort(key=lambda j: priority_order[j.priority])
+
+        next_job = queued_jobs[0]
+
+        logger.info(
+            f"Triggering next job from queue: {next_job.id} ({next_job.name}) "
+            f"with priority {next_job.priority.value}"
+        )
+
+        # Enqueue the job for execution in Huey
+        execute_job_task(job_id=str(next_job.id), priority=priority_order[next_job.priority])
 
 
 def run_command_job(db: Session, db_job: models.Job) -> None:
@@ -50,7 +86,7 @@ def run_command_job(db: Session, db_job: models.Job) -> None:
             db_job.pid = process.pid
             logger.info(f"Job {db_job.id}: Job started with PID {db_job.pid}")
 
-            crud.job.sync.update(db, obj_in=models.JobUpdate(pid=db_job.pid), db_obj=db_job)
+            crud.job.sync.update(db, obj_in=models.JobUpdate(pid=db_job.pid), id=db_job.id)
 
             # Read and write output in real-time
             if process.stdout:
@@ -107,106 +143,193 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
     """
     Huey task to execute a job and update its status.
     This is the entry point for background job execution.
-    Version: 5
+    Version: 7 - Added proper status management and race condition protection
     """
     logger.info("\n\n\n")
     logger.info(f"--- HUEY CONSUMER: EXECUTING JOB TASK for job_id: {job_id} ---")
 
     with get_db_context() as db:
-        db_job = crud.job.get(db, id=job_id)
+        # First, try to claim the job by updating its status to "running"
+        # This prevents race conditions where multiple consumers might try to run the same job
+        db_job = crud.job.sync.get(db, id=job_id)
 
-    if not db_job:
-        logger.error(f"Huey Consumer could not find job with ID: {job_id}. Aborting task.")
-        return
+        if not db_job:
+            logger.error(f"Huey Consumer could not find job with ID: {job_id}. Aborting task.")
+            return
 
-    job_succeeded = False
-    try:
-        logger.info(f"Job {db_job.id}: Requesting execution...")
-        if db_job.type == models.JobType.command:
-            try:
-                run_command_job(db=db, db_job=db_job)
-                job_succeeded = True
-            except Exception as e:
-                if "died with <Signals.SIGKILL: 9>" in str(e):
-                    logger.error(f"Job {db_job.id}: KILLED by SIGKILL signal")
-                    # Handle SIGKILL specifically - could add custom handling here
+        # Check if job is still in queued status (race condition protection)
+        if db_job.status != models.JobStatus.queued:
+            logger.warning(
+                f"Job {db_job.id} is not in queued status (current: {db_job.status}). "
+                f"Another consumer may be processing it. Aborting task."
+            )
+            return
 
-                    # Update Status
-                    with get_db_context() as db:
+        # Atomically update job status to "running" to claim it
+        try:
+            obj_in = models.JobUpdate(status=models.JobStatus.running)
+            db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
+            logger.info(f"Job {db_job.id}: Status updated to 'running' - job claimed for execution")
+        except Exception as e:
+            logger.error(f"Job {db_job.id}: Failed to update status to 'running': {e}")
+            return
+
+        job_succeeded = False
+        try:
+            logger.info(f"Job {db_job.id}: Starting execution...")
+            if db_job.type == models.JobType.command:
+                try:
+                    run_command_job(db=db, db_job=db_job)
+                    job_succeeded = True
+                except Exception as e:
+                    if "died with <Signals.SIGKILL: 9>" in str(e):
+                        logger.error(f"Job {db_job.id}: KILLED by SIGKILL signal")
+                        # Handle SIGKILL specifically - could add custom handling here
+
                         obj_in = models.JobUpdate(status=models.JobStatus.pending)
-                        db_job = crud.job.update(db, db_obj=db_job, obj_in=obj_in)
+                        db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
 
-                    job_succeeded = False
-                else:
-                    raise  # Re-raise other exceptions
-        elif db_job.type == models.JobType.api_post:
-            run_api_post_job(db_job)
-            job_succeeded = True
+                        job_succeeded = False
+                    else:
+                        raise  # Re-raise other exceptions
+            elif db_job.type == models.JobType.api_post:
+                run_api_post_job(db_job)
+                job_succeeded = True
 
-    except Exception as e:
-        logger.error(f"Job {db_job.id}: FAILED: {e}", exc_info=True)
+        except Exception as e:
+            logger.error(f"Job {db_job.id}: FAILED: {e}", exc_info=True)
 
-        # Update Status
-        with get_db_context() as db:
+            # Update Status to failed
             obj_in = models.JobUpdate(status=models.JobStatus.failed)
-            db_job = crud.job.update(db, db_obj=db_job, obj_in=obj_in)
+            db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
 
-    finally:
-        if job_succeeded:
-            # Update Status
-            with get_db_context() as db:
+        finally:
+            if job_succeeded:
+                # Update Status to done
                 obj_in = models.JobUpdate(status=models.JobStatus.done)
-                db_job = crud.job.update(db, db_obj=db_job, obj_in=obj_in)
+                db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
 
-            logger.info(f"Job {db_job.id}: Updated status to 'done'.")
+                logger.info(f"Job {db_job.id}: Updated status to 'done'.")
 
-        logger.info(f"--- HUEY CONSUMER: FINISHED JOB TASK for job {db_job.id} ---")
+            logger.info(f"--- HUEY CONSUMER: FINISHED JOB TASK for job {db_job.id} ---")
+
+            # Trigger the next queued job after this one completes
+            trigger_next_queued_job()
+
+
+@huey.periodic_task(crontab(minute="*/1"))  # Check every minute
+def check_and_process_queued_jobs() -> None:
+    """
+    Periodic task that checks for queued jobs and triggers them for processing.
+    This ensures that jobs get processed even if the trigger_next_queued_job()
+    mechanism fails or if jobs are added while no jobs are running.
+    """
+    logger.info("--- HUEY CONSUMER: Periodic check for queued jobs ---")
+
+    with get_db_context() as db:
+        # Check if there are any running jobs
+        all_jobs = crud.job.sync.get_all(db)
+        running_jobs = [j for j in all_jobs if j.status == models.JobStatus.running]
+
+        # If no jobs are running, check for queued jobs
+        if not running_jobs:
+            queued_jobs = [j for j in all_jobs if j.status == models.JobStatus.queued]
+            if queued_jobs:
+                logger.info(
+                    f"Found {len(queued_jobs)} queued jobs with no running jobs. Triggering next job."
+                )
+                trigger_next_queued_job()
+            else:
+                logger.info("No running jobs and no queued jobs found.")
+        else:
+            logger.info(f"Found {len(running_jobs)} running job(s). Skipping queued job check.")
+
+
+@huey.periodic_task(crontab(minute="*/5"))  # Check every 5 minutes
+def cleanup_stuck_jobs() -> None:
+    """
+    Periodic task that checks for jobs that have been 'running' for too long
+    and may be stuck. This helps recover from situations where a job process
+    died but the status wasn't updated.
+    """
+    logger.info("--- HUEY CONSUMER: Checking for stuck jobs ---")
+
+    with get_db_context() as db:
+        all_jobs = crud.job.sync.get_all(db)
+        running_jobs = [j for j in all_jobs if j.status == models.JobStatus.running]
+
+        for job in running_jobs:
+            # Check if the process is still running
+            if job.pid:
+                try:
+                    import os
+
+                    os.kill(job.pid, 0)  # Check if process exists
+                    logger.debug(f"Job {job.id} with PID {job.pid} is still running")
+                except OSError:
+                    # Process is no longer running, but status wasn't updated
+                    logger.warning(
+                        f"Job {job.id} has PID {job.pid} but process is not running. Marking as failed."
+                    )
+                    obj_in = models.JobUpdate(status=models.JobStatus.failed)
+                    crud.job.sync.update(db, db_obj=job, obj_in=obj_in)
+            else:
+                # Job has no PID but is marked as running - this shouldn't happen
+                logger.warning(
+                    f"Job {job.id} is marked as running but has no PID. Marking as failed."
+                )
+                obj_in = models.JobUpdate(status=models.JobStatus.failed)
+                crud.job.sync.update(db, db_obj=job, obj_in=obj_in)
 
 
 @huey.periodic_task(crontab(minute="0"))  # TODO: NOT IMPLEMENTED YET
-def enqueue_hourly_jobs():
+def enqueue_hourly_jobs() -> None:
     """
     Periodically executed task to enqueue jobs marked as "hourly".
     """
     logger.info("Checking for hourly recurring jobs...")
-    all_jobs = job_queue.get_all_jobs()
-    for job in all_jobs:
-        if job.recurrence == "hourly":
-            logger.info(f"Spawning new job from recurring hourly job: {job.id}")
-            # Spawn a new job instance, don't re-add the same one.
-            new_job = job.model_copy(
-                update={
-                    "id": uuid4(),  # Generate a new ID
-                    "status": models.JobStatus.queued,
-                    "recurrence": None,  # The spawned job is not recurring
-                    "created_at": datetime.now(tz=timezone.utc),
-                    "retry_count": 0,
-                }
-            )
-            job_queue.add_job_to_queue(new_job)
+    with get_db_context() as db:
+        all_jobs = crud.job.sync.get_all(db)
+        for job in all_jobs:
+            if job.recurrence == "hourly":
+                logger.info(f"Spawning new job from recurring hourly job: {job.id}")
+                # Spawn a new job instance, don't re-add the same one.
+                new_job_data = job.model_copy(
+                    update={
+                        "id": uuid4(),  # Generate a new ID
+                        "status": models.JobStatus.queued,
+                        "recurrence": None,  # The spawned job is not recurring
+                        "created_at": datetime.now(tz=timezone.utc),
+                        "retry_count": 0,
+                    }
+                )
+                new_job_create = models.JobCreate.model_validate(new_job_data)
+                crud.job.sync.create(db, obj_in=new_job_create)
 
 
 @huey.periodic_task(crontab(minute="0", hour="0"))  # TODO: NOT IMPLEMENTED YET
-def enqueue_daily_jobs():
+def enqueue_daily_jobs() -> None:
     """
     Periodically executed task to enqueue jobs marked as "daily".
     """
     logger.info("Checking for daily recurring jobs...")
-    all_jobs = job_queue.get_all_jobs()
-    for job in all_jobs:
-        if job.recurrence == "daily":
-            logger.info(f"Spawning new job from recurring daily job: {job.id}")
-            # Spawn a new job instance, don't re-add the same one.
-            new_job = job.model_copy(
-                update={
-                    "id": uuid4(),  # Generate a new ID
-                    "status": models.JobStatus.queued,
-                    "recurrence": None,  # The spawned job is not recurring
-                    "created_at": datetime.now(tz=timezone.utc),
-                    "retry_count": 0,
-                }
-            )
-            job_queue.add_job_to_queue(new_job)
+    with get_db_context() as db:
+        all_jobs = crud.job.sync.get_all(db)
+        for job in all_jobs:
+            if job.recurrence == "daily":
+                logger.info(f"Spawning new job from recurring daily job: {job.id}")
+                # Spawn a new job instance, don't re-add the same one.
+                new_job_data = job.model_copy(
+                    update={
+                        "id": uuid4(),  # Generate a new ID
+                        "status": models.JobStatus.queued,
+                        "recurrence": None,  # The spawned job is not recurring
+                        "created_at": datetime.now(tz=timezone.utc),
+                        "retry_count": 0,
+                    }
+                )
+                new_job_create = models.JobCreate.model_validate(new_job_data)
+                crud.job.sync.create(db, obj_in=new_job_create)
 
 
 @huey.periodic_task(crontab(minute="0"))
