@@ -33,7 +33,7 @@
         <div class="btn-group" role="group">
 
             {% if job.status == 'pending' %}
-                <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="startOrRetryJob(event, '{{ job.id }}')"><i class="fas fa-play"></i></button>
+                <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="queueJob(event, '{{ job.id }}')"><i class="fas fa-play"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
 
             {% elif job.status == 'queued' %}
@@ -46,7 +46,7 @@
                         class="fas fa-file-alt"></i></button>
         
             {% elif job.status == 'failed' %}
-                <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="startOrRetryJob(event, '{{ job.id }}')"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="queueJob(event, '{{ job.id }}')"><i class="fas fa-sync-alt"></i></button>
                 <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i class="fas fa-file-alt"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button
                 >
@@ -61,7 +61,7 @@
 {% endmacro %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>Jobs ({{ ENV_NAME }})</h3>
 
@@ -363,15 +363,15 @@
         }
     };
 
-    window.startOrRetryJob = async function(event, jobId) {
+    window.queueJob = async function(event, jobId) {
         // Stop event propagation to prevent the row's onclick from firing
         event.stopPropagation();
         try {
-            await apiCrud.postText(`jobs/${jobId}/retry`, {});
-            toast.show('Job sent for execution.', 'success');
+            await apiCrud.putText(`jobs/${jobId}/status`, {"status": "queued"});
+            toast.show('Job queued.', 'success');
             //csetTimeout(() => uiHelpers.refreshPage(), 1000);
         } catch (error) {
-            toast.show(error.message || 'Failed to start job', 'danger');
+            toast.show(error.message || 'Failed to queue job', 'danger');
         }
     };
 
@@ -426,7 +426,7 @@
         let actions = '';
         if (job.status === 'pending') {
             actions = `
-                <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="startOrRetryJob(event, '${job.id}')"><i class="fas fa-plus"></i></button>
+                <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="queueJob(event, '${job.id}')"><i class="fas fa-plus"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
             `;
         } else if (job.status === 'queued') {
@@ -441,13 +441,13 @@
             `;
         } else if (job.status === 'failed') {
             actions = `
-                <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="startOrRetryJob(event, '${job.id}')"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="queueJob(event, '${job.id}')"><i class="fas fa-sync-alt"></i></button>
                 <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '${job.id}')"><i class="fas fa-file-alt"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
             `;
         } else if (job.status === 'done') {
             actions = `
-                <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="startOrRetryJob(event, '${job.id}')"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="queueJob(event, '${job.id}')"><i class="fas fa-sync-alt"></i></button>
                 <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '${job.id}')"><i class="fas fa-file-alt"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
             `;

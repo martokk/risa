@@ -6,6 +6,7 @@ import subprocess
 from datetime import datetime, timezone
 from uuid import uuid4
 
+import httpx
 import requests
 from huey import crontab
 from sqlmodel import Session
@@ -138,6 +139,20 @@ def run_api_post_job(job: models.Job) -> None:  # TODO: Not implemented yet (dum
         raise
 
 
+def push_jobs_to_websocket() -> None:
+    """
+    Push all jobs to the websocket.
+    """
+    try:
+        with httpx.Client() as client:
+            client.post(
+                "/api/v1/jobs/push-jobs-to-websocket",
+            )
+
+    except Exception as e:
+        logger.error(f"Failed to push jobs to websocket: {e}")
+
+
 @huey.task()
 def execute_job_task(job_id: str, priority: int = 100) -> None:
     """
@@ -169,6 +184,7 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
         try:
             obj_in = models.JobUpdate(status=models.JobStatus.running)
             db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
+            push_jobs_to_websocket()
             logger.info(f"Job {db_job.id}: Status updated to 'running' - job claimed for execution")
         except Exception as e:
             logger.error(f"Job {db_job.id}: Failed to update status to 'running': {e}")
@@ -188,6 +204,7 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
 
                         obj_in = models.JobUpdate(status=models.JobStatus.pending)
                         db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
+                        push_jobs_to_websocket()
 
                         job_succeeded = False
                     else:
@@ -202,12 +219,14 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
             # Update Status to failed
             obj_in = models.JobUpdate(status=models.JobStatus.failed)
             db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
+            push_jobs_to_websocket()
 
         finally:
             if job_succeeded:
                 # Update Status to done
                 obj_in = models.JobUpdate(status=models.JobStatus.done)
                 db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
+                push_jobs_to_websocket()
 
                 logger.info(f"Job {db_job.id}: Updated status to 'done'.")
 

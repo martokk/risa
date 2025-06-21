@@ -9,15 +9,15 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlmodel import Session
 
-from app import logger, paths
+from app import paths
 from framework import crud, models
 from framework.core.db import get_db
-from framework.services import job_queue
 from framework.services.job_queue import (
     kill_job_process,
     start_consumer_process,
     stop_consumer_process,
 )
+from framework.services.job_queue_ws_manager import job_queue_ws_manager
 
 
 router = APIRouter(prefix="/jobs", tags=["Job Queue"])
@@ -52,7 +52,20 @@ async def delete_job(job_id: str, db: Session = Depends(get_db)) -> None:
     """
     Delete a job.
     """
-    return await crud.job.delete(db, id=job_id)
+    return await crud.job.remove(db, id=job_id)
+
+
+@router.post("/push-jobs-to-websocket")
+async def push_jobs_to_websocket(db: Session = Depends(get_db)) -> None:
+    """
+    Push all jobs to the websocket.
+    """
+    jobs = await crud.job.get_all(db)
+    await job_queue_ws_manager.broadcast(
+        {
+            "jobs": [j.model_dump(mode="json") for j in jobs],
+        }
+    )
 
 
 @router.put("/{job_id}", response_model=models.Job)
@@ -66,7 +79,9 @@ async def update_job(
 
 
 @router.put("/{job_id}/status")
-async def update_job_status(job_id: str, body: dict = Body(...)) -> JSONResponse:
+async def update_job_status(
+    job_id: str, body: dict = Body(...), db: Session = Depends(get_db)
+) -> JSONResponse:
     """
     Update the status of a job and broadcast the update to websocket clients.
     Expects a JSON body: {"status": "running"}
@@ -80,7 +95,7 @@ async def update_job_status(job_id: str, body: dict = Body(...)) -> JSONResponse
         raise HTTPException(status_code=400, detail=f"Invalid status: {status_value}")
 
     # Update the job status in the database
-    await job_queue.update_job_status(job_id=job_id, status=status)
+    await crud.job.update(db, id=job_id, obj_in=models.JobUpdate(status=status))
 
     return JSONResponse(
         content={"success": True, "message": f"Job {job_id} status updated to {status.value}"}
@@ -104,26 +119,6 @@ async def kill_job(job_id: str, db: Session = Depends(get_db)) -> dict[str, Any]
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["message"])
     return result
-
-
-@router.post("/{job_id}/retry", status_code=202)
-async def retry_job(job_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
-    """
-    Retries a job by setting its status to 'Queued' and re-enqueuing it.
-    """
-    logger.info(f"Received request to retry job: {job_id}")
-    job = await crud.job.get(db, id=job_id)
-
-    # Update status to 'Queued' to provide immediate and accurate feedback.
-    db_job = await crud.job.update(
-        db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.queued)
-    )
-
-    # # Enqueue the task, ensuring we pass the ID as a string.
-    # execute_tasks.execute_job_task(str(job.id), priority=job.priority)
-
-    logger.info(f"Job {job_id} has been re-enqueued with status 'Queued'.")
-    return {"message": "Job has been re-enqueued."}
 
 
 @router.get("/{job_id}/log", response_class=PlainTextResponse)

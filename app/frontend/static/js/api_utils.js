@@ -240,6 +240,24 @@ export const apiCrud = {
     },
 
     /**
+     * Put text to api endpoint
+     * @param {string} endpoint - API endpoint
+     * @param {Object} postData - Data to send to endpoint
+     * @param {HTMLElement} [loadingTarget] - Optional target element to attach loading spinner
+     * @returns {Promise} API response
+     */
+    async putText(endpoint, postData, loadingTarget = null) {
+        console.log(`Putting text to ${endpoint}`);
+        const response = await makeRequest(`${API_CONFIG.baseUrl}/${endpoint}`, {
+            method: 'PUT',
+            headers: getHeaders(),
+            body: JSON.stringify(postData),
+            loadingTarget
+        });
+        return handleResponse(response, `Failed to put text to ${endpoint}`);
+    },
+
+    /**
      * Update an entity
      * @param {string} entityType - Type of entity
      * @param {string|number} id - Entity ID
