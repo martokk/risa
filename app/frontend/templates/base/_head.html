@@ -1,0 +1,73 @@
+<head>
+    <!-- Essential Meta Tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#f7df71">
+    <link rel="canonical" href="{{ BASE_URL}}{{ request.url.path }}">
+
+    <!-- Preload Critical Resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="/static/css/styles.css" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+        as="style">
+
+
+    <!-- OG Meta Tags -->
+    <meta property="og:image" content="/static/images/logos/og-logo.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:title" content="{{ PROJECT_NAME }}" />
+    <meta property="og:description" content="{{ PROJECT_DESCRIPTION }}" />
+    <meta property="og:url" content="{{ BASE_URL }}/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="{{ PROJECT_NAME }}">
+
+    <!-- Standard Meta Tags -->
+    <meta name="description" content="{{ PROJECT_DESCRIPTION }}">
+    <meta name="author" content="{{ PROJECT_NAME }}">
+    <meta name="keywords" content="">
+
+    <!-- Robots -->
+    <meta name="robots" content="index, follow">
+
+
+    <!-- X Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ PROJECT_NAME }}">
+    <meta name="twitter:description" content="{{ PROJECT_DESCRIPTION }}">
+    <meta name="twitter:image" content="/static/images/logos/og-logo.png">
+
+    <!-- Title -->
+    <title>{{ PROJECT_NAME }}: {% block title %}{% endblock %}</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" href="/static/images/favicons/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/static/images/favicons/favicon.svg" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/favicons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="{{ PROJECT_NAME }}" />
+    <link rel="manifest" href="/static/images/favicons/site.webmanifest" />
+
+    <!-- Third-party CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    {#
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css"> #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/components/inline-editor.css">
+    
+    {% include 'base/_style.html' %}
+
+
+    {% block head %}
+    {% endblock head %}
+</head>

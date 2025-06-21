@@ -216,10 +216,9 @@ def update(id: int, data: dict, db: Session = Depends(get_db)):
 ## Template Implementation (app/frontend/templates/root/[entity].html)
 
 ```html
-{% extends "base/base.html" %}
+{% extends "base/container.html" %}
 
 {% block title %}[Entities]{% endblock %}
-{% block content_header %}[Entities]{% endblock %}
 
 {% block content %}
 <div class="container">

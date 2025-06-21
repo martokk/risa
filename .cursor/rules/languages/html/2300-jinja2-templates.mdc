@@ -44,7 +44,7 @@ alwaysApply: false
 
 <example>
 {# New page template #}
-{% extends "base/base.html" %}
+{% extends "base/container.html" %}
 
 {% block title %}My Page Title{% endblock %}
 {% block meta_description %}Description for search engines{% endblock %}
@@ -72,7 +72,7 @@ alwaysApply: false
 
 <example type="invalid">
 {# Incorrect template usage #}
-{% extends "base/base.html" %}
+{% extends "base/container.html" %}
 
 {% block content %}
     <div class="container">
@@ -112,7 +112,7 @@ alwaysApply: false
 </html>
 
 {# admin/base.html - Admin template #}
-{% extends "base/base.html" %}
+{% extends "base/container.html" %}
 {% block content %}
     <div class="admin-container">
         {% block admin_content %}{% endblock %}

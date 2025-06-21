@@ -1,0 +1,294 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-accent py-0">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">{{ PROJECT_NAME }}{% if ENV_NAME != "production" %} ({{ ENV_NAME }}){% endif
+            %}</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+            {% if current_user %}
+                <!-- User Logged In -->
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                    <!-- Characters -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/characters">Characters</a>
+                    </li>
+
+                    <!-- Manage -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Manage
+                        </a>
+                        <ul class="dropdown-menu border-accent">
+                            <li>
+                                <a class="dropdown-item" href="/sd-base-models">SD Base Models</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/sd-checkpoints">SD Checkpoints</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/sd-extra-networks">SD Extra Networks</a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/characters">Characters</a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+                    <!-- rPLAYGROUND -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            rPLAYGROUND
+                        </a>
+                        <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
+
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-3000.proxy.runpod.net">A1111 WebUI</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-3010.proxy.runpod.net">Kohya_ss GUI</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-3020.proxy.runpod.net">ComfyUI</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-3030.proxy.runpod.net">InvokeAI</a>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-8010.proxy.runpod.net">TensorBoard</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-2000.proxy.runpod.net">Code Server</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-2010.proxy.runpod.net">Jupyter Lab</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-9999.proxy.runpod.net">WebDAV: File Server</a>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic" href="">TODO: LOG VIEWER</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic" href="">TODO: TERMINAL SPLIT SCREEN</a>
+                            </li>
+
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic"
+                                    href="{{ RISA_PLAYGROUND_BASE_DOMAIN }}">rPLAYGROUND</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic"
+                                    href="{{ RISA_PLAYGROUND_BASE_DOMAIN }}/dashboard">Dashboard (rPLAYGROUND)</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic"
+                                    href="{{ RISA_PLAYGROUND_BASE_DOMAIN }}/jobs">Job Queue (rPLAYGROUND)</a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+
+                    <!-- rLOCAL -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            rLOCAL
+                        </a>
+                        <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
+
+
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/tools/dataset-tagger/setup">Dataset Tagger</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/tools/fix-civitai-download-filenames">Fix
+                                    Civitai Filenames</a>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/tools/safetensor-import-helper">Import Helper:
+                                    All</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/tools/safetensor-import-helper/?sd_base_model_id=flux">Import
+                                    Helper: Flux</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/tools/safetensor-import-helper/?sd_base_model_id=illustrious">Import
+                                    Helper: Illustrious</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/tools/safetensor-import-helper/?sd_base_model_id=sdxl">Import
+                                    Helper: SDXL</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/tools/safetensor-import-helper/?sd_base_model_id=pony">Import
+                                    Helper: Pony</a>
+                            </li>
+
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/">rLOCAL</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/dashboard">Dashboard (rLOCAL)</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic"
+                                    href="http://{{ RISA_LOCAL_BASE_DOMAIN }}/jobs">Job Queue (rLOCAL)</a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+                    <!-- rHOST -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            rHOST
+                        </a>
+                        <ul class="dropdown-menu border-accent" aria-labelledby="toolsDropdown">
+
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic"
+                                    href="http://{{ RISA_HOST_BASE_DOMAIN }}/">rHOST</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic"
+                                    href="http://{{ RISA_HOST_BASE_DOMAIN }}/dashboard">Dashboard (rHOST)</a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item text-secondary fst-italic"
+                                    href="http://{{ RISA_HOST_BASE_DOMAIN }}/jobs">Job Queue (rHOST)</a>
+                            </li>
+
+                        </ul>
+                    </li>
+
+
+
+                    <!-- Network Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Network
+                        </a>
+                        <ul class="dropdown-menu border-accent" aria-labelledby="networkDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/state/instance">Instance State</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/state/network">Network State</a>
+                            </li>
+                        </ul>
+                    </li>
+
+                </ul>
+
+                {#
+                <ul class="navbar-nav ml-auto navbar-right">
+                
+                    <li class="nav-item">
+                        <a class="nav-link" href="/account">
+                            <i class="fa fa-user"></i> Account</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="fa fa-sign-out-alt"></i> Log Out</a>
+                    </li>
+                </ul> #}
+
+            {% else %}
+                <!-- User Not Logged In -->
+                <ul class="navbar-nav ml-auto navbar-right">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">
+                            <i class="fa fa-user-plus"></i> Sign Up</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">
+                            <i class="fa fa-sign-in-alt"></i> Login</a>
+                    </li>
+                </ul>
+            {% endif %}
+
+        </div>
+    </div>
+</nav>

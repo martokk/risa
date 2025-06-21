@@ -1,4 +1,4 @@
-{% extends "base/base.html" %}
+{% extends "base/container.html" %}
 
 {% if character %}
     {% set title = "View/Edit Character: " ~ character.name %}
@@ -7,7 +7,6 @@
 {% endif %}
 
 {% block title %}{{ title }}{% endblock %}
-{% block content_header %}{{ title }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
