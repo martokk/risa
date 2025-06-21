@@ -1,0 +1,20 @@
+{% extends 'base/_html.html' %}
+
+{% block layout %}
+<div class="row m-3">
+    <!-- Column 1: Sidebar Left -->
+    <div class="col-md-3 mb-3">
+    </div>
+
+    <!-- Column 2: Content -->
+    <div class="col-md-6 mb-3">
+        {% include 'base/_alerts.html' %}
+        {% block content %} {% endblock content %}
+    </div>
+
+    <!-- Column 3: Sidebar Right -->
+    <div class="col-md-3 mb-3">
+        {% block sidebar_right %} {% endblock sidebar_right %}
+    </div>
+</div>
+{% endblock layout %}

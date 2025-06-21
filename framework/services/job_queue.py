@@ -12,7 +12,7 @@ from typing import Any
 from sqlmodel import Session
 
 from app import logger, paths
-from framework import crud, models, schemas
+from framework import crud, models
 from framework.services.job_queue_ws_manager import job_queue_ws_manager
 from framework.tasks import execute_tasks
 
@@ -28,7 +28,7 @@ async def broadcast_consumer_status(status: str) -> None:
     )
 
 
-def trigger_next_job(db: Session) -> models.Job | None:
+async def trigger_next_job(db: Session) -> models.Job | None:
     """
     Finds the next job to run based on priority, and enqueues it in Huey.
 
@@ -37,7 +37,7 @@ def trigger_next_job(db: Session) -> models.Job | None:
     """
     # This is a simplified priority queue. For a large number of jobs,
     # a more efficient querying method would be needed.
-    all_jobs = crud.job.get_all(db)
+    all_jobs = await crud.job.get_all(db)
 
     # Filter for queued jobs
     queued_jobs = [j for j in all_jobs if j.status == models.JobStatus.queued]
@@ -45,7 +45,13 @@ def trigger_next_job(db: Session) -> models.Job | None:
         return None
 
     # Sort by priority: high -> medium -> low
-    priority_order = {schemas.Priority.high: 0, schemas.Priority.normal: 1, schemas.Priority.low: 2}
+    priority_order = {
+        models.job.Priority.highest: 0,
+        models.job.Priority.high: 1,
+        models.job.Priority.normal: 2,
+        models.job.Priority.low: 3,
+        models.job.Priority.lowest: 4,
+    }
     queued_jobs.sort(key=lambda j: priority_order[j.priority])
 
     next_job = queued_jobs[0]
@@ -54,11 +60,10 @@ def trigger_next_job(db: Session) -> models.Job | None:
         f"Triggering next job from queue: {next_job.id} with priority {next_job.priority.value}"
     )
 
-    # Enqueue the job for execution in the background
-    execute_tasks.execute_job_task(job_data=next_job.model_dump(), priority=next_job.priority.value)
-
-    # Update the job's status to "queued" in Huey (or "running" conceptually)
-    # update_job_status(str(next_job.id), models.JobStatus.running)
+    # Enqueue the job for execution in the background, passing only the ID
+    execute_tasks.execute_job_task(
+        job_id=str(next_job.id), priority=priority_order[next_job.priority]
+    )
 
     return next_job
 
@@ -109,6 +114,11 @@ async def start_consumer_process() -> dict[str, Any]:
             f"nohup poetry run huey_consumer app.tasks.huey --worker-type=process"
             f"> {log_path} 2>&1 & echo $!"
         )
+
+        # Append "\n Starting consumer..." to the log file
+        with open(log_path, "a") as f:
+            f.write("\n Starting consumer...")
+
         # Start the process and capture the PID
         proc = subprocess.Popen(
             cmd,
@@ -138,8 +148,15 @@ async def stop_consumer_process() -> dict[str, Any]:
     Stop the Huey consumer process if running.
     Returns a dict with success and message.
     """
+    log_path = paths.DATA_PATH / "logs" / "huey_consumer.log"
+
     if not HUEY_PID_FILE.exists():
         print("HUEY_PID_FILE does not exist")
+
+        # Append "\n Stopping consumer..." to the log file
+        with open(log_path, "a") as f:
+            f.write("\n Stopping consumer...")
+
         await broadcast_consumer_status("stopped")
         return {"success": False, "message": "Huey consumer is not running."}
     try:
@@ -148,13 +165,18 @@ async def stop_consumer_process() -> dict[str, Any]:
         os.kill(pid, signal.SIGTERM)
         os.remove(HUEY_PID_FILE)
         print("HUEY_PID_FILE removed")
+
+        # Append "\n Stopping consumer..." to the log file
+        with open(log_path, "a") as f:
+            f.write("\n Stopping consumer...")
+
         await broadcast_consumer_status("stopped")
         return {"success": True, "message": f"Huey consumer with PID {pid} stopped."}
     except Exception as e:
         return {"success": False, "message": f"Failed to stop consumer: {e}"}
 
 
-def kill_job_process(job_id: str, db: Session) -> dict[str, Any]:
+async def kill_job_process(job_id: str, db: Session) -> dict[str, Any]:
     """Immediately kill a running job process by its PID.
 
     Args:
@@ -163,21 +185,27 @@ def kill_job_process(job_id: str, db: Session) -> dict[str, Any]:
     Returns:
         Dict with 'success' and 'message'.
     """
-    job = crud.job.get_or_none(id=job_id)
+    job = await crud.job.get_or_none(db, id=job_id)
     if not job:
         return {"success": False, "message": f"Job {job_id} not found."}
     pid = job.pid
     if not pid:
-        crud.job.update(db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.pending))
+        await crud.job.update(
+            db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.pending)
+        )
         return {"success": False, "message": f"No PID found for job {job_id}."}
     try:
         os.kill(int(pid), signal.SIGKILL)
 
-        crud.job.update(db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.pending))
+        await crud.job.update(
+            db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.pending)
+        )
 
         return {"success": True, "message": f"Job {job_id} (PID {pid}) killed."}
     except ProcessLookupError:
-        crud.job.update(db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.pending))
+        await crud.job.update(
+            db, id=job_id, obj_in=models.JobUpdate(status=models.JobStatus.pending)
+        )
         return {"success": True, "message": f"Job {job_id} (PID {pid}) not found."}
     except Exception as e:
         return {"success": False, "message": f"Failed to kill job {job_id}: {e}"}

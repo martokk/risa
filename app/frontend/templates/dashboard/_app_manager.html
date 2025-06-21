@@ -20,7 +20,7 @@
                     </div>
                     <div class="btn-group ms-2">
                         {% if app.command_start %}
-                            <button class="btn btn-sm {% if is_running %}btn-secondary {% else %}btn-outline-success{% endif %} py-0 px-1" title="Start {{ app.name }}"
+                            <button class="btn btn-sm {% if is_running %}btn {% else %}btn-outline-success{% endif %} py-0 px-1" title="Start {{ app.name }}"
                                 onclick="startApp('{{ app.name }}')" >
                                 <i class="fas fa-play"></i>
                             </button>

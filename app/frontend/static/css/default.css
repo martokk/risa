@@ -140,6 +140,7 @@ h6 {
 /* Accent Color Utilities */
 :root {
     --accent-subtle: color-mix(in srgb, var(--accent) 65%, black);
+    --accent-dark: color-mix(in srgb, var(--accent) 35%, black);
     --accent-light: color-mix(in srgb, var(--accent) 50%, white);
 
     --risa-host-accent-subtle: color-mix(in srgb, var(--risa-host-accent) 65%, black);

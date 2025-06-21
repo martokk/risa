@@ -1,6 +1,21 @@
-{% extends "base/base.html" %}
+{% extends "base/container.html" %}
 
 {% block title %}Instance Status{% endblock %}
+
+{% block head %}
+<style>
+    .table-equal-width {
+        table-layout: fixed;
+        width: 100%;
+    }
+    #network-status-table.table-hover > tbody > tr:hover > * {
+        background-color: var(--accent-dark);
+    }
+    #network-status-table .hover-col {
+        background-color: var(--accent-dark) !important;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,7 +24,7 @@
     <div class="row">
         <div class="col-md-12">
             <h1>Network Status</h1>
-            <p>Last Updated: {{ network_state.last_updated | humanize if network_state.last_updated else '' }}</p>
+            <p>Last Updated: {{ network_state.last_updated | humanize_network if network_state.last_updated else '' }}</p>
             <p>
                 This instance's ENV_NAME is: <strong>{{ ENV_NAME }}</strong>
             </p>
@@ -20,7 +35,7 @@
     <div class="row">
         <div class="col-md-12">
 
-            <table class="table table-striped">
+            <table id="network-status-table" class="table table-striped table-equal-width table-bordered table-hover">
                 
                 <!-- Table Header -->
                 <thead>
@@ -48,10 +63,10 @@
                     <!-- Last Updated -->
                     <tr>
                         <td>Last Updated</td>
-                        <td>{{ network_state.dev.last_updated | humanize if network_state.dev.last_updated else ''  }}</td>
-                        <td>{{ network_state.local.last_updated | humanize if network_state.local.last_updated else '' }}</td>
-                        <td>{{ network_state.playground.last_updated | humanize if network_state.playground.last_updated else '' }}</td>
-                        <td>{{ network_state.host.last_updated | humanize if network_state.host.last_updated else '' }}</td>
+                        <td class="{{ network_state.dev.last_updated | humanize_network_text_color }}">{{ network_state.dev.last_updated | humanize_network if network_state.dev.last_updated else ''  }}</td>
+                        <td class="{{ network_state.local.last_updated | humanize_network_text_color }}">{{ network_state.local.last_updated | humanize_network if network_state.local.last_updated else '' }}</td>
+                        <td class="{{ network_state.playground.last_updated | humanize_network_text_color }}">{{ network_state.playground.last_updated | humanize_network if network_state.playground.last_updated else '' }}</td>
+                        <td class="{{ network_state.host.last_updated | humanize_network_text_color }}">{{ network_state.host.last_updated | humanize_network if network_state.host.last_updated else '' }}</td>
                     </tr>
 
                     <!-- BASE_DOMAIN -->
@@ -74,84 +89,85 @@
 
                     <!-- System Status -->
                     <tr>
+                        <td>CPU Usage</td>
+                        <td>{{ network_state.dev.cpu_usage | int | string + '%' if network_state.dev.cpu_usage else '' }}</td>
+                        <td>{{ network_state.local.cpu_usage | int | string + '%' if network_state.local.cpu_usage else '' }}</td>
+                        <td>{{ network_state.playground.cpu_usage | int | string + '%' if network_state.playground.cpu_usage else '' }}</td>
+                        <td>{{ network_state.host.cpu_usage | int | string + '%' if network_state.host.cpu_usage else '' }}</td>
+                    </tr>
+                    
+                    <tr>
                         <td>GPU Usage</td>
-                        <td>{{ network_state.dev.gpu_usage }}</td>
-                        <td>{{ network_state.local.gpu_usage }}</td>
-                        <td>{{ network_state.playground.gpu_usage }}</td>
-                        <td>{{ network_state.host.gpu_usage }}</td>
+                        <td>{{ network_state.dev.gpu_usage | int | string + '%' if network_state.dev.gpu_usage else '' }}</td>
+                        <td>{{ network_state.local.gpu_usage | int | string + '%' if network_state.local.gpu_usage else '' }}</td>
+                        <td>{{ network_state.playground.gpu_usage | int | string + '%' if network_state.playground.gpu_usage else '' }}</td>
+                        <td>{{ network_state.host.gpu_usage | int | string + '%' if network_state.host.gpu_usage else '' }}</td>
                     </tr>
 
                     <tr>
                         <td>GPU Memory Used</td>
-                        <td>{{ network_state.dev.gpu_memory_used }}</td>
-                        <td>{{ network_state.local.gpu_memory_used }}</td>
-                        <td>{{ network_state.playground.gpu_memory_used }}</td>
-                        <td>{{ network_state.host.gpu_memory_used }}</td>
+                        <td>{{ network_state.dev.gpu_memory_used | int | string + ' MB' if network_state.dev.gpu_memory_used else '' }}</td>
+                        <td>{{ network_state.local.gpu_memory_used | int | string + ' MB' if network_state.local.gpu_memory_used else '' }}</td>
+                        <td>{{ network_state.playground.gpu_memory_used | int | string + ' MB' if network_state.playground.gpu_memory_used else '' }}</td>
+                        <td>{{ network_state.host.gpu_memory_used | int | string + ' MB' if network_state.host.gpu_memory_used else '' }}</td>
                     </tr>
 
-                    <tr>
-                        <td>CPU Usage</td>
-                        <td>{{ network_state.dev.cpu_usage }}</td>
-                        <td>{{ network_state.local.cpu_usage }}</td>
-                        <td>{{ network_state.playground.cpu_usage }}</td>
-                        <td>{{ network_state.host.cpu_usage }}</td>
-                    </tr>
                     
                     <tr>
                         <td>Total Disk Space</td>
-                        <td>{{ network_state.dev.total_disk_space }}</td>
-                        <td>{{ network_state.local.total_disk_space }}</td>
-                        <td>{{ network_state.playground.total_disk_space }}</td>
-                        <td>{{ network_state.host.total_disk_space }}</td>
+                        <td>{{ network_state.dev.total_disk_space | int | string + ' GB' if network_state.dev.total_disk_space else '' }}</td>
+                        <td>{{ network_state.local.total_disk_space | int | string + ' GB' if network_state.local.total_disk_space else '' }}</td>
+                        <td>{{ network_state.playground.total_disk_space | int | string + ' GB' if network_state.playground.total_disk_space else '' }}</td>
+                        <td>{{ network_state.host.total_disk_space | int | string + ' GB' if network_state.host.total_disk_space else '' }}</td>
                     </tr>
 
                     <tr>
                         <td>Used Disk Space</td>
-                        <td>{{ network_state.dev.used_disk_space }}</td>
-                        <td>{{ network_state.local.used_disk_space }}</td>
-                        <td>{{ network_state.playground.used_disk_space }}</td>
-                        <td>{{ network_state.host.used_disk_space }}</td>
+                        <td>{{ network_state.dev.used_disk_space | int | string + ' GB' if network_state.dev.used_disk_space else '' }}</td>
+                        <td>{{ network_state.local.used_disk_space | int | string + ' GB' if network_state.local.used_disk_space else '' }}</td>
+                        <td>{{ network_state.playground.used_disk_space | int | string + ' GB' if network_state.playground.used_disk_space else '' }}</td>
+                        <td>{{ network_state.host.used_disk_space | int | string + ' GB' if network_state.host.used_disk_space else '' }}</td>
                     </tr>
 
                     <tr>
                         <td>Free Disk Space</td>
-                        <td>{{ network_state.dev.free_disk_space }}</td>
-                        <td>{{ network_state.local.free_disk_space }}</td>
-                        <td>{{ network_state.playground.free_disk_space }}</td>
-                        <td>{{ network_state.host.free_disk_space }}</td>
+                        <td>{{ network_state.dev.free_disk_space | int | string + ' GB' if network_state.dev.free_disk_space else '' }}</td>
+                        <td>{{ network_state.local.free_disk_space | int | string + ' GB' if network_state.local.free_disk_space else '' }}</td>
+                        <td>{{ network_state.playground.free_disk_space | int | string + ' GB' if network_state.playground.free_disk_space else '' }}</td>
+                        <td>{{ network_state.host.free_disk_space | int | string + ' GB' if network_state.host.free_disk_space else '' }}</td>
                     </tr>
 
                     <tr>
                         <td>Disk Usage</td>
-                        <td>{{ network_state.dev.disk_usage }}</td>
-                        <td>{{ network_state.local.disk_usage }}</td>
-                        <td>{{ network_state.playground.disk_usage }}</td>
-                        <td>{{ network_state.host.disk_usage }}</td>
+                        <td>{{ network_state.dev.disk_usage | int | string + '%' if network_state.dev.disk_usage else '' }}</td>
+                        <td>{{ network_state.local.disk_usage | int | string + '%' if network_state.local.disk_usage else '' }}</td>
+                        <td>{{ network_state.playground.disk_usage | int | string + '%' if network_state.playground.disk_usage else '' }}</td>
+                        <td>{{ network_state.host.disk_usage | int | string + '%' if network_state.host.disk_usage else '' }}</td>
                     </tr>
 
                     <!-- Runpod -->
                     <tr>
                         <td>Runpod Pod ID</td>
-                        <td>{{ network_state.dev.runpod_pod_id }}</td>
-                        <td>{{ network_state.local.runpod_pod_id }}</td>
-                        <td>{{ network_state.playground.runpod_pod_id }}</td>
-                        <td>{{ network_state.host.runpod_pod_id }}</td>
+                        <td>{{ network_state.dev.runpod_pod_id if network_state.dev.runpod_pod_id else '' }}</td>
+                        <td>{{ network_state.local.runpod_pod_id if network_state.local.runpod_pod_id else '' }}</td>
+                        <td>{{ network_state.playground.runpod_pod_id if network_state.playground.runpod_pod_id else '' }}</td>
+                        <td>{{ network_state.host.runpod_pod_id if network_state.host.runpod_pod_id else '' }}</td>
                     </tr>
 
                     <tr>
                         <td>Runpod Public IP</td>
-                        <td>{{ network_state.dev.runpod_public_ip }}</td>
-                        <td>{{ network_state.local.runpod_public_ip }}</td>
-                        <td>{{ network_state.playground.runpod_public_ip }}</td>
-                        <td>{{ network_state.host.runpod_public_ip }}</td>
+                        <td>{{ network_state.dev.runpod_public_ip if network_state.dev.runpod_public_ip else '' }}</td>
+                        <td>{{ network_state.local.runpod_public_ip if network_state.local.runpod_public_ip else '' }}</td>
+                        <td>{{ network_state.playground.runpod_public_ip if network_state.playground.runpod_public_ip else '' }}</td>
+                        <td>{{ network_state.host.runpod_public_ip if network_state.host.runpod_public_ip else '' }}</td>
                     </tr>
 
                     <tr>
                         <td>Runpod GPU Name</td>
-                        <td>{{ network_state.dev.runpod_gpu_name }}</td>
-                        <td>{{ network_state.local.runpod_gpu_name }}</td>
-                        <td>{{ network_state.playground.runpod_gpu_name }}</td>
-                        <td>{{ network_state.host.runpod_gpu_name }}</td>
+                        <td>{{ network_state.dev.runpod_gpu_name if network_state.dev.runpod_gpu_name else '' }}</td>
+                        <td>{{ network_state.local.runpod_gpu_name if network_state.local.runpod_gpu_name else '' }}</td>
+                        <td>{{ network_state.playground.runpod_gpu_name if network_state.playground.runpod_gpu_name else '' }}</td>
+                        <td>{{ network_state.host.runpod_gpu_name if network_state.host.runpod_gpu_name else '' }}</td>
                     </tr>
 
                 </tbody>
@@ -165,4 +181,43 @@
 {% endblock %}
 
 {% block js_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('network-status-table');
+    if (!table) return;
+
+    let lastHoveredIndex = -1;
+
+    const highlightColumn = (index) => {
+        if (index === 0) return; // Don't highlight first column.
+        for (const row of table.rows) {
+            row.cells[index]?.classList.add('hover-col');
+        }
+    };
+
+    const unhighlightColumn = (index) => {
+        if (index === 0 || index < 0) return;
+        for (const row of table.rows) {
+            row.cells[index]?.classList.remove('hover-col');
+        }
+    };
+
+    table.addEventListener('mouseover', (e) => {
+        const cell = e.target.closest('td');
+        if (!cell) return;
+
+        const colIndex = cell.cellIndex;
+        if (colIndex !== lastHoveredIndex) {
+            unhighlightColumn(lastHoveredIndex);
+            highlightColumn(colIndex);
+            lastHoveredIndex = colIndex;
+        }
+    });
+
+    table.addEventListener('mouseleave', () => {
+        unhighlightColumn(lastHoveredIndex);
+        lastHoveredIndex = -1;
+    });
+});
+</script>
 {% endblock %}

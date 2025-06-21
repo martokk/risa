@@ -1,0 +1,15 @@
+{% extends 'base/_html.html' %}
+
+{% block layout %}
+
+	<div class="container-fluid m-3 mb-5">
+
+		<!-- Alerts -->
+		{% include 'base/_alerts.html' %}
+
+
+		<!-- Content Block -->
+		{% block content %} {% endblock content %}
+
+	</div>
+{% endblock layout %}

@@ -25,6 +25,3 @@ class WebSocketManager:
             except Exception:
                 # Remove dead connections
                 self.disconnect(connection)
-
-
-websocket_manager = WebSocketManager()

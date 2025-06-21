@@ -5,8 +5,8 @@ from sqlmodel import Session
 
 from framework import crud
 from framework.core.db import get_db
-from framework.core.websocket import websocket_manager
-from framework.services import job_queue, job_queue_ws_manager
+from framework.services import job_queue
+from framework.services.job_queue_ws_manager import job_queue_ws_manager
 
 
 router = APIRouter()
@@ -14,7 +14,7 @@ router = APIRouter()
 
 @router.websocket("/ws/job-queue")
 async def websocket_job_queue(websocket: WebSocket, db: Session = Depends(get_db)) -> None:
-    await job_queue_ws_manager.job_queue_ws_manager.connect(websocket)
+    await job_queue_ws_manager.connect(websocket)
 
     # Send initial state
     jobs = await crud.job.get_all(db=db)
@@ -45,9 +45,9 @@ async def websocket_job_queue(websocket: WebSocket, db: Session = Depends(get_db
                 log_task = asyncio.create_task(stream_job_log(websocket, job_id))
             # Otherwise, just keep alive
     except WebSocketDisconnect:
-        websocket_manager.disconnect(websocket)
+        job_queue_ws_manager.disconnect(websocket)
     except Exception:
-        websocket_manager.disconnect(websocket)
+        job_queue_ws_manager.disconnect(websocket)
     finally:
         if log_task:
             log_task.cancel()

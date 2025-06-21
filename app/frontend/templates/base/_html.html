@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+{% include 'base/_head.html' %}
+
+
+<body class="d-flex flex-column">
+    <!-- JavaScript Disabled Warning -->
+    <noscript>
+        <div class="alert alert-warning text-center" role="alert">
+            This website works best with JavaScript enabled.
+        </div>
+    </noscript>
+
+    <!-- Navbar -->
+    {% include 'base/_navbar.html' %}
+
+    <!-- Body -->
+    {% block layout %} {% endblock layout %}
+
+    <!-- Footer -->
+    {% include 'base/_footer.html' %}
+
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+    <script src="/static/js/back_to_top.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js" defer></script>
+    <!-- JavaScript Scripts -->
+    <script type="module">
+        import { InitializationManager } from '/static/js/initialization.js';
+        import { apiCrud } from '/static/js/api_utils.js';
+
+        // Create configuration object
+        const config = {
+            tokens: {
+                access_token: "{{ tokens.access_token }}",
+                refresh_token: "{{ tokens.refresh_token }}"
+            },
+        };
+
+        // Initialize all managers
+        const initManager = new InitializationManager(config);
+        initManager.initialize();
+    </script>
+
+    <!-- JavaScript Blocks -->
+    {% block js_scripts %}{% endblock js_scripts %}
+    {% block js_dependencies %}{% endblock js_dependencies %}
+
+</body>
+
+
+</html>

@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
+from app.models import settings
 from framework import models
 from framework.frontend.deps import get_current_active_user, get_current_user
 from framework.frontend.templates.context import get_template_context
@@ -68,4 +69,16 @@ async def favicon() -> FileResponse:
     Returns:
         FileResponse: favicon.ico file
     """
-    return FileResponse("app/frontend/static/images/favicons/favicon.ico")
+    if settings.ENV_NAME == "host":
+        filename = "app/frontend/static/images/icons/risa-blue.png"
+
+    if settings.ENV_NAME == "playground":
+        filename = "app/frontend/static/images/icons/risa-red.png"
+
+    if settings.ENV_NAME == "local":
+        filename = "app/frontend/static/images/icons/risa-green.png"
+
+    if settings.ENV_NAME == "dev":
+        filename = "app/frontend/static/images/icons/risa-yellow.png"
+
+    return FileResponse(filename)
