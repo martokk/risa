@@ -11,7 +11,7 @@ import requests
 from huey import crontab
 from sqlmodel import Session
 
-from app import logger, paths
+from app import logger, paths, settings
 from framework import crud, models
 from framework.core.db import get_db_context
 from framework.core.huey import huey
@@ -146,7 +146,7 @@ def push_jobs_to_websocket() -> None:
     try:
         with httpx.Client() as client:
             client.post(
-                "/api/v1/jobs/push-jobs-to-websocket",
+                f"{settings.BASE_URL}/api/v1/jobs/push-jobs-to-websocket",
             )
 
     except Exception as e:

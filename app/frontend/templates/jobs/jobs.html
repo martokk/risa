@@ -1,6 +1,11 @@
-{% extends "base/full_width.html" %}
+{% extends "base/sidebar_right.html" %}
 
 {% block title %}Job Queue{% endblock %}
+
+{% block sidebar_right %}
+    {% include "/jobs/_quick_jobs.html" %}
+{% endblock sidebar_right %}
+
 
 {% macro job_row(job) %}
 <tr id="job-row-{{ job.id }}" onclick="openEditModal('{{ job.id }}')" style="cursor: pointer;">
@@ -351,11 +356,13 @@
         logModal.show();
         currentLogJobId = jobId;
         if (logSocket && logSocket.readyState === WebSocket.OPEN) {
+            logContent.textContent = '';
             logSocket.send(JSON.stringify({ type: 'subscribe_log', job_id: jobId }));
         } else {
             // If not open yet, wait and retry
             const waitForSocket = setInterval(() => {
                 if (logSocket && logSocket.readyState === WebSocket.OPEN) {
+                    logContent.textContent = '';
                     logSocket.send(JSON.stringify({ type: 'subscribe_log', job_id: jobId }));
                     clearInterval(waitForSocket);
                 }
