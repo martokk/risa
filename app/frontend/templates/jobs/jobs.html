@@ -78,7 +78,7 @@
                 <button type="button" class="btn btn-outline-secondary" id="stopConsumerBtn" title="Stop Huey Consumer">
                     <i class="fas fa-stop"></i>
                 </button>
-                <button type="button" class="btn btn-outline-secondary" id="viewLogBtn" title="View Log" disabled>
+                <button type="button" class="btn btn-outline-secondary" id="viewLogBtn" title="View Log">
                     <i class="fas fa-file-alt"></i>
                 </button>
             </div>
@@ -228,14 +228,14 @@
 
 <!-- Log Viewer Modal -->
 <div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="logModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="logModalLabel">Job Log</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body position-relative">
-                <pre id="logContent" style="white-space: pre-wrap; word-wrap: break-word; max-height: 70vh; overflow-y: auto;"></pre>
+                <pre id="logContent" class="bg-dark small" style="word-wrap: break-word; max-height: 70vh; overflow-y: auto;font-size: x-small;"></pre>
                 <button id="scrollToBottomBtn" class="btn btn-sm btn-primary position-absolute end-0 bottom-0 m-3" style="display:none; z-index:10;">
                     Scroll to Latest
                 </button>
@@ -268,6 +268,7 @@
 <script type="module">
     import { apiCrud, uiHelpers } from '/static/js/api_utils.js';
     import { toast } from '/static/js/toast.js';
+    import { LogStreamer } from '/static/js/tools/log_streamer.js';
 
     const jobModalEl = document.getElementById('jobModal');
     const jobModal = new bootstrap.Modal(jobModalEl);
@@ -275,13 +276,8 @@
     const jobModalLabel = document.getElementById('jobModalLabel');
     const saveJobBtn = document.getElementById('saveJobBtn');
 
-    const logModalEl = document.getElementById('logModal');
-    const logModal = new bootstrap.Modal(logModalEl);
-    const logContent = document.getElementById('logContent');
-    const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
-
     let logSocket = null;
-    let currentLogJobId = null;
+    let logStreamer = null;
 
     function resetForm() {
         jobForm.reset();
@@ -352,21 +348,10 @@
 
     window.viewLog = function(event, jobId) {
         event.stopPropagation();
-        logContent.textContent = 'Loading...';
-        logModal.show();
-        currentLogJobId = jobId;
-        if (logSocket && logSocket.readyState === WebSocket.OPEN) {
-            logContent.textContent = '';
-            logSocket.send(JSON.stringify({ type: 'subscribe_log', job_id: jobId }));
+        if (logStreamer) {
+            logStreamer.viewLog(jobId, 'job');
         } else {
-            // If not open yet, wait and retry
-            const waitForSocket = setInterval(() => {
-                if (logSocket && logSocket.readyState === WebSocket.OPEN) {
-                    logContent.textContent = '';
-                    logSocket.send(JSON.stringify({ type: 'subscribe_log', job_id: jobId }));
-                    clearInterval(waitForSocket);
-                }
-            }, 200);
+            console.error("Log streamer is not initialized.");
         }
     };
 
@@ -534,18 +519,16 @@
         let protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         let wsUrl = `${protocol}://${window.location.host}/api/v1/ws/job-queue`;
         logSocket = new WebSocket(wsUrl);
+
+        // Initialize the LogStreamer once the socket is created
+        logStreamer = new LogStreamer('logModal', 'logContent', 'scrollToBottomBtn', logSocket);
+
         logSocket.onmessage = function(event) {
             try {
                 const data = JSON.parse(event.data);
-                if (data.type === 'log_update' && data.job_id === currentLogJobId) {
-                    const wasAtBottom = isScrolledToBottom(logContent);
-                    logContent.textContent += data.content;
-                    if (wasAtBottom) {
-                        scrollLogToBottom();
-                    }
-                } else if (data.type === 'log_error' && data.job_id === currentLogJobId) {
-                    logContent.textContent += `\n[Error streaming log: ${data.error}]`;
-                } else if (data.jobs) {
+                // The log streamer now handles its own messages.
+                // We only need to handle non-log messages here.
+                if (data.jobs) {
                     updateJobTables(data.jobs);
                 }
                 if (data.consumer_status) {
@@ -561,34 +544,20 @@
         };
     }
 
-    function isScrolledToBottom(element) {
-        return element.scrollHeight - element.scrollTop - element.clientHeight < 10;
-    }
-
-    function scrollLogToBottom() {
-        logContent.scrollTop = logContent.scrollHeight;
-    }
-
-    // Show/hide the button based on scroll position
-    logContent.addEventListener('scroll', () => {
-        if (isScrolledToBottom(logContent)) {
-            scrollToBottomBtn.style.display = 'none';
-        } else {
-            scrollToBottomBtn.style.display = 'block';
-        }
-    });
-
-    scrollToBottomBtn.addEventListener('click', () => {
-        scrollLogToBottom();
-        scrollToBottomBtn.style.display = 'none';
-    });
-
     document.addEventListener('DOMContentLoaded', () => {
         connectJobQueueWebSocket();
 
         // Start/Stop Huey Consumer buttons
         const startBtn = document.getElementById('startConsumerBtn');
         const stopBtn = document.getElementById('stopConsumerBtn');
+        const viewLogBtn = document.getElementById('viewLogBtn');
+
+        if (viewLogBtn && logStreamer) {
+            viewLogBtn.addEventListener('click', () => {
+                logStreamer.viewLog('consumer', 'consumer');
+            });
+        }
+
         if (startBtn) {
             startBtn.addEventListener('click', async () => {
                 try {
@@ -611,19 +580,6 @@
                 }
             });
         }
-
-        // Clean up when modal is closed
-        logModalEl.addEventListener('hidden.bs.modal', () => {
-            currentLogJobId = null;
-            logContent.textContent = '';
-            scrollToBottomBtn.style.display = 'none';
-        });
-
-        // Show/hide the button based on scroll position when opening the modal
-        logModalEl.addEventListener('shown.bs.modal', () => {
-            scrollLogToBottom();
-            scrollToBottomBtn.style.display = 'none';
-        });
     });
 </script>
 {% endblock %} 

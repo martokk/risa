@@ -43,6 +43,10 @@ async def websocket_job_queue(websocket: WebSocket, db: Session = Depends(get_db
                     log_task.cancel()
                 job_id = msg["job_id"]
                 log_task = asyncio.create_task(stream_job_log(websocket, job_id))
+            elif msg and msg.get("type") == "subscribe_consumer_log":
+                if log_task:
+                    log_task.cancel()
+                log_task = asyncio.create_task(stream_consumer_log(websocket))
             # Otherwise, just keep alive
     except WebSocketDisconnect:
         job_queue_ws_manager.disconnect(websocket)
@@ -79,5 +83,44 @@ async def stream_job_log(websocket: WebSocket, job_id: str) -> None:
     except Exception as e:
         try:
             await websocket.send_json({"type": "log_error", "job_id": job_id, "error": str(e)})
+        except Exception:
+            pass
+
+
+async def stream_consumer_log(websocket: WebSocket) -> None:
+    """Stream the main application log file to the websocket client."""
+    from app.paths import LOG_FILE
+
+    last_pos = 0
+    try:
+        # Send existing content first
+        if LOG_FILE.exists():
+            with open(LOG_FILE) as f:
+                content = f.read()
+                if content:
+                    await websocket.send_json(
+                        {"type": "log_update", "job_id": "consumer", "content": content}
+                    )
+                last_pos = f.tell()
+
+        # Now, tail the file for new content
+        while True:
+            if not LOG_FILE.exists():
+                await asyncio.sleep(0.5)
+                continue
+            with open(LOG_FILE) as f:
+                f.seek(last_pos)
+                new_content = f.read()
+                if new_content:
+                    await websocket.send_json(
+                        {"type": "log_update", "job_id": "consumer", "content": new_content}
+                    )
+                    last_pos = f.tell()
+            await asyncio.sleep(0.5)
+    except asyncio.CancelledError:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_json({"type": "log_error", "job_id": "consumer", "error": str(e)})
         except Exception:
             pass
