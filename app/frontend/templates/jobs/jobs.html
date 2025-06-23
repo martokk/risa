@@ -42,7 +42,7 @@
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
 
             {% elif job.status == 'queued' %}
-                <button class="btn btn-sm btn-outline-warning" title="Unqueue Job" onclick="unqueueJob(event, '{{ job.id }}')" disabled><i class="fas fa-clock"></i></button>
+                <button class="btn btn-sm btn-outline-warning" title="Unqueue Job" onclick="unqueueJob(event, '{{ job.id }}')"><i class="fas fa-clock"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
 
             {% elif job.status == 'running' %}
@@ -382,6 +382,18 @@
         }
     };
 
+    window.unqueueJob = async function (event, jobId) {
+            // Stop event propagation to prevent the row's onclick from firing
+            event.stopPropagation();
+            try {
+                await apiCrud.putText(`jobs/${jobId}/status`, { "status": "pending" });
+                toast.show('Job unqueued.', 'success');
+                //csetTimeout(() => uiHelpers.refreshPage(), 1000);
+            } catch (error) {
+                toast.show(error.message || 'Failed to unqueue job', 'danger');
+            }
+        };
+
     window.deleteJob = function(event, jobId) {
         // Stop event propagation to prevent the row's onclick from firing
         event.stopPropagation();
@@ -438,7 +450,7 @@
             `;
         } else if (job.status === 'queued') {
             actions = `
-                <button class="btn btn-sm btn-outline-warning" title="Unqueue Job" onclick="unqueueJob(event, '${job.id}')" disabled><i class="fas fa-clock"></i></button>
+                <button class="btn btn-sm btn-outline-warning" title="Unqueue Job" onclick="unqueueJob(event, '${job.id}')"><i class="fas fa-clock"></i></button>
                 <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
             `;
         } else if (job.status === 'running') {
