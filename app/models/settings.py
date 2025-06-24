@@ -28,13 +28,13 @@ class Settings(PythonFastAPIBaseSettings):
         return v
 
     @root_validator(pre=True)
-    def set_base_domain(cls, values: dict) -> dict:
-        """Set BASE_DOMAIN based on ENV_NAME."""
+    def set_base_url(cls, values: dict) -> dict:
+        """Set BASE_URL based on ENV_NAME."""
         env_name = values.get("ENV_NAME")
         if env_name == "playground":
             runpod_pod_id = os.environ.get("RUNPOD_POD_ID")
             port = 1000
-            values["BASE_DOMAIN"] = f"{runpod_pod_id}-{port}.proxy.runpod.net"
+            values["BASE_URL"] = f"https://{runpod_pod_id}-{port}.proxy.runpod.net"
         return values
 
 

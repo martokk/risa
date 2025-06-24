@@ -7,7 +7,7 @@ class InstanceStateBase(SQLModel):
     id: str = Field(default=None, primary_key=True, unique=True, alias="env_name")
     last_updated: datetime | None = None
     project_name: str
-    base_domain: str
+    base_url: str
 
     # Theme
     accent: str | None = None

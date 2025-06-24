@@ -46,9 +46,6 @@ for env_file_path in ENV_FILES_PATHS:
         ENV_FILE = env_file_path
         break
 
-
-print(f"ENV_FILE={ENV_FILE}")
-
 # Files
 # DATABASE_FILE = DATA_PATH / "database.sqlite3"
 PYPROJECT_FILE = PROJECT_PATH / "pyproject.toml"

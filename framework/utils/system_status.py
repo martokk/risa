@@ -28,6 +28,7 @@ def get_gpu_stats() -> dict[str, Any]:
             stderr=subprocess.DEVNULL,
             text=True,
             check=True,
+            timeout=5,
         )
         usage, mem_used = result.stdout.strip().split(", ")
         status = {

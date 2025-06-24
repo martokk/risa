@@ -69,13 +69,13 @@
                         <td class="{{ network_state.host.last_updated | humanize_network_text_color }}">{{ network_state.host.last_updated | humanize_network if network_state.host.last_updated else '' }}</td>
                     </tr>
 
-                    <!-- BASE_DOMAIN -->
+                    <!-- BASE_URL -->
                     <tr>
-                        <td>BASE_DOMAIN</td>
-                        <td>{{ network_state.dev.base_domain }}</td>
-                        <td>{{ network_state.local.base_domain }}</td>
-                        <td>{{ network_state.playground.base_domain }}</td>
-                        <td>{{ network_state.host.base_domain }}</td>
+                        <td>BASE_URL</td>
+                        <td>{{ network_state.dev.base_url }}</td>
+                        <td>{{ network_state.local.base_url }}</td>
+                        <td>{{ network_state.playground.base_url }}</td>
+                        <td>{{ network_state.host.base_url }}</td>
                     </tr>
 
                     <!-- Theme -->
