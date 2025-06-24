@@ -25,6 +25,6 @@ async def initialize_project_specific_data(db: Session, **kwargs: Any) -> None:
                 obj_in=models.InstanceStateCreate(
                     id=network_env,
                     project_name=settings.PROJECT_NAME,
-                    base_domain=settings.BASE_DOMAIN,
+                    base_url=settings.BASE_URL,
                 ),
             )

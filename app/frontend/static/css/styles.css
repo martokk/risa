@@ -2,6 +2,7 @@
 @import url('variables.css');
 @import url('dataset_tagger.css');
 @import url('tomselect.css');
+@import url('sidebar.css');
 
 .wrap {
     /* top: 0; */

@@ -12,7 +12,7 @@ from app.paths import STATIC_PATH
 from app.routes.api import api_router
 from app.routes.views import views_router
 from app.services.idle_watcher import start_idle_watcher, stop_idle_watcher
-from framework.core.db import get_db, initialize_tables_and_initial_data
+from framework.core.db import get_db_context, initialize_tables_and_initial_data
 from framework.services import notify
 
 
@@ -55,8 +55,10 @@ async def startup_event(db: Session | None = None) -> None:
 
     # Initialize database and tables if they do not exist
     if db is None:
-        db = next(get_db())
-    await initialize_tables_and_initial_data(db=db)
+        with get_db_context() as db:
+            await initialize_tables_and_initial_data(db=db)
+    else:
+        await initialize_tables_and_initial_data(db=db)
 
     # Start the playground app in a separate thread
     # threading.Thread(target=run_playground_app).start()

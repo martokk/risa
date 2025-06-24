@@ -13,7 +13,7 @@ async def _get_instance_state() -> InstanceState:
     id = settings.ENV_NAME
     last_updated = datetime.now(tz=timezone.utc)
     project_name = settings.PROJECT_NAME
-    base_domain = settings.BASE_DOMAIN
+    base_url = settings.BASE_URL
 
     # Theme
     accent = settings.ACCENT
@@ -41,7 +41,7 @@ async def _get_instance_state() -> InstanceState:
         id=id,
         last_updated=last_updated,
         project_name=project_name,
-        base_domain=base_domain,
+        base_url=base_url,
         accent=accent,
         gpu_usage=gpu_usage,
         gpu_memory_used=gpu_memory_used,
