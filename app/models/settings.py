@@ -37,6 +37,10 @@ class Settings(PythonFastAPIBaseSettings):
             values["BASE_URL"] = f"https://{runpod_pod_id}-{port}.proxy.runpod.net"
         return values
 
+    @property
+    def risa_project_name(self) -> str:
+        return f"r|{self.ENV_NAME.upper()}"
+
 
 def get_settings(env_file_path: Path | str, version: str | None = None) -> Settings:
     load_env(env_file_path)
