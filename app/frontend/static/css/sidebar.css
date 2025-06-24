@@ -1,0 +1,224 @@
+:root {
+    --accent: #fdcf5b;
+    --accent-subtle: color-mix(in srgb, var(--accent) 65%, black);
+    --accent-dark: color-mix(in srgb, var(--accent) 35%, black);
+    --accent-light: color-mix(in srgb, var(--accent) 50%, white);
+}
+
+.main-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 200px;
+    background-color: var(--bs-dark-bg-subtle) !important;
+    /* Bootstrap dark bg */
+    color: #dee2e6;
+    /* Bootstrap text-light */
+    font-size: 15px;
+    font-family: system-ui, sans-serif;
+    z-index: 1000;
+}
+
+.with-sidebar {
+    margin-left: 200px !important;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.sidebar-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.sidebar-menu li.header {
+    padding: 12px 23px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    /* Bootstrap secondary text */
+    background-color: var(--accent-subtle);
+    /* Slightly darker */
+    letter-spacing: 0.5px;
+}
+
+/* Top-level item */
+.sidebar-menu>li {
+    margin: 0;
+    padding: 0;
+}
+
+/* Top-level link */
+.sidebar-menu>li>a {
+    padding: 8px 8px 8px 15px !important;
+    display: flex;
+    align-items: center;
+    border-left: 3px solid transparent !important;
+    color: #ced4da;
+    font-weight: 500;
+    transition: background 0.2s ease, border-left-color 0.2s ease;
+}
+
+/* Icon styling */
+.sidebar-menu>li>a>.fa {
+    width: 20px !important;
+    margin-right: 10px !important;
+    text-align: center !important;
+    color: var(--accent) !important;
+    /* Accent used in icon */
+}
+
+/* Hover and active top-level */
+.sidebar-menu>li:hover>a,
+.sidebar-menu>li.active>a {
+    background-color: #343a40 !important;
+    /* Bootstrap dark-hover */
+    color: #fff !important;
+    border-left-color: var(--accent) !important;
+}
+
+/* Divider */
+.sidebar-menu .divider {
+    border-bottom: 1px solid var(--accent-subtle, #444);
+    margin: 0.5rem 0;
+    height: 0;
+    list-style: none;
+    width: 160px;
+    justify-self: left;
+    margin-left: 20px !important;
+}
+
+/* Submenu container */
+.sidebar-menu .treeview-menu {
+    list-style: none !important;
+    margin: 0 !important;
+    padding-left: 10px !important;
+    background: #2b3035 !important;
+    /* Bootstrap body-secondary-dark */
+    display: none;
+}
+
+/* Show submenus for active treeviews */
+.sidebar-menu li.active>.treeview-menu {
+    display: block;
+}
+
+/* Submenu items */
+.sidebar-menu .treeview-menu>li>a {
+    padding: 5px 5px 5px 20px !important;
+    display: block !important;
+    font-size: 14px !important;
+    color: #adb5bd !important;
+    transition: color 0.2s ease !important;
+}
+
+/* Submenu hover/active */
+.sidebar-menu .treeview-menu>li>a:hover,
+.sidebar-menu .treeview-menu>li.active>a {
+    color: var(--accent) !important;
+}
+
+/* Nested submenu spacing */
+.sidebar-menu .treeview-menu .treeview-menu {
+    padding-left: 15px !important;
+}
+
+/* Toggle arrow */
+.sidebar-menu li>a>.fa-angle-left {
+    margin-left: auto !important;
+    transition: transform 0.3s ease !important;
+    color: #6c757d !important;
+}
+
+.sidebar-menu li.active>a>.fa-angle-left {
+    transform: rotate(-90deg) !important;
+}
+
+/* Labels, badges */
+.sidebar-menu li .label,
+.sidebar-menu li .badge {
+    margin-left: auto !important;
+    font-size: 10px !important;
+    background: var(--accent) !important;
+    color: #000 !important;
+    padding: 2px 6px !important;
+    border-radius: 0.25rem !important;
+}
+
+/* General link styles */
+.sidebar-menu a {
+    color: inherit !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.sidebar-footer {
+    display: flex !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    padding: 10px 0 !important;
+    border-top: 1px solid var(--accent-dark) !important;
+    background-color: var(--bs-dark-bg-subtle) !important;
+    width: 100% !important;
+}
+
+.sidebar-icon {
+    position: relative !important;
+    color: var(--accent) !important;
+    font-size: 18px !important;
+    padding: 5px !important;
+    transition: color 0.2s !important;
+}
+
+.sidebar-icon:hover {
+    color: var(--accent-light) !important;
+}
+
+.sidebar-icon .badge {
+    position: absolute !important;
+    top: -4px !important;
+    right: -9px !important;
+    background-color: var(--accent) !important;
+    color: #000 !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    border-radius: 50% !important;
+    padding: 2px 5px !important;
+    line-height: 1 !important;
+}
+
+.sidebar-badge-accent {
+    background-color: var(--accent);
+    color: #fff;
+    padding: 0.25em 0.5em;
+    border-radius: 1em;
+    font-size: 0.75em;
+    vertical-align: top;
+}
+
+.sidebar-flex-spacer {
+    flex-grow: 1;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+}
+
+.disabled {
+    font-style: italic;
+    /* cursor: not-allowed;
+    pointer-events: none; */
+    opacity: 0.3;
+}

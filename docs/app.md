@@ -206,10 +206,17 @@ RisaFap refers to any app/workflow that allows for one handed, simple and liner 
          			- Dislike/Like Prompt
          			- Dislike/Like Prompt: Pose
       		- Delete
+				- Delete All Inbox Items from this "run" (prompt?)
+				- Delete All Inbox Items for this checkpoint
+				- Delete All Inbox Items for this character lora
+				- Delete All Inbox Items for this character lora + checkpoint
       		- View Metadata
          			- Metadata
          			- Prompt
          			- Character
+			- Report Error
+				- Character Lora not compatible with checkpoint
+				- Other Lora not compatible with checkpoint
    	- Services:
       		- Job Queue
          			- Generate Similar: For Character
@@ -284,3 +291,7 @@ Stats section should include all sorts of stats about risa, the media, the colle
           		- rDEV
          			- Dashboard
          			- Jobs
+- Dev
+   	- Dev Dashboard
+   	- Github Repo
+   	- Create Github Issue

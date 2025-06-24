@@ -1,0 +1,263 @@
+{% block sidebar %}
+  {% if current_user %}
+    <aside class="main-sidebar">
+      <section class="sidebar">
+        <ul class="sidebar-menu">
+
+          <!-- Header -->
+          <li class="header">r | {{ ENV_NAME | upper }}</li>
+
+          <!-- Quick Links -->
+          <li><a href="/"><i class="fa fa-home"></i> <span>Home</span></a></li>
+
+          <!-- RisaFap -->
+          <li class="treeview disabled">
+            <a href="#" class=""><i class="fa fa-magic"></i> <span>RisaFap</span> <i class="fa fa-angle-right pull-right"></i></a>
+            <ul class="treeview-menu">
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Home</a></li>
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Workflows</a></li>
+            </ul>
+          </li>
+
+          <!-- rPlayground -->
+          <li class="treeview">
+            <a href="#"><i class="fa fa-desktop"></i> <span>rPlayground</span> <i
+                class="fa fa-angle-right pull-right"></i></a>
+            <ul class="treeview-menu">
+              <li><a href="https://console.runpod.io/pods"><i class="fa fa-circle-o"></i> RunPod</a></li>
+              <li><a href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-3000.proxy.runpod.net"><i class="fa fa-circle-o"></i> A1111 WebUI</a></li>
+              <li><a href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-3010.proxy.runpod.net"><i class="fa fa-circle-o"></i> Kohya_ss</a></li>
+              <li><a href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-3020.proxy.runpod.net"><i class="fa fa-circle-o"></i> ComfyUI</a></li>
+              <li><a href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-3030.proxy.runpod.net"><i class="fa fa-circle-o"></i> InvokeAI</a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-8010.proxy.runpod.net"><i class="fa fa-circle-o"></i> TensorBoard</a></li>
+              <li><a href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-2000.proxy.runpod.net"><i class="fa fa-circle-o"></i> Code Server</a></li>
+              <li><a href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-2010.proxy.runpod.net"><i class="fa fa-circle-o"></i> Jupyter Lab</a></li>
+              <li><a href="{{ RISA_PLAYGROUND_RUNPOD_POD_ID }}-9999.proxy.runpod.net"><i class="fa fa-circle-o"></i> WebDAV: File Server</a></li>
+            </ul>
+          </li>
+
+          <!-- Divider -->
+          <li class="divider"></li>
+
+          <!-- Browse -->
+          <li class="treeview disabled">
+            <a href="#"><i class="fa fa-folder-open"></i> <span>Browse</span> <i
+                class="fa fa-angle-right pull-right"></i></a>
+            <ul class="treeview-menu">
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Saved</a></li>
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> AI Inbox</a></li>
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Collector Inbox</a></li>
+            </ul>
+          </li>
+
+          <!-- Manage -->
+          <li class="treeview">
+            <a href="#"><i class="fa fa-cogs"></i> <span>Manage</span> <i class="fa fa-angle-right pull-right"></i></a>
+            <ul class="treeview-menu">
+
+              <!-- Characters -->
+              <li><a href="/characters"><i class="fa fa-circle-o"></i> Characters</a></li>
+
+              <!-- rAI -->
+              <li class="treeview">
+                <a href="#"><i class="fa fa-circle-o"></i> rAI <i class="fa fa-angle-right pull-right"></i></a>
+                <ul class="treeview-menu">
+                  <li><a href="/sd-base-models"><i class="fa fa-circle-o"></i> Base Models</a></li>
+                  <li><a href="/sd-checkpoints"><i class="fa fa-circle-o"></i> Checkpoints</a></li>
+                  <li><a href="/sd-extra-networks"><i class="fa fa-circle-o"></i> Extra Networks</a></li>
+                  <li><a href="/characters"><i class="fa fa-circle-o"></i> Characters</a></li>
+                </ul>
+              </li>
+
+              <!-- rCollector -->
+              <li class="treeview disabled">
+                <a href="#"><i class="fa fa-circle-o"></i> rCollector <i class="fa fa-angle-right pull-right"></i></a>
+                <ul class="treeview-menu">
+                  <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Subscriptions</a></li>
+                  <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Scrapers</a></li>
+                </ul>
+              </li>
+
+              <!-- Settings -->
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Settings</a></li>
+
+              <!-- Jobs -->
+              <li class="treeview">
+                <a href="#"><i class="fa fa-circle-o"></i> Jobs <i class="fa fa-angle-right pull-right"></i></a>
+                <ul class="treeview-menu">
+                  <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> All Jobs</a></li>
+                  <li><a href="{{ RISA_LOCAL_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> rLOCAL Jobs</a></li>
+                  <li><a href="{{ RISA_HOST_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> rHOST Jobs</a></li>
+                  <li><a href="{{ RISA_PLAYGROUND_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> rPLAYGROUND Jobs</a></li>
+                  <li><a href="{{ RISA_DEV_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> rDev Jobs</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Tools -->
+          <li class="treeview">
+            <a href="#"><i class="fa fa-wrench"></i> <span>Tools</span> <i class="fa fa-angle-right pull-right"></i></a>
+            <ul class="treeview-menu">
+
+              <!-- rAI -->
+              <li class="treeview">
+                <a href="#"><i class="fa fa-circle-o"></i> rAI <i class="fa fa-angle-right pull-right"></i></a>
+                <ul class="treeview-menu">
+                  <li class="treeview">
+                    <a href="#"><i class="fa fa-circle-o"></i> rAI Scripts <i class="fa fa-angle-right pull-right"></i></a>
+                    <ul class="treeview-menu">
+                      <li><a href="#"><i class="fa fa-circle-o"></i> Fix Civitai Filenames</a></li>
+                    </ul>
+                  </li>
+                  <li><a href="#"><i class="fa fa-circle-o"></i> Safetensor Importer</a></li>
+                  <li><a href="#"><i class="fa fa-circle-o"></i> Dataset Tagger</a></li>
+                </ul>
+              </li>
+
+              <!-- rCollector -->
+              <li class="treeview disabled">
+                <a href="#"><i class="fa fa-circle-o"></i> rCollector <i class="fa fa-angle-right pull-right"></i></a>
+                <ul class="treeview-menu">
+                  <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> rCollector Scripts</a></li>
+                </ul>
+              </li>
+
+              <!-- Backups -->
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Backups</a></li>
+
+              <!-- System -->
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> System</a></li>
+
+              <!-- Logs -->
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Logs</a></li>
+            </ul>
+          </li>
+
+          <!-- Spacer -->
+          <li class="sidebar-flex-spacer"></li>
+
+          <!-- Stats --> 
+          <li class="treeview disabled">
+            <a href="#"><i class="fa fa-tachometer"></i> <span>Stats</span></a></li>
+
+          <!-- Network -->
+          <li class="treeview">
+            <a href="#"><i class="fa fa-sitemap"></i> <span>Network</span> <i class="fa fa-angle-right pull-right"></i></a>
+            <ul class="treeview-menu">
+
+              <!-- Network Dashboard -->
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Network Dashboard</a></li>
+
+              <!-- Instances -->
+              <li class="treeview">
+                <a href="#"><i class="fa fa-circle-o"></i> Instances <i class="fa fa-angle-right pull-right"></i></a>
+                <ul class="treeview-menu">
+                  <li class="treeview">
+                    <a href="#"><i class="fa fa-circle-o"></i> rLOCAL <i class="fa fa-angle-right pull-right"></i></a>
+                    <ul class="treeview-menu">
+                      <li><a href="{{ RISA_LOCAL_BASE_URL }}/dashboard"><i class="fa fa-circle-o"></i> Dashboard</a></li>
+                      <li><a href="{{ RISA_LOCAL_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs</a></li>
+                    </ul>
+                  </li>
+                  <li class="treeview">
+                    <a href="#"><i class="fa fa-circle-o"></i> rHOST <i class="fa fa-angle-right pull-right"></i></a>
+                    <ul class="treeview-menu">
+                      <li><a href="{{ RISA_HOST_BASE_URL }}/dashboard"><i class="fa fa-circle-o"></i> Dashboard</a></li>
+                      <li><a href="{{ RISA_HOST_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs</a></li>
+                    </ul>
+                  </li>
+                  <li class="treeview">
+                    <a href="#"><i class="fa fa-circle-o"></i> rPLAYGROUND <i class="fa fa-angle-right pull-right"></i></a>
+                    <ul class="treeview-menu">
+                      <li><a href="{{ RISA_PLAYGROUND_BASE_URL }}/dashboard"><i class="fa fa-circle-o"></i> Dashboard</a></li>
+                      <li><a href="{{ RISA_PLAYGROUND_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs</a></li>
+                    </ul>
+                  </li>
+                  <li class="treeview">
+                    <a href="#"><i class="fa fa-circle-o"></i> rDEV <i class="fa fa-angle-right pull-right"></i></a>
+                    <ul class="treeview-menu">
+                      <li><a href="{{ RISA_DEV_BASE_URL }}/dashboard"><i class="fa fa-circle-o"></i> Dashboard</a></li>
+                      <li><a href="{{ RISA_DEV_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs</a></li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Dev -->
+          <li class="treeview">
+            <a href="#"><i class="fa fa-code"></i> <span>Dev</span> <i class="fa fa-angle-right pull-right"></i></a>
+            <ul class="treeview-menu">
+
+              <!-- Dev Dashboard -->
+              <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Dev Dashboard</a></li>
+
+              <!-- Github -->
+              <li><a href="https://github.com/martokk/risa"><i class="fa fa-circle-o"></i> Github Repo</a></li>
+              <li><a href="https://github.com/martokk/risa/issues/new"><i class="fa fa-circle-o"></i> Create Github Issue</a></li>
+            </ul>
+          </li>
+        </ul>
+
+        <!-- Sidebar Footer Icons-->
+        <div class="sidebar-footer mt-4">
+          <a href="#" class="sidebar-icon disabled" title="Feed">
+            <i class="fa fa-rss text-white"></i>
+            <span class="badge sidebar-badge-accent">3</span>
+          </a>
+          <a href="#" class="sidebar-icon disabled" title="Tasks">
+            <i class="fa fa-tasks text-white"></i>
+            <span class="badge sidebar-badge-accent">5</span>
+          </a>
+          <a href="#" class="sidebar-icon disabled" title="Notifications">
+            <i class="fa fa-bell text-white"></i>
+            <span class="badge sidebar-badge-accent">1</span>
+          </a>
+        </div>
+
+      </section>
+    </aside>
+  {% endif %}
+{% endblock %}
+
+{% block js_scripts %}
+<script type="text/javascript">
+// Sidebar menu JS (jQuery required)
+$.sidebarMenu = function(menu) {
+    var animationSpeed = 300;
+    $(menu).on('click', 'li a', function(e) {
+        var $this = $(this);
+        var checkElement = $this.next();
+        if (checkElement.is('.treeview-menu') && checkElement.is(':visible')) {
+            checkElement.slideUp(animationSpeed, function() {
+                checkElement.removeClass('menu-open');
+            });
+            checkElement.parent("li").removeClass("active");
+        } else if ((checkElement.is('.treeview-menu')) && (!checkElement.is(':visible'))) {
+            var parent = $this.parents('ul').first();
+            var ul = parent.find('ul:visible').slideUp(animationSpeed);
+            ul.removeClass('menu-open');
+            var parent_li = $this.parent("li");
+            checkElement.slideDown(animationSpeed, function() {
+                checkElement.addClass('menu-open');
+                parent.find('li.active').removeClass('active');
+                parent_li.addClass('active');
+            });
+        }
+        if (checkElement.is('.treeview-menu')) {
+            e.preventDefault();
+        }
+    });
+}
+
+// Only initialize once on DOM ready
+$(function() {
+    $.sidebarMenu($('.sidebar-menu'));
+});
+</script>
+{% endblock %} 
