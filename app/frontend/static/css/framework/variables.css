@@ -1,0 +1,13 @@
+:root {
+    --color-black: #000000;
+    --color-white: #ffffff;
+    --color-dark: #1c1f22;
+    --color-blue: var(--bs-primary);
+    --color-red: var(--bs-danger);
+    --color-muted-more: #ffffff35;
+
+    --accent-subtle: color-mix(in srgb, var(--accent) 65%, black);
+    --accent-dark: color-mix(in srgb, var(--accent) 35%, black);
+    --accent-light: color-mix(in srgb, var(--accent) 50%, white);
+
+}

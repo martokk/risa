@@ -1,10 +1,3 @@
-:root {
-    --accent: #fdcf5b;
-    --accent-subtle: color-mix(in srgb, var(--accent) 65%, black);
-    --accent-dark: color-mix(in srgb, var(--accent) 35%, black);
-    --accent-light: color-mix(in srgb, var(--accent) 50%, white);
-}
-
 .main-sidebar {
     position: fixed;
     top: 0;
