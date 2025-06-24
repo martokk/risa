@@ -6,6 +6,13 @@
 }
 
 [data-editable="true"]:hover {
-    background-color: rgba(0, 123, 255, 0.1);
-    /* Subtle blue on hover */
+    background: var(--color-dark);
+}
+
+
+
+[data-editable="true"]:focus {
+    background: #000;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }

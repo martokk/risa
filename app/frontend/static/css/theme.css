@@ -97,6 +97,7 @@ body {
 }
 
 
+/* Headings */
 h1 {
     font-size: 1.75rem;
 }
@@ -137,22 +138,6 @@ h6 {
 }
 
 
-/* Accent Color Utilities */
-:root {
-    --accent-subtle: color-mix(in srgb, var(--accent) 65%, black);
-    --accent-dark: color-mix(in srgb, var(--accent) 35%, black);
-    --accent-light: color-mix(in srgb, var(--accent) 50%, white);
-
-    --risa-host-accent-subtle: color-mix(in srgb, var(--risa-host-accent) 65%, black);
-    --risa-dev-accent-subtle: color-mix(in srgb, var(--risa-dev-accent) 65%, black);
-    --risa-local-accent-subtle: color-mix(in srgb, var(--risa-local-accent) 65%, black);
-    --risa-playground-accent-subtle: color-mix(in srgb, var(--risa-playground-accent) 65%, black);
-
-    --risa-host-accent-light: color-mix(in srgb, var(--risa-host-accent) 50%, white);
-    --risa-dev-accent-light: color-mix(in srgb, var(--risa-dev-accent) 50%, white);
-    --risa-local-accent-light: color-mix(in srgb, var(--risa-local-accent) 50%, white);
-    --risa-playground-accent-light: color-mix(in srgb, var(--risa-playground-accent) 50%, white);
-}
 
 .accent {
     color: var(--accent) !important;

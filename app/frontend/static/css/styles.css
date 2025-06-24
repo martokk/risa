@@ -1,19 +1,13 @@
-@import url('default.css');
-@import url('variables.css');
+/* Variables */
+@import url('framework/variables.css');
+@import url('project_variables.css');
+
+/* Framework */
+@import url('framework/text-colors.css');
+@import url('framework/tomselect.css');
+@import url('framework/inline-editor.css');
+@import url('framework/sidebar.css');
+
+/* Project */
+@import url('theme.css');
 @import url('dataset_tagger.css');
-@import url('tomselect.css');
-@import url('sidebar.css');
-
-.wrap {
-    /* top: 0; */
-    padding-right: 20px;
-    padding-bottom: 10px;
-    position: absolute;
-    width: 100%;
-    height: 100vh;
-    overflow-y: auto;
-}
-
-.wrap::-webkit-scrollbar {
-    display: none;
-}
