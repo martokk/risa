@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from sqlmodel import Session
 
+from app.models import settings
 from framework import crud
 from framework.core.db import get_db
 from framework.frontend.templates import templates
@@ -27,7 +28,7 @@ async def jobs_page(
     Returns:
         An HTML response rendering the jobs page.
     """
-    jobs = await crud.job.get_all(db)
+    jobs = await crud.job.get_all_jobs_for_env_name(db, env_name=settings.ENV_NAME)
     # Sort jobs by status and priority for display
     status_order = {
         "running": 0,

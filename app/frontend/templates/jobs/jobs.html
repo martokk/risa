@@ -10,19 +10,12 @@
 {% macro job_row(job) %}
 <tr id="job-row-{{ job.id }}" onclick="openEditModal('{{ job.id }}')" style="cursor: pointer;">
     <td>{{ job.name }}</td>
+    <td>{{ job.env_name }}</td>
     <td><small>{{ job.id|string|truncate(8, True, '') }}</small></td>
     <td>{{ job.recurrence | default('None', True) | title }}</td>
     <td>{{ job.type.value | title }}</td>
     <td><small>{{ job.command|truncate(50, True, '...') }}</small></td>
-    <td class="text-center">
-        <span class="badge 
-            {% if job.priority == 'high' %}bg-danger
-            {% elif job.priority == 'medium' %}bg-warning text-dark
-            {% else %}bg-secondary
-            {% endif %}">
-            {{ job.priority.value | title }}
-        </span>
-    </td>
+
     <td class="text-center">
         <span class="badge
             {% if job.status == 'running' %}bg-primary
@@ -101,11 +94,11 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>ENV_NAME</th>
                         <th>ID</th>
                         <th>Recurrence</th>
                         <th>Type</th>
                         <th>Command</th>
-                        <th>Priority</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -138,11 +131,11 @@
                 <thead>
                     <tr>
                         <th>Name</th>
+                        <th>ENV_NAME</th>
                         <th>ID</th>
                         <th>Recurrence</th>
                         <th>Type</th>
                         <th>Command</th>
-                        <th class="text-center">Priority</th>
                         <th class="text-center">Status</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -459,11 +452,11 @@
         return `
 <tr id="job-row-${job.id}" onclick="openEditModal('${job.id}')" style="cursor: pointer;">
     <td>${job.name}</td>
+    <td>${job.env_name}</td>
     <td><small>${String(job.id).substring(0, 8)}</small></td>
     <td>${job.recurrence ? job.recurrence.charAt(0).toUpperCase() + job.recurrence.slice(1) : 'None'}</td>
     <td>${job.type.charAt(0).toUpperCase() + job.type.slice(1)}</td>
     <td><small>${job.command.length > 50 ? job.command.substring(0, 50) + '...' : job.command}</small></td>
-    <td class="text-center"><span class="badge ${priorityBadge}">${job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}</span></td>
     <td class="text-center"><span class="badge ${statusBadge}">${job.status.charAt(0).toUpperCase() + job.status.slice(1)}</span></td>
     <td class="text-end"><div class="btn-group" role="group">${actions}</div></td>
 </tr>`;
@@ -476,8 +469,12 @@
         const priorityOrder = { high: 0, medium: 1, low: 2 };
         jobs.sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || (priorityOrder[a.priority] - priorityOrder[b.priority]));
 
+        // filter jobs by env_name
+        const env_name = '{{ ENV_NAME }}';
+        const envJobs = jobs.filter(j => j.env_name === env_name);
+
         // Active jobs
-        const activeJobs = jobs.filter(j => ['queued', 'running', 'pending'].includes(j.status));
+        const activeJobs = envJobs.filter(j => ['queued', 'running', 'pending'].includes(j.status));
         const activeTbody = document.querySelector('.card .card-body table tbody');
         console.log('Active jobs:', activeJobs);
         console.log('Active tbody:', activeTbody);
@@ -486,7 +483,7 @@
             : '<tr><td colspan="8" class="text-center">No active jobs in the queue.</td></tr>';
 
         // History jobs (sorted by created_at descending)
-        const historyJobs = jobs.filter(j => ['done', 'failed'].includes(j.status)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const historyJobs = envJobs.filter(j => ['done', 'failed'].includes(j.status)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         const historyTbody = document.querySelector('.card.mt-4 .card-body table tbody');
         console.log('History jobs:', historyJobs);
         console.log('History tbody:', historyTbody);
