@@ -20,9 +20,34 @@ export class LogStreamer {
 
         this.modal = new bootstrap.Modal(this.modalEl);
         this.webSocket = webSocket;
-        this.currentLogId = null; // e.g., job_id
+        this.topic = null; // e.g., job_id
 
         this._setupEventListeners();
+    }
+
+    _handleIncomingMessage() {
+        this.webSocket.addEventListener('message', (event) => {
+            try {
+
+                // Parse the message
+                const msg = JSON.parse(event.data);
+
+                // Handle Log Updates
+                if (msg.type === 'log_update') {
+                    // if (msg.topic === this.topic) {
+                    this._appendLog(msg.content);
+                    // }
+
+                    // Handle Log Errors
+                } else if (msg.type === 'log_error') {
+                    if (msg.topic === this.topic) {
+                        this._appendLog(`\n[Error streaming log: ${msg.error}]`, true);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to parse WebSocket message:', e);
+            }
+        });
     }
 
     _setupEventListeners() {
@@ -55,18 +80,7 @@ export class LogStreamer {
         });
 
         // Handle incoming WebSocket messages
-        this.webSocket.addEventListener('message', (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === 'log_update' && data.job_id === this.currentLogId) {
-                    this._appendLog(data.content);
-                } else if (data.type === 'log_error' && data.job_id === this.currentLogId) {
-                    this._appendLog(`\n[Error streaming log: ${data.error}]`, true);
-                }
-            } catch (e) {
-                console.error('Failed to parse WebSocket message:', e);
-            }
-        });
+        this._handleIncomingMessage();
     }
 
     _isScrolledToBottom() {
@@ -88,21 +102,18 @@ export class LogStreamer {
 
     /**
      * View a log by its ID.
-     * @param {string} logId - The ID of the log to view (e.g., job ID).
-     * @param {string} logType - The type of log ('job' or 'consumer').
+     * @param {string} topic - The topic of the log to view (e.g., job ID, app_id, etc.).
+     * @param {string} type - The type of log ('job', 'consumer', 'app', etc.).
      */
-    viewLog(logId, logType = 'job') {
+    viewLog({ topic, type }) {
         this.logContentEl.textContent = 'Loading...';
         this.modal.show();
-        this.currentLogId = logId;
+        this.topic = topic;
 
         const message = {
-            type: logType === 'job' ? 'subscribe_log' : `subscribe_${logType}_log`,
+            type: type === 'job' ? 'subscribe_log' : `subscribe_${type}_log`,
+            topic: topic,
         };
-
-        if (logType === 'job') {
-            message.job_id = logId;
-        }
 
         if (this.webSocket && this.webSocket.readyState === WebSocket.OPEN) {
             this.logContentEl.textContent = '';
