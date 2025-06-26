@@ -42,48 +42,6 @@
             refresh_token: "{{ tokens.refresh_token }}"
         });
 
-        window.sendAppCommand = async function(appName, command) {
-            const button = event.target.closest('button');
-            if (button) {
-                const group = button.closest('.btn-group');
-                group.querySelectorAll('button').forEach(b => b.disabled = true);
-                const icon = button.querySelector('i');
-                if (icon) {
-                    icon.className = 'fas fa-spinner fa-spin';
-                }
-            }
-            
-            try {
-                await apiCrud.postText(`app_manager/${appName}/${command}`, {});
-                toast.show(`App ${appName} command '${command}' sent successfully.`, 'success');
-                setTimeout(() => {
-                    uiHelpers.refreshPage();
-                }, 2500);
 
-            } catch (error) {
-                toast.show(error.message || 'An unknown error occurred', 'danger');
-                if (button) {
-                    const group = button.closest('.btn-group');
-                    group.querySelector('[title*="Start"]').disabled = false;
-                    group.querySelector('[title*="Stop"]').disabled = false;
-                    const icon = button.querySelector('i');
-                    if(icon){
-                        if(command === 'start'){
-                            icon.className = 'fas fa-play';
-                        } else {
-                            icon.className = 'fas fa-stop';
-                        }
-                    }
-                }
-            }
-        }
-
-        window.startApp = function(appName) {
-            sendAppCommand(appName, 'start');
-        }
-
-        window.stopApp = function(appName) {
-            sendAppCommand(appName, 'stop');
-        }
     </script>
 {% endblock %}

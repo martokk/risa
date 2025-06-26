@@ -1,0 +1,19 @@
+<!-- Log Viewer Modal -->
+<div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="logModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="logModalLabel">Log Viewer</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body position-relative">
+                <pre id="logContent" class="bg-dark small"
+                    style="word-wrap: break-word; max-height: 70vh; overflow-y: auto;font-size: x-small;"></pre>
+                <button id="scrollToBottomBtn" class="btn btn-sm btn-primary position-absolute end-0 bottom-0 m-3"
+                    style="display:none; z-index:10;">
+                    Scroll to Latest
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

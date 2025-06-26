@@ -1,41 +1,234 @@
-<div class="card risa-playground-card">
-    <div class="card-header risa-playground-card-header fw-bold">
+<div class="card">
+    <div class="card-header">
         App Manager
     </div>
-    <ul class="list-group list-group-flush">
-        {% for app in apps %}
-            {% set is_running = app.is_running %}
-            <li class="list-group-item py-1 {% if is_running %}bg-success-subtle fw-bold border-success {% else %}bg-dark-subtle{% endif %}">
-                <div class="d-flex align-items-center">
- 
-                    <div class="flex-grow-1">
-                        <h6 class="mb-0 py-2c" style="font-size: 1.1rem;">
-                        {% if is_running and app.port_connect %}
-                            <a href="//{{ request.client.host }}:{{ app.port_connect }}" target="_blank" class="text-success fw-bold text-decoration-none">{{ app.name
-                                }}</a>
-                        {% else %}
-                            <span class="text-secondary fst-italic fw-bold">{{ app.name }}</span>
-                        {% endif %}
-                        </h6>
-                    </div>
-                    <div class="btn-group ms-2">
-                        {% if app.command_start %}
-                            <button class="btn btn-sm {% if is_running %}btn {% else %}btn-outline-success{% endif %} py-0 px-1" title="Start {{ app.name }}"
-                                onclick="startApp('{{ app.name }}')" >
-                                <i class="fas fa-play"></i>
-                            </button>
-                        {% endif %}
 
-                        {% if app.command_start %}
-                            <button class="btn btn-sm {% if is_running %}btn-danger{% else %}btn-outline-secondary{% endif %} py-0 px-1" title="Stop {{ app.name }}"
-                                onclick="stopApp('{{ app.name }}')" >
-                                <i class="fas fa-stop"></i>
+    {% if ENV_NAME == 'playground' %}
+        <ul class="list-group list-group-flush">
+            {% for app in apps %}
+                {% set is_running = app.is_running %}
+                <li class="list-group-item {% if is_running %}bg-success-subtle border-success border-2{% else %}bg-dark-subtle{% endif %}">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0 py-1">
+                                {% if is_running and app.port_connect %}
+                                    <a href="//{{ request.client.host }}:{{ app.port_connect }}" target="_blank" class="text-white fw-bold text-decoration-none">{{ app.name
+                                        }}</a>
+                                {% else %}
+                                    <span class="text-secondary fst-italic">{{ app.name }}</span>
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <div class="btn-group ms-2">
+                            {% if app.command_start %}
+                                <button class="btn btn-sm {% if is_running %}btn-outline-secondary{% else %}btn-outline-success{% endif %} py-0 px-1" title="Start {{ app.name }}"
+                                    onclick="startApp('{{ app.id }}')" >
+                                    <i class="fas fa-play"></i>
+                                </button>
+                            {% endif %}
+
+                            {% if app.command_start %}
+                                <button class="btn btn-sm {% if is_running %}btn-danger{% else %}btn-outline-secondary{% endif %} py-0 px-1" title="Stop {{ app.name }}"
+                                    onclick="stopApp('{{ app.id }}')" >
+                                    <i class="fas fa-stop"></i>
+                                </button>
+                            {% endif %}
+
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-1" title="Log {{ app.name }}"
+                                onclick="viewAppManagerLog(event, '{{ app.id }}')" >
+                                <i class="fas fa-file-alt"></i>
                             </button>
-                        {% endif %}
+                        
+                        </div>
                     </div>
-                    
-                </div>
-            </li>
-        {% endfor %}
-    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <!-- Placeholder for non-playground environments -->
+        <ul class="list-group list-group-flush">
+            {% for i in range(4) %}
+                <li class="list-group-item">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0 py-1 placeholder-glow">
+                                <span class="placeholder col-9"></span>
+                            </h5>
+                        </div>
+                        <div class="btn-group ms-2">
+                            <button class="btn btn-sm py-0 px-1 disabled placeholder col-1" aria-hidden="true">
+                                <span class="visually-hidden">Loading...</span>
+                                <i class="fas fa-placeholder"></i>
+                            </button>
+                            <button class="btn btn-sm py-0 px-1 disabled placeholder col-1" aria-hidden="true">
+                                <span class="visually-hidden">Loading...</span>
+                                <i class="fas fa-placeholder"></i>
+                            </button>
+                            <button class="btn btn-sm py-0 px-1 disabled placeholder col-1" aria-hidden="true">
+                                <span class="visually-hidden">Loading...</span>
+                                <i class="fas fa-placeholder"></i>
+                            </button>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 </div>
+
+{% include "logs/_modal_view_log.html" %}
+
+<script type="module">
+    import { LogStreamer } from '/static/js/tools/log_streamer.js';
+
+
+    let logSocket = null;
+    let logStreamer = null;
+
+    function connectAppManagerWebSocket() {
+        let protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        let wsUrl = `${protocol}://${window.location.host}/api/v1/ws/app_manager`;
+        logSocket = new WebSocket(wsUrl);
+
+        // Initialize the LogStreamer once the socket is created
+        logStreamer = new LogStreamer('logModal', 'logContent', 'scrollToBottomBtn', logSocket);
+
+        logSocket.onmessage = function (event) {
+            try {
+                const data = JSON.parse(event.data);
+                // The log streamer now handles its own messages.
+                // We only need to handle non-log messages here.
+                /*
+                if (data.jobs) {
+                    updateJobTables(data.jobs);
+                }
+                */
+                
+            } catch (e) {
+                console.error('Failed to parse WebSocket message:', e);
+            }
+        };
+        logSocket.onclose = function () {
+            console.log('App Manager WebSocket closed');
+            setTimeout(connectAppManagerWebSocket, 3000);
+        };
+    }
+
+    window.viewAppManagerLog = function (event, appId) {
+        event.stopPropagation();
+        if (logStreamer) {
+            logStreamer.viewLog({ topic: appId, type: 'app' });
+        } else {
+            console.error("Log streamer is not initialized.");
+        }
+    };
+
+    window.sendAppCommand = async function (appId, command) {
+        const button = event.target.closest('button');
+        if (button) {
+            const group = button.closest('.btn-group');
+            group.querySelectorAll('button').forEach(b => b.disabled = true);
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-spinner fa-spin';
+            }
+        }
+
+        try {
+            await apiCrud.postText(`app_manager/${appId}/${command}`, {});
+            toast.show(`App ${appId} command '${command}' sent successfully.`, 'success');
+            setTimeout(() => {
+                uiHelpers.refreshPage();
+            }, 2500);
+
+        } catch (error) {
+            toast.show(error.message || 'An unknown error occurred', 'danger');
+            if (button) {
+                const group = button.closest('.btn-group');
+                group.querySelector('[title*="Start"]').disabled = false;
+                group.querySelector('[title*="Stop"]').disabled = false;
+                const icon = button.querySelector('i');
+                if (icon) {
+                    if (command === 'start') {
+                        icon.className = 'fas fa-play';
+                    } else {
+                        icon.className = 'fas fa-stop';
+                    }
+                }
+            }
+        }
+    };
+    
+    window.startApp = function (appId) {
+        sendAppCommand(appId, 'start');
+    };
+
+    window.stopApp = function (appId) {
+        sendAppCommand(appId, 'stop');
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        connectAppManagerWebSocket();
+
+        const viewLogBtn = document.getElementById('viewLogBtn');
+        if (viewLogBtn && logStreamer) {
+            viewLogBtn.addEventListener('click', () => {
+                const appId = viewLogBtn.dataset.appId;
+                logStreamer.viewLog({ topic: appId, type: "app" });
+            });
+        }
+    });
+</script>
+    <script type="module">
+        import { initializeApi, apiCrud, uiHelpers } from '/static/js/api_utils.js';
+        import { toast } from '/static/js/toast.js';
+
+        initializeApi({
+            access_token: "{{ tokens.access_token }}",
+            refresh_token: "{{ tokens.refresh_token }}"
+        });
+
+        window.sendAppCommand = async function (appName, command) {
+            const button = event.target.closest('button');
+            if (button) {
+                const group = button.closest('.btn-group');
+                group.querySelectorAll('button').forEach(b => b.disabled = true);
+                const icon = button.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-spinner fa-spin';
+                }
+            }
+
+            try {
+                await apiCrud.postText(`app_manager/${appName}/${command}`, {});
+                toast.show(`App ${appName} command '${command}' sent successfully.`, 'success');
+                setTimeout(() => {
+                    uiHelpers.refreshPage();
+                }, 2500);
+
+            } catch (error) {
+                toast.show(error.message || 'An unknown error occurred', 'danger');
+                if (button) {
+                    const group = button.closest('.btn-group');
+                    group.querySelector('[title*="Start"]').disabled = false;
+                    group.querySelector('[title*="Stop"]').disabled = false;
+                    const icon = button.querySelector('i');
+                    if (icon) {
+                        if (command === 'start') {
+                            icon.className = 'fas fa-play';
+                        } else {
+                            icon.className = 'fas fa-stop';
+                        }
+                    }
+                }
+            }
+        }
+
+        window.startApp = function (appName) {
+            sendAppCommand(appName, 'start');
+        }
+
+        window.stopApp = function (appName) {
+            sendAppCommand(appName, 'stop');
+        }
+    </script>
