@@ -17,8 +17,8 @@ def get_config() -> dict[str, Any]:
         config_yaml = yaml.safe_load(f)
 
     app_instances = []
-    if config_yaml and "apps" in config_yaml:
-        apps_data = config_yaml["apps"]
+    if config_yaml and "app_manager" in config_yaml:
+        apps_data = config_yaml["app_manager"]["apps"]
         for app in apps_data:
             app_instances.append(AppManagerApp.model_validate(app))
 

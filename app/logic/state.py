@@ -126,3 +126,11 @@ def get_network_state(db: Session) -> NetworkState:
 #     except Exception as e:
 #         logger.error(f"Failed to get the network state from the host api: {e}")
 #         return None
+
+
+def is_env_name_running(env_name: str) -> bool:
+    with get_db_context() as db:
+        instance_state = crud.sync.instance_state.get(db, id=env_name)
+        if instance_state:
+            return instance_state.is_running
+        return False

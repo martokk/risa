@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     app_manager,
+    app_manager_ws,
     character,
     export,
     hub,
@@ -30,3 +31,4 @@ api_router.include_router(sd_extra_network.router, tags=["SD Extra Networks"])
 api_router.include_router(app_manager.router, tags=["App Manager"])
 api_router.include_router(job_queue_ws.router, tags=["Job Queue WS"])
 api_router.include_router(hub.router, tags=["Tools"])
+api_router.include_router(app_manager_ws.router, tags=["App Manager WS"])
