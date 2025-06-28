@@ -7,7 +7,7 @@ from sqlmodel import Session
 from app import crud, logger, models
 from app.logic import state
 from app.logic.dashboard import get_config
-from app.logic.file_management import get_trained_lora_output_names
+from app.logic.file_management import get_trained_lora_safetensors
 from framework.core.db import get_db
 from framework.frontend.deps import get_current_active_user
 from framework.frontend.templates import templates
@@ -56,7 +56,7 @@ async def dashboard_page(
     context["risa_playground_state"] = network_state.playground
 
     # Script Hooks
-    context["lora_output_names"] = get_trained_lora_output_names() or []
+    context["trained_lora_safetensors"] = get_trained_lora_safetensors() or []
 
     return templates.TemplateResponse(
         "dashboard/dashboard.html",

@@ -15,8 +15,12 @@
                 <label for="lora_output_name" class="form-label">Lora Output Name</label>
                 <select class="form-select" id="lora_output_name" name="lora_output_name">
                     <option value="">Trained Lora</option>
-                    {% for lora_output_name in lora_output_names %}
-                        <option value="{{ lora_output_name }}">{{ lora_output_name }}</option>
+                    {% for trained_lora_safetensors in trained_lora_safetensors %}
+                        <option value="{{ trained_lora_safetensors.lora_output_name }}"
+                                data-min-epoch="{{ trained_lora_safetensors.min_epoch }}"
+                                data-max-epoch="{{ trained_lora_safetensors.max_epoch }}">
+                            {{ trained_lora_safetensors.lora_output_name }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
@@ -158,159 +162,7 @@
                 </div>
             </div>
 
-            <!-- XY Plot Settings Accordion Item -->
-            {% set x_type_value = "Seed" %}
-            {% set y_type_value = "Prompt S/R" %}
-            <div class="accordion-item">
-
-                <!-- XY Plot Settings Accordion Header -->
-                <h2 class="accordion-header" id="headingXyPlot">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseXyPlot" aria-expanded="true" aria-controls="collapseXyPlot">
-                        XY Plot Settings
-                    </button>
-                </h2>
-
-                <!-- XY Plot Settings Accordion Body -->
-                <div id="collapseXyPlot" class="accordion-collapse collapse show" aria-labelledby="headingXyPlot" data-bs-parent="#settingsAccordion">
-                    <div class="accordion-body">
-                        <div class="row g-2 mb-2">
-
-                            <!-- X Type -->
-                            {# <div class="col">
-                                <label for="x_type" class="form-label">X Type</label>
-                                <input type="number" class="form-control" id="x_type" name="x_type" placeholder="1">
-                            </div> #}
-
-                            <!-- X Values -->
-                            <div class="col">
-                                <label for="x_values" class="form-label">X Values {{ "[" + x_type_value + "]" if x_type_value else "" }}</label>
-                                <input type="text" class="form-control" id="x_values" name="x_values" placeholder="-1,-1">
-                            </div>
-
-                            <!-- X Values Dropdown -->
-                            {# <div class="col">
-                                <label for="x_values_dropdown" class="form-label">X Values Dropdown</label>
-                                <input type="text" class="form-control" id="x_values_dropdown" name="x_values_dropdown" placeholder="">
-                            </div> #}
-                        </div>
-
-                        <!-- Y Type -->
-                        <div class="row g-2 mb-2">
-                            {# <div class="col">
-                                <label for="y_type" class="form-label">Y Type</label>
-                                <input type="number" class="form-control" id="y_type" name="y_type" placeholder="7">
-                            </div> #}
-
-                            <!-- Y Values -->
-                            <div class="col">
-                                <label for="y_values" class="form-label">Y Values {{ "[" + y_type_value + "]" if y_type_value else "" }}</label>
-                                <input type="text" class="form-control" id="y_values" name="y_values" placeholder=",">
-                            </div>
-
-                            {# <!-- Y Values Dropdown -->
-                            <div class="col">
-                                <label for="y_values_dropdown" class="form-label">Y Values Dropdown</label>
-                                <input type="text" class="form-control" id="y_values_dropdown" name="y_values_dropdown" placeholder="">
-                            </div> #}
-                        </div>
-
-                        <!-- Z Type -->
-                        {# <div class="row g-2 mb-2">
-                            <div class="col">
-                                <label for="z_type" class="form-label">Z Type</label>
-                                <input type="number" class="form-control" id="z_type" name="z_type" placeholder="0">
-                            </div>
-
-                            <!-- Z Values -->
-                            <div class="col">
-                                <label for="z_values" class="form-label">Z Values (comma separated)</label>
-                                <input type="text" class="form-control" id="z_values" name="z_values" placeholder="">
-                            </div>
-
-                            <!-- Z Values Dropdown -->
-                            <div class="col">
-                                <label for="z_values_dropdown" class="form-label">Z Values Dropdown</label>
-                                <input type="text" class="form-control" id="z_values_dropdown" name="z_values_dropdown" placeholder="">
-                            </div>
-                        </div> #}
-
-                        <!-- Draw Legend -->
-                        {# <div class="row g-2 mb-2">
-                            <div class="col">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="draw_legend" name="draw_legend" checked>
-                                    <label class="form-check-label" for="draw_legend">Draw Legend</label>
-                                </div>
-                            </div>
-
-                            <!-- Include Lone Images -->
-                            <div class="col">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="include_lone_images" name="include_lone_images">
-                                    <label class="form-check-label" for="include_lone_images">Include Lone Images</label>
-                                </div>
-                            </div>
-
-                            <!-- Include Sub Grids -->
-                            <div class="col">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="include_sub_grids" name="include_sub_grids">
-                                    <label class="form-check-label" for="include_sub_grids">Include Sub Grids</label>
-                                </div>
-                            </div>
-
-                            <!-- No Fixed Seeds -->
-                            <div class="col">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="no_fixed_seeds" name="no_fixed_seeds">
-                                    <label class="form-check-label" for="no_fixed_seeds">No Fixed Seeds</label>
-                                </div>
-                            </div>
-                        </div> #}
-
-                        <!-- Vary Seeds X -->
-                        {# <div class="row g-2 mb-2">
-                            <div class="col">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="vary_seeds_x" name="vary_seeds_x">
-                                    <label class="form-check-label" for="vary_seeds_x">Vary Seeds X</label>
-                                </div>
-                            </div>
-
-                            <!-- Vary Seeds Y -->
-                            <div class="col">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="vary_seeds_y" name="vary_seeds_y">
-                                    <label class="form-check-label" for="vary_seeds_y">Vary Seeds Y</label>
-                                </div>
-                            </div>
-
-                            <!-- Vary Seeds Z -->
-                            <div class="col">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="vary_seeds_z" name="vary_seeds_z">
-                                    <label class="form-check-label" for="vary_seeds_z">Vary Seeds Z</label>
-                                </div>
-                            </div>
-
-                            <!-- Margin Size -->
-                            <div class="col">
-                                <label for="margin_size" class="form-label">Margin Size</label>
-                                <input type="number" class="form-control" id="margin_size" name="margin_size" placeholder="0">
-                            </div>
-
-                            <!-- CSV Mode -->
-                            <div class="col">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="csv_mode" name="csv_mode">
-                                    <label class="form-check-label" for="csv_mode">CSV Mode</label>
-                                </div>
-                            </div>
-                            
-                        </div> #}
-                    </div>
-                </div>
-            </div>
+            
         </div>
 
     </div>
@@ -332,7 +184,60 @@
 {% block modal_scripts %}
     {{ super() }}
     <script type="module">
-        // Example: Post-process output if needed
-        // You can add custom JS here if your script needs to further process the output
+        document.addEventListener('DOMContentLoaded', () => {
+            const loraSelect = document.getElementById('lora_output_name');
+            const characterSelect = document.getElementById('character_id');
+            const checkpointSelect = document.getElementById('sd_checkpoint_id');
+            const startEpochInput = document.getElementById('start_epoch');
+            const endEpochInput = document.getElementById('end_epoch');
+            const maxEpochsInput = document.getElementById('max_epochs');
+            const promptInput = document.getElementById('prompt');
+
+            if (!loraSelect || !characterSelect || !checkpointSelect) return;
+
+            // Collect all character and checkpoint IDs from the options (skip empty value)
+            const characterIds = Array.from(characterSelect.options)
+                .map(opt => opt.value)
+                .filter(val => val);
+            const checkpointIds = Array.from(checkpointSelect.options)
+                .map(opt => opt.value)
+                .filter(val => val);
+
+            loraSelect.addEventListener('change', () => {
+                const selectedOption = loraSelect.options[loraSelect.selectedIndex];
+                const minEpoch = selectedOption.getAttribute('data-min-epoch');
+                const maxEpochs = selectedOption.getAttribute('data-max-epoch');
+                if (minEpoch && maxEpochs && startEpochInput && endEpochInput) {
+                    startEpochInput.value = minEpoch;
+                    endEpochInput.value = maxEpochs;
+                    maxEpochsInput.value = maxEpochs;
+                }
+                // Character selection
+                let foundChar = false;
+                for (const charId of characterIds) {
+                    if (loraSelect.value.includes(charId)) {
+                        characterSelect.value = charId;
+                        foundChar = true;
+                        break;
+                    }
+                }
+                if (!foundChar) characterSelect.value = '';
+
+                // Checkpoint selection
+                let foundCkpt = false;
+                for (const ckptId of checkpointIds) {
+                    if (loraSelect.value.includes(ckptId)) {
+                        checkpointSelect.value = ckptId;
+                        foundCkpt = true;
+                        break;
+                    }
+                }
+
+                // Prompt
+                promptInput.value = `<lora:${loraSelect.value}-00000${startEpochInput.value}:1> trigger, 1girl, smile, portrait`;
+            
+                if (!foundCkpt) checkpointSelect.value = '';
+            });
+        });
     </script>
 {% endblock %} 

@@ -142,17 +142,18 @@ body {
 
 /* Cards */
 .card-header {
-    color: var(--accent) !important;
+    color: var(--accent);
+    font-weight: bold;
 }
 
 .card {
-    border-color: var(--accent) !important;
+    border-color: var(--accent-subtle);
 }
 
 /* Accordion */
 
 .accordion-item {
-    border: var(--bs-accordion-border-width) solid var(--accent) !important;
+    border: var(--bs-accordion-border-width) solid #d3d3d3 !important;
     padding: 0.3rem !important;
 }
 
@@ -163,6 +164,27 @@ body {
     padding: var(--bs-card-cap-padding-y) var(--bs-card-cap-padding-x);
     font-weight: bold !important;
 }
+
+/* Modals */
+.modal-content {
+    border-color: var(--accent) !important;
+}
+
+.modal-header {
+    font-weight: bold !important;
+    color: var(--accent) !important;
+    border: none !important;
+}
+
+.modal-body {
+    border: none !important;
+}
+
+.modal-footer {
+    border: none !important;
+}
+
+
 
 
 /* === Compact Global Resets === */
@@ -213,7 +235,7 @@ body,
 .form-control,
 .form-select {
     padding: 0.25rem 0.375rem !important;
-    height: auto !important;
+    /* height: auto !important; */
 }
 
 .form-group {
@@ -273,6 +295,10 @@ textarea {
 }
 
 /* === Modals === */
+
+.modal-backdrop {
+    --bs-backdrop-opacity: 0.80 !important;
+}
 
 .modal-content {
     padding: 0.5rem !important;
@@ -347,8 +373,4 @@ h6 {
 .card-header {
     font-weight: bold !important;
     margin-bottom: 0.25rem !important;
-}
-
-.modal-xl {
-    --bs-modal-width: 1400px;
 }
