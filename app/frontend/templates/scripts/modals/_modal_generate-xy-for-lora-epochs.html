@@ -215,7 +215,7 @@
                 // Character selection
                 let foundChar = false;
                 for (const charId of characterIds) {
-                    if (loraSelect.value.includes(charId)) {
+                    if (loraSelect.value.toLowerCase().includes(charId.toLowerCase())) {
                         characterSelect.value = charId;
                         foundChar = true;
                         break;
@@ -226,7 +226,7 @@
                 // Checkpoint selection
                 let foundCkpt = false;
                 for (const ckptId of checkpointIds) {
-                    if (loraSelect.value.includes(ckptId)) {
+                    if (loraSelect.value.toLowerCase().includes(ckptId.toLowerCase())) {
                         checkpointSelect.value = ckptId;
                         foundCkpt = true;
                         break;
@@ -234,7 +234,7 @@
                 }
 
                 // Prompt
-                promptInput.value = `<lora:${loraSelect.value}-00000${startEpochInput.value}:1> trigger, 1girl, smile, portrait`;
+                promptInput.value = `<lora:${loraSelect.value}-${startEpochInput.value.padStart(6, '0')}:1> trigger, 1girl, smile, portrait`;
             
                 if (!foundCkpt) checkpointSelect.value = '';
             });

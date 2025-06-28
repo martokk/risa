@@ -11,6 +11,7 @@ class Settings(PythonFastAPIBaseSettings):
     RISA_HOST_BASE_URL: str = "http://localhost:5000"
     HUB_PATH: str = ""
     EXPORT_API_KEY: str = ""
+    WORKSPACE_PATH: str = "/workspace"
     DASHBOARD_CONFIG_PATH: str = "/app/data/config_dashboard.yaml"
     DATASET_TAGGER_WALKTHROUGH_PATH: str = "/app/data/dataset_tagger_walkthrough.yaml"
 
