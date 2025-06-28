@@ -1,0 +1,33 @@
+{% extends "scripts/modals/_modal_script_base.html" %}
+
+{% block modal_id %}modalExampleScript{% endblock %}
+{% block modal_label_id %}modalExampleScriptLabel{% endblock %}
+{% block modal_title %}Example Script Modal{% endblock %}
+
+
+{% block modal_input %}
+    <div class="mb-3">
+        <label for="exampleInput" class="form-label">Example Input</label>
+        <input type="text" class="form-control" id="exampleInput" name="input_text" placeholder="Enter something..." required>
+    </div>
+    <button type="submit" class="btn btn-primary float-end">Run Script</button>
+{% endblock %}
+
+
+{% block modal_output %}
+        <!-- Output/result will be rendered here by JS -->
+{% endblock %}
+
+
+{% block modal_footer %}
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+{% endblock %}
+
+
+{% block modal_scripts %}
+    {{ super() }}
+    <script type="module">
+        // Example: Post-process output if needed
+        // You can add custom JS here if your script needs to further process the output
+    </script>
+{% endblock %} 

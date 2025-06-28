@@ -12,9 +12,11 @@ from huey import crontab
 from sqlmodel import Session
 
 from app import logger, paths, settings
+from app.scripts.generate_xy_for_lora_epochs import ScriptGenerateXYForLoraEpochs
 from framework import crud, models
 from framework.core.db import get_db_context
 from framework.core.huey import huey
+from framework.services.scripts import ScriptOutput
 
 
 def trigger_next_queued_job() -> None:
@@ -117,6 +119,55 @@ def run_command_job(db: Session, db_job: models.Job) -> None:
         raise
 
 
+def run_script_job(db_job: models.Job) -> None:
+    """
+    Executes a script job using the script class.
+    """
+    logger.info(f"Recieved run_script_job() request for job `{db_job.name}` - `{db_job.id}`")
+
+    script_class_name = db_job.command
+    logger.info(f"script_class_name: {script_class_name}")
+
+    logger.info(f"db_job.meta: {db_job.meta}")
+
+    if script_class_name == "ScriptGenerateXYForLoraEpochs":
+        script_class = ScriptGenerateXYForLoraEpochs
+    else:
+        raise ValueError(f"Unknown script class name: {script_class_name}")
+
+    if settings.ENV_NAME == "playground":
+        script_output = script_class().run(**db_job.meta)
+    else:
+        logger.warning(f"Script job {db_job.id} is running in {settings.ENV_NAME} environment.")
+        logger.info(f"ENV_NAME: {settings.ENV_NAME}")
+        logger.info(f"script_class_name: {script_class_name}")
+        logger.info(f"script_class: {script_class}")
+        logger.info(f"db_job.meta: {db_job.meta}")
+        script_output = ScriptOutput(
+            success=True,
+            message="Successfully ran script job.",
+            data={"output": "output"},
+        )
+
+    # script_output = ScriptGenerateXYForLoraEpochs().run(
+    #     character_id="ashley_pasco",
+    #     sd_checkpoint_id="cyberrealisticPony_v110",
+    #     lora_model_name="ashley_pasco_cyberrealisticPony_v110_1",
+    #     start_epoch=9,
+    #     end_epoch=30,
+    #     max_epochs=30,
+    #     seeds_per_epoch=1,
+    #     text2img_settings=Text2ImgSettings(
+    #         prompt="<lora:ashley_pasco_cyberrealisticPony_v110_1-000009:1> ashleyp, smile, 1girl",
+    #         styles=["general"],
+    #         override_settings={
+    #             "CLIP_stop_at_last_layers": 2,
+    #             "sd_vae": "Automatic",
+    #         },
+    #     ),
+    # )
+
+
 def run_api_post_job(job: models.Job) -> None:  # TODO: Not implemented yet (dummy code)
     """
     Executes an API POST job using requests.
@@ -211,6 +262,9 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
                         raise  # Re-raise other exceptions
             elif db_job.type == models.JobType.api_post:
                 run_api_post_job(db_job)
+                job_succeeded = True
+            elif db_job.type == models.JobType.script:
+                run_script_job(db_job)
                 job_succeeded = True
 
         except Exception as e:

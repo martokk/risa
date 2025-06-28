@@ -1,0 +1,338 @@
+{% extends "scripts/modals/_modal_script_base.html" %}
+
+{% block modal_id %}modalGenerateXyForLoraEpochs{% endblock %}
+{% block modal_label_id %}modalGenerateXyForLoraEpochsLabel{% endblock %}
+{% block modal_title %}Generate XY Plot for Lora Epochs{% endblock %}
+{% block script_id %}generate-xy-for-lora-epochs{% endblock %} {# API endpoint #}
+
+{% block modal_input %}
+    <div class="mb-3">
+        <!-- SD Checkpoint ID and Lora Output Name in a row -->
+        <div class="row g-2 mb-2">
+
+            <!-- Lora Output Name -->
+            <div class="col">
+                <label for="lora_output_name" class="form-label">Lora Output Name</label>
+                <select class="form-select" id="lora_output_name" name="lora_output_name">
+                    <option value="">Trained Lora</option>
+                    {% for lora_output_name in lora_output_names %}
+                        <option value="{{ lora_output_name }}">{{ lora_output_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Character -->
+            <div class="col">
+                <label for="character_id" class="form-label">Character</label>
+                <select class="form-select" id="character_id" name="character_id">
+                    <option value="">Character</option>
+                    {% for character in characters %}
+                    <option value="{{ character.id }}">{{ character.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- SD Checkpoint ID -->
+            <div class="col">
+                <label for="sd_checkpoint_id" class="form-label">SD Checkpoint ID</label>
+                <select class="form-select" id="sd_checkpoint_id" name="sd_checkpoint_id">
+                    <option value="">Checkpoint</option>
+                    {% for sd_checkpoint in sd_checkpoints %}
+                    <option value="{{ sd_checkpoint.id }}">{{ sd_checkpoint.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+        </div>
+        <!-- Epochs and Seeds in a row -->
+        <div class="row g-2 mb-2">
+            <div class="col">
+                <label for="start_epoch" class="form-label">Start Epoch</label>
+                <input type="number" class="form-control" id="start_epoch" name="start_epoch" value="9" required>
+            </div>
+            <div class="col">
+                <label for="end_epoch" class="form-label">End Epoch</label>
+                <input type="number" class="form-control" id="end_epoch" name="end_epoch" value="30" required>
+            </div>
+            <div class="col">
+                <label for="max_epochs" class="form-label">Max Epochs</label>
+                <input type="number" class="form-control" id="max_epochs" name="max_epochs" value="30" required>
+            </div>
+            <div class="col">
+                <label for="seeds_per_epoch" class="form-label">Seeds/Epoch</label>
+                <input type="number" class="form-control" id="seeds_per_epoch" name="seeds_per_epoch" value="1" required>
+            </div>
+            
+        </div>
+
+        <!-- Accordion for Settings -->
+        <div class="accordion mb-3" id="settingsAccordion">
+            <!-- Text2Img Settings Accordion Item -->
+            <div class="accordion-item">
+
+                <!-- Text2Img Settings Accordion Header -->
+                <h2 class="accordion-header" id="headingText2Img">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseText2Img" aria-expanded="true" aria-controls="collapseText2Img">
+                        Text2Img Settings
+                    </button>
+                </h2>
+
+                <!-- Text2Img Settings Accordion Body -->
+                <div id="collapseText2Img" class="accordion-collapse collapse show" aria-labelledby="headingText2Img" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <div class="row g-2 mb-2">
+
+                            <!-- Sampler Name -->
+                            <div class="col">
+                                <label for="sampler_name" class="form-label">Sampler Name</label>
+                                <input type="text" class="form-control" id="sampler_name" name="sampler_name" value="Euler a">
+                            </div>
+
+                            <!-- Seed --> 
+                            <div class="col">
+                                <label for="seed" class="form-label">Seed</label>
+                                <input type="number" class="form-control" id="seed" name="seed" value="-1">
+                            </div>
+
+                            <!-- Steps -->
+                            <div class="col">
+                                <label for="steps" class="form-label">Steps</label>
+                                <input type="number" class="form-control" id="steps" name="steps" value="20">
+                            </div>
+
+                            <!-- CFG Scale -->
+                            <div class="col">
+                                <label for="cfg_scale" class="form-label">CFG Scale</label>
+                                <input type="number" step="0.1" class="form-control" id="cfg_scale" name="cfg_scale" value="7.0">
+                            </div>
+
+                        </div>
+
+                        <div class="row g-2 mb-2">
+
+                            <!-- Width -->
+                            <div class="col">
+                                <label for="width" class="form-label">Width</label>
+                                <input type="number" class="form-control" id="width" name="width" value="768">
+                            </div>
+
+                            <!-- Height -->
+                            <div class="col">
+                                <label for="height" class="form-label">Height</label>
+                                <input type="number" class="form-control" id="height" name="height" value="768">
+                            </div>
+
+                            <!-- Batch Size -->
+                            <div class="col">
+                                <label for="batch_size" class="form-label">Batch Size</label>
+                                <input type="number" class="form-control" id="batch_size" name="batch_size" value="1">
+                            </div>
+
+                            <!-- N Inter -->
+                            <div class="col">
+                                <label for="n_iter" class="form-label">N Iter</label>
+                                <input type="number" class="form-control" id="n_iter" name="n_iter" value="1">
+                            </div>
+
+                        </div>
+
+                        <!-- Styles -->
+                        <div class="mb-2">
+                            <label for="styles" class="form-label">Styles (comma separated)</label>
+                            <input type="text" class="form-control" id="styles" name="styles" value="general">
+                        </div>
+
+                        <!-- Prompt -->
+                        <div class="mb-2">
+                            <label for="prompt" class="form-label">Prompt</label>
+                            <textarea class="form-control" id="prompt" name="prompt" rows="2" value="<lora:XXX:1> trigger, 1girl, smile, portrait"></textarea>
+                        </div>
+
+                        <!-- Negative Prompt -->
+                        <div class="mb-2">
+                            <label for="negative_prompt" class="form-label">Negative Prompt</label>
+                            <textarea class="form-control" id="negative_prompt" name="negative_prompt" rows="2" value=""></textarea>
+                        </div>
+        
+                    </div>
+                </div>
+            </div>
+
+            <!-- XY Plot Settings Accordion Item -->
+            {% set x_type_value = "Seed" %}
+            {% set y_type_value = "Prompt S/R" %}
+            <div class="accordion-item">
+
+                <!-- XY Plot Settings Accordion Header -->
+                <h2 class="accordion-header" id="headingXyPlot">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseXyPlot" aria-expanded="true" aria-controls="collapseXyPlot">
+                        XY Plot Settings
+                    </button>
+                </h2>
+
+                <!-- XY Plot Settings Accordion Body -->
+                <div id="collapseXyPlot" class="accordion-collapse collapse show" aria-labelledby="headingXyPlot" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <div class="row g-2 mb-2">
+
+                            <!-- X Type -->
+                            {# <div class="col">
+                                <label for="x_type" class="form-label">X Type</label>
+                                <input type="number" class="form-control" id="x_type" name="x_type" placeholder="1">
+                            </div> #}
+
+                            <!-- X Values -->
+                            <div class="col">
+                                <label for="x_values" class="form-label">X Values {{ "[" + x_type_value + "]" if x_type_value else "" }}</label>
+                                <input type="text" class="form-control" id="x_values" name="x_values" placeholder="-1,-1">
+                            </div>
+
+                            <!-- X Values Dropdown -->
+                            {# <div class="col">
+                                <label for="x_values_dropdown" class="form-label">X Values Dropdown</label>
+                                <input type="text" class="form-control" id="x_values_dropdown" name="x_values_dropdown" placeholder="">
+                            </div> #}
+                        </div>
+
+                        <!-- Y Type -->
+                        <div class="row g-2 mb-2">
+                            {# <div class="col">
+                                <label for="y_type" class="form-label">Y Type</label>
+                                <input type="number" class="form-control" id="y_type" name="y_type" placeholder="7">
+                            </div> #}
+
+                            <!-- Y Values -->
+                            <div class="col">
+                                <label for="y_values" class="form-label">Y Values {{ "[" + y_type_value + "]" if y_type_value else "" }}</label>
+                                <input type="text" class="form-control" id="y_values" name="y_values" placeholder=",">
+                            </div>
+
+                            {# <!-- Y Values Dropdown -->
+                            <div class="col">
+                                <label for="y_values_dropdown" class="form-label">Y Values Dropdown</label>
+                                <input type="text" class="form-control" id="y_values_dropdown" name="y_values_dropdown" placeholder="">
+                            </div> #}
+                        </div>
+
+                        <!-- Z Type -->
+                        {# <div class="row g-2 mb-2">
+                            <div class="col">
+                                <label for="z_type" class="form-label">Z Type</label>
+                                <input type="number" class="form-control" id="z_type" name="z_type" placeholder="0">
+                            </div>
+
+                            <!-- Z Values -->
+                            <div class="col">
+                                <label for="z_values" class="form-label">Z Values (comma separated)</label>
+                                <input type="text" class="form-control" id="z_values" name="z_values" placeholder="">
+                            </div>
+
+                            <!-- Z Values Dropdown -->
+                            <div class="col">
+                                <label for="z_values_dropdown" class="form-label">Z Values Dropdown</label>
+                                <input type="text" class="form-control" id="z_values_dropdown" name="z_values_dropdown" placeholder="">
+                            </div>
+                        </div> #}
+
+                        <!-- Draw Legend -->
+                        {# <div class="row g-2 mb-2">
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="draw_legend" name="draw_legend" checked>
+                                    <label class="form-check-label" for="draw_legend">Draw Legend</label>
+                                </div>
+                            </div>
+
+                            <!-- Include Lone Images -->
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="include_lone_images" name="include_lone_images">
+                                    <label class="form-check-label" for="include_lone_images">Include Lone Images</label>
+                                </div>
+                            </div>
+
+                            <!-- Include Sub Grids -->
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="include_sub_grids" name="include_sub_grids">
+                                    <label class="form-check-label" for="include_sub_grids">Include Sub Grids</label>
+                                </div>
+                            </div>
+
+                            <!-- No Fixed Seeds -->
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="no_fixed_seeds" name="no_fixed_seeds">
+                                    <label class="form-check-label" for="no_fixed_seeds">No Fixed Seeds</label>
+                                </div>
+                            </div>
+                        </div> #}
+
+                        <!-- Vary Seeds X -->
+                        {# <div class="row g-2 mb-2">
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="vary_seeds_x" name="vary_seeds_x">
+                                    <label class="form-check-label" for="vary_seeds_x">Vary Seeds X</label>
+                                </div>
+                            </div>
+
+                            <!-- Vary Seeds Y -->
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="vary_seeds_y" name="vary_seeds_y">
+                                    <label class="form-check-label" for="vary_seeds_y">Vary Seeds Y</label>
+                                </div>
+                            </div>
+
+                            <!-- Vary Seeds Z -->
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="vary_seeds_z" name="vary_seeds_z">
+                                    <label class="form-check-label" for="vary_seeds_z">Vary Seeds Z</label>
+                                </div>
+                            </div>
+
+                            <!-- Margin Size -->
+                            <div class="col">
+                                <label for="margin_size" class="form-label">Margin Size</label>
+                                <input type="number" class="form-control" id="margin_size" name="margin_size" placeholder="0">
+                            </div>
+
+                            <!-- CSV Mode -->
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="csv_mode" name="csv_mode">
+                                    <label class="form-check-label" for="csv_mode">CSV Mode</label>
+                                </div>
+                            </div>
+                            
+                        </div> #}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button type="submit" class="btn btn-primary float-end">Add to Job Queue</button>
+{% endblock %}
+
+
+{% block modal_output %}
+        <!-- Output/result will be rendered here by JS -->
+{% endblock %}
+
+
+{% block modal_footer %}
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+{% endblock %}
+
+
+{% block modal_scripts %}
+    {{ super() }}
+    <script type="module">
+        // Example: Post-process output if needed
+        // You can add custom JS here if your script needs to further process the output
+    </script>
+{% endblock %} 

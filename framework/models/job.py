@@ -16,6 +16,7 @@ class JobType(str, Enum):
 
     command = "command"  # Shell script or bash .sh
     api_post = "api_post"  # POST to a given endpoint
+    script = "script"  # Run a script
 
 
 class Priority(str, Enum):
@@ -46,7 +47,10 @@ class JobBase(SQLModel):
     env_name: str = Field(default="dev")
     name: str = Field(default="")
     type: JobType = Field(default=JobType.command)
-    command: str = Field(default="")
+    command: str = Field(
+        default="",
+        description="The command (or script Class Name) to run for the job.",
+    )
     meta: dict[str, Any] = Field(default_factory=dict, sa_type=JSON)
     pid: int | None = Field(default=None)
     priority: Priority = Field(default=Priority.normal)

@@ -3,7 +3,7 @@
 {% block title %}Job Queue{% endblock %}
 
 {% block sidebar_right %}
-    {% include "/jobs/_quick_jobs.html" %}
+    {% include "/scripts/_scripts_jobs.html" %}
 {% endblock sidebar_right %}
 
 
@@ -181,6 +181,7 @@
                         <select class="form-select" id="jobType" name="type" required>
                             <option value="command">Command</option>
                             <option value="api_post">API Post</option>
+                            <option value="script">Script</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -207,7 +208,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="jobMeta" class="form-label">Meta (JSON for API Post)</label>
-                        <textarea class="form-control" id="jobMeta" name="meta" rows="3">{}</textarea>
+                        <textarea class="form-control" id="jobMeta" name="meta" rows="8">{}</textarea>
                     </div>
                 </form>
             </div>

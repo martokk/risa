@@ -46,6 +46,10 @@
     }
 }
 
+.modal-xl {
+    --bs-modal-width: 1400px;
+}
+
 .navbar-nav .dropdown-menu {
     z-index: 2000 !important;
 }
@@ -145,6 +149,21 @@ body {
     border-color: var(--accent) !important;
 }
 
+/* Accordion */
+
+.accordion-item {
+    border: var(--bs-accordion-border-width) solid var(--accent) !important;
+    padding: 0.3rem !important;
+}
+
+.accordion-button,
+.accordion-button:not(.collapsed) {
+    color: var(--accent) !important;
+    background-color: var(--bs-card-cap-bg);
+    padding: var(--bs-card-cap-padding-y) var(--bs-card-cap-padding-x);
+    font-weight: bold !important;
+}
+
 
 /* === Compact Global Resets === */
 
@@ -177,7 +196,7 @@ body,
 }
 
 .card-body {
-    padding: 0.1rem !important;
+    padding: 0.3rem !important;
 }
 
 .card-title,
@@ -327,4 +346,9 @@ h6 {
 
 .card-header {
     font-weight: bold !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.modal-xl {
+    --bs-modal-width: 1400px;
 }
