@@ -33,7 +33,7 @@ async def generate_xy_for_lora_epochs(
     await crud.job.create(
         db,
         obj_in=models.JobCreate(
-            env_name="dev",
+            env_name="playground",
             name=f"Generate XY for Lora Epochs: {lora_output_name}",
             type=models.JobType.script,
             command="ScriptGenerateXYForLoraEpochs",
