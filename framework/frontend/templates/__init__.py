@@ -11,6 +11,7 @@ from framework.frontend.templates.filters import (
     format_date,
 )
 from framework.utils.datetime import format_datetime, utc_to_local
+from framework.utils.git import get_git_branch
 
 
 def get_templates() -> Jinja2Templates:
@@ -38,9 +39,13 @@ def get_templates() -> Jinja2Templates:
     templates.env.globals["PROJECT_DESCRIPTION"] = settings.PROJECT_DESCRIPTION
     templates.env.globals["BASE_DOMAIN"] = settings.BASE_DOMAIN
     templates.env.globals["BASE_URL"] = settings.BASE_URL
-    templates.env.globals["VERSION"] = settings.VERSION
     templates.env.globals["current_year"] = datetime.now(timezone.utc).year
     templates.env.globals["ACCENT"] = settings.ACCENT
+
+    git_branch = get_git_branch()
+    templates.env.globals["VERSION"] = (
+        f"{settings.VERSION}[{git_branch}]" if git_branch != "main" else settings.VERSION
+    )
 
     templates = hook_get_templates(templates)
     return templates
