@@ -1,3 +1,4 @@
+import base64
 from typing import Any
 
 from app import logger
@@ -105,9 +106,10 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
         image_paths = []
 
         for i, image_data in enumerate(images_data):
+            # Convert base64 to png file
             image_path = f"/workspace/__OUTPUTS__/xy_output_{i}.png"
             with open(image_path, "wb") as f:
-                f.write(image_data.encode("latin1"))
+                f.write(base64.b64decode(image_data))
             image_paths.append(image_path)
 
         return scripts.ScriptOutput(
