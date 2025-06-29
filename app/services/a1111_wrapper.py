@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Any
 
 import requests
@@ -186,8 +185,11 @@ class RisaA1111Wrapper(A1111Wrapper):
                 "SDCheckpoint.local_file_path is required to convert to checkpoint path. There is room for improvement here."
             )
 
-        sdcp_local_file_path = Path(sd_checkpoint.local_file_path)
-        return f"{sdcp_local_file_path.parent}/{sdcp_local_file_path.name}"
+        local_checkpoint_folder = "/media/martokk/FILES/AI/hub/models/SDXL/checkpoints/"
+
+        checkpoint_path = sd_checkpoint.local_file_path.replace(local_checkpoint_folder, "")
+
+        return checkpoint_path
 
     def _convert_sd_checkpoint_id_to_checkpoint_path(self, sd_checkpoint_id: str) -> str:
         with get_db_context() as db:
