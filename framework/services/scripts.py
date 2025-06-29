@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from app.services.a1111_wrapper import RisaA1111Wrapper, Text2ImgSettings
+from app import logger
 
 
 class ScriptOutput(BaseModel):
@@ -28,8 +28,14 @@ class Script(BaseModel):
         pass
 
     def run(self, *args: Any, **kwargs: Any) -> ScriptOutput:
+        logger.info(f"Script {self.__class__.__name__}: Running script.")
         if not self._validate_input(*args, **kwargs):
             raise ValueError("Script input validation failed.")
 
+        logger.info(f"Script {self.__class__.__name__}: Input validated.")
+
         self.output = self._run(*args, **kwargs)
+
+        logger.info(f"Script {self.__class__.__name__}: Script completed.")
+
         return self.output

@@ -69,7 +69,6 @@ def broadcast_jobs_after_sync(func: Callable[..., T]) -> Callable[..., T]:
         async def broadcast_jobs() -> None:
             try:
                 jobs = self.get_all_jobs_for_env_name(db, settings.ENV_NAME)
-                print(f"\n\n\njobs: {len(jobs)}\n\n\n")
                 await job_queue_ws_manager.broadcast(
                     {
                         "jobs": [j.model_dump(mode="json") for j in jobs],

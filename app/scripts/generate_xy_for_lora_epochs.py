@@ -1,5 +1,6 @@
 from typing import Any
 
+from app import logger
 from app.services.a1111_wrapper import RisaA1111Wrapper, Text2ImgSettings
 from framework.services import scripts
 
@@ -18,17 +19,50 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
         return True
 
     def _run(self, *args: Any, **kwargs: Any) -> Any:
+        logger.debug("Starting ScriptGenerateXYForLoraEpochs._run()")
+        logger.debug(f"kwargs: {kwargs}")
+
         risa_a1111_wrapper = RisaA1111Wrapper()
+        logger.debug(f"risa_a1111_wrapper: {risa_a1111_wrapper}")
+
+        text2img_settings = Text2ImgSettings(**kwargs)
+        logger.debug(f"text2img_settings: {text2img_settings}")
+
+        sd_checkpoint_id = str(kwargs["sd_checkpoint_id"])
+        logger.debug(f"sd_checkpoint_id: {sd_checkpoint_id}")
+
+        lora_output_name = str(kwargs["lora_output_name"])
+        logger.debug(f"lora_output_name: {lora_output_name}")
+
+        start_epoch = int(kwargs.get("start_epoch", 9))
+        logger.debug(f"start_epoch: {start_epoch}")
+
+        end_epoch = int(kwargs.get("end_epoch", 30))
+        logger.debug(f"end_epoch: {end_epoch}")
+
+        max_epochs = int(kwargs.get("max_epochs", 30))
+        logger.debug(f"max_epochs: {max_epochs}")
+
+        seeds_per_epoch = int(kwargs.get("seeds_per_epoch", 1))
+        logger.debug(f"seeds_per_epoch: {seeds_per_epoch}")
+
+        character_id = kwargs.get("character_id")
+        logger.debug(f"character_id: {character_id}")
+
+        logger.info("Calling risa_a1111_wrapper.gen_xy_each_epoch_in_range()")
+
         response = risa_a1111_wrapper.gen_xy_each_epoch_in_range(
-            sd_checkpoint_id=str(kwargs["sd_checkpoint_id"]),
-            lora_model_name=str(kwargs["lora_model_name"]),
-            text2img_settings=Text2ImgSettings(**kwargs),
-            start_epoch=int(kwargs.get("start_epoch", 9)),
-            end_epoch=int(kwargs.get("end_epoch", 30)),
-            max_epochs=int(kwargs.get("max_epochs", 30)),
-            seeds_per_epoch=int(kwargs.get("seeds_per_epoch", 1)),
-            character_id=kwargs.get("character_id"),
+            sd_checkpoint_id=sd_checkpoint_id,
+            lora_output_name=lora_output_name,
+            text2img_settings=text2img_settings,
+            start_epoch=start_epoch,
+            end_epoch=end_epoch,
+            max_epochs=max_epochs,
+            seeds_per_epoch=seeds_per_epoch,
+            character_id=character_id,
         )
+
+        logger.debug(f"response: {response}")
 
         # payload = {
         #     "prompt": "woman",

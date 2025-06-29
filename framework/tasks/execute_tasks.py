@@ -16,7 +16,6 @@ from app.scripts.generate_xy_for_lora_epochs import ScriptGenerateXYForLoraEpoch
 from framework import crud, models
 from framework.core.db import get_db_context
 from framework.core.huey import huey
-from framework.services.scripts import ScriptOutput
 
 
 def trigger_next_queued_job() -> None:
@@ -32,7 +31,7 @@ def trigger_next_queued_job() -> None:
         queued_jobs = [j for j in all_jobs if j.status == models.JobStatus.queued]
 
         if not queued_jobs:
-            logger.info("No queued jobs found. Waiting for new jobs...")
+            logger.debug("No queued jobs found. Waiting for new jobs...")
             return
 
         # Sort by priority: highest -> high -> normal -> low -> lowest
@@ -63,7 +62,7 @@ def run_command_job(db: Session, db_job: models.Job) -> None:
     Args:
         job: The job to execute.
     """
-    logger.info(f"Recieved run_command_job() request for job `{db_job.name}` - `{db_job.id}`")
+    logger.debug(f"\nJob {str(db_job.id)[:8]}: Recieved run_command_job() request.")
 
     log_file_name = f"job_{db_job.id}_retry_{db_job.retry_count}.txt"
     log_path = paths.JOB_LOGS_PATH / log_file_name
@@ -87,7 +86,7 @@ def run_command_job(db: Session, db_job: models.Job) -> None:
 
             # Update the job with the PID
             db_job.pid = process.pid
-            logger.info(f"Job {db_job.id}: Job started with PID {db_job.pid}")
+            logger.info(f"Job {str(db_job.id)[:8]}: Job started with PID {db_job.pid}")
 
             crud.job.sync.update(db, obj_in=models.JobUpdate(pid=db_job.pid), id=db_job.id)
 
@@ -96,26 +95,26 @@ def run_command_job(db: Session, db_job: models.Job) -> None:
                 for line in process.stdout:
                     log_file.write(line)
                     log_file.flush()  # Ensure immediate writing to disk
-                    logger.debug(f"Job {db_job.id}: OUTPUT: {line.strip()}")
+                    logger.debug(f"Job {str(db_job.id)[:8]}: OUTPUT: {line.strip()}")
 
             # Wait for the process to complete
             return_code = process.wait()
 
             if return_code == 0:
-                logger.info(f"Job {db_job.id}: SUCCESSFULLY COMPLETED")
+                logger.info(f"Job {str(db_job.id)[:8]}: SUCCESSFULLY COMPLETED")
             else:
-                error_msg = f"Job {db_job.id}: FAILED: exit code {return_code}"
+                error_msg = f"Job {str(db_job.id)[:8]}: FAILED: exit code {return_code}"
                 logger.error(error_msg)
                 raise subprocess.CalledProcessError(return_code, db_job.command)
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"Job {db_job.id}: FAILED: {str(e)}")
+        logger.error(f"Job {str(db_job.id)[:8]}: FAILED: {str(e)}")
 
         with open(log_path, "a") as log_file:
-            log_file.write(f"Job {db_job.id}: FAILED: {str(e)}\n")
+            log_file.write(f"Job {str(db_job.id)[:8]}: FAILED: {str(e)}\n")
         raise  # Re-raise the exception to be caught by the Huey task
     except Exception as e:
-        logger.error(f"Job {db_job.id}: UNEXPECTED ERROR: {str(e)}")
+        logger.error(f"Job {str(db_job.id)[:8]}: UNEXPECTED ERROR: {str(e)}")
         raise
 
 
@@ -123,31 +122,16 @@ def run_script_job(db_job: models.Job) -> None:
     """
     Executes a script job using the script class.
     """
-    logger.info(f"Recieved run_script_job() request for job `{db_job.name}` - `{db_job.id}`")
+    logger.debug(f"\nJob {str(db_job.id)[:8]}: Recieved run_script_job() request.")
 
     script_class_name = db_job.command
-    logger.info(f"script_class_name: {script_class_name}")
-
-    logger.info(f"db_job.meta: {db_job.meta}")
 
     if script_class_name == "ScriptGenerateXYForLoraEpochs":
         script_class = ScriptGenerateXYForLoraEpochs
     else:
         raise ValueError(f"Unknown script class name: {script_class_name}")
 
-    if settings.ENV_NAME == "playground":
-        script_output = script_class().run(**db_job.meta)
-    else:
-        logger.warning(f"Script job {db_job.id} is running in {settings.ENV_NAME} environment.")
-        logger.info(f"ENV_NAME: {settings.ENV_NAME}")
-        logger.info(f"script_class_name: {script_class_name}")
-        logger.info(f"script_class: {script_class}")
-        logger.info(f"db_job.meta: {db_job.meta}")
-        script_output = ScriptOutput(
-            success=True,
-            message="Successfully ran script job.",
-            data={"output": "output"},
-        )
+    script_output = script_class().run(**db_job.meta)
 
     # script_output = ScriptGenerateXYForLoraEpochs().run(
     #     character_id="ashley_pasco",
@@ -212,12 +196,14 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
     Version: 7 - Added proper status management and race condition protection
     """
     logger.info("\n\n\n")
-    logger.info(f"--- HUEY CONSUMER: EXECUTING JOB TASK for job_id: {job_id} ---")
+    logger.info(f"--- EXECUTING JOB: {job_id} ---")
 
     with get_db_context() as db:
         # First, try to claim the job by updating its status to "running"
         # This prevents race conditions where multiple consumers might try to run the same job
         db_job = crud.job.sync.get(db, id=job_id)
+
+        logger.info(f"Job {str(db_job.id)[:8]}: Name: {db_job.name}")
 
         if not db_job:
             logger.error(f"Huey Consumer could not find job with ID: {job_id}. Aborting task.")
@@ -226,7 +212,7 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
         # Check if job is still in queued status (race condition protection)
         if db_job.status != models.JobStatus.queued:
             logger.warning(
-                f"Job {db_job.id} is not in queued status (current: {db_job.status}). "
+                f"Job {str(db_job.id)[:8]}: Job is not in queued status (current: {db_job.status}). "
                 f"Another consumer may be processing it. Aborting task."
             )
             return
@@ -236,21 +222,23 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
             obj_in = models.JobUpdate(status=models.JobStatus.running)
             db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
             push_jobs_to_websocket()
-            logger.info(f"Job {db_job.id}: Status updated to 'running' - job claimed for execution")
+            logger.debug(
+                f"Job {str(db_job.id)[:8]}: Status updated to 'running' - job claimed for execution"
+            )
         except Exception as e:
-            logger.error(f"Job {db_job.id}: Failed to update status to 'running': {e}")
+            logger.error(f"Job {str(db_job.id)[:8]}: Failed to update status to 'running': {e}")
             return
 
         job_succeeded = False
         try:
-            logger.info(f"Job {db_job.id}: Starting execution...")
+            logger.info(f"Job {str(db_job.id)[:8]}: Starting execution...")
             if db_job.type == models.JobType.command:
                 try:
                     run_command_job(db=db, db_job=db_job)
                     job_succeeded = True
                 except Exception as e:
                     if "died with <Signals.SIGKILL: 9>" in str(e):
-                        logger.error(f"Job {db_job.id}: KILLED by SIGKILL signal")
+                        logger.error(f"Job {str(db_job.id)[:8]}: KILLED by SIGKILL signal")
                         # Handle SIGKILL specifically - could add custom handling here
 
                         obj_in = models.JobUpdate(status=models.JobStatus.pending)
@@ -282,9 +270,9 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
                 db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
                 push_jobs_to_websocket()
 
-                logger.info(f"Job {db_job.id}: Updated status to 'done'.")
+                logger.debug(f"Job {str(db_job.id)[:8]}: Updated status to 'done'.")
 
-            logger.info(f"--- HUEY CONSUMER: FINISHED JOB TASK for job {db_job.id} ---")
+            logger.info(f"--- FINISHED JOB: {str(db_job.id)[:8]} ---\n\n\n")
 
             # Trigger the next queued job after this one completes
             trigger_next_queued_job()

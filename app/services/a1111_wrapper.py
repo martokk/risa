@@ -4,7 +4,7 @@ from typing import Any
 import requests
 from pydantic import BaseModel, Field
 
-from app import crud
+from app import crud, logger
 from app.models.sd_checkpoint import SDCheckpoint
 from framework.core.db import get_db_context
 
@@ -66,21 +66,33 @@ class A1111Wrapper:
     def __init__(self, base_url: str = "http://localhost:3001"):
         self.base_url = base_url
         self.session = requests.Session()
+        logger.debug(f"A1111Wrapper initialized with base_url: {self.base_url}")
 
     def post(self, endpoint: str, payload: dict) -> Any:
         url = f"{self.base_url}/{endpoint}"
-        resp = self.session.post(url, json=payload)
-        resp.raise_for_status()
-        return resp.json()
+
+        try:
+            resp = self.session.post(url, json=payload)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            logger.error(f"Error posting to {url}: {e}")
+            raise e
 
     def get(self, endpoint: str) -> Any:
         url = f"{self.base_url}/{endpoint}"
-        resp = self.session.get(url)
-        resp.raise_for_status()
-        return resp.json()
+
+        try:
+            resp = self.session.get(url)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            logger.error(f"Error getting from {url}: {e}")
+            raise e
 
     def generate_txt2img(self, text2img_settings: Text2ImgSettings) -> Any:
         payload = text2img_settings.dict()
+        logger.info(f"Generating txt2img with payload: {payload}")
         return self.post("sdapi/v1/txt2img", payload)
 
     def generate_xy_plot(
@@ -96,27 +108,52 @@ class A1111Wrapper:
         payload = text2img_settings.model_dump()
         payload["script_name"] = "x/y/z plot"
         payload["script_args"] = xy_plot_settings.model_dump()
-        return self.post("sdapi/v1/txt2img", payload)
+        logger.info(f"Generating xy plot with payload: {payload}")
+
+        try:
+            return self.post("sdapi/v1/txt2img", payload)
+        except Exception as e:
+            logger.error(f"Error generating xy plot: {e}")
+            raise e
 
     def list_checkpoints(self) -> Any:
-        return self.get("sdapi/v1/sd-models")
+        try:
+            return self.get("sdapi/v1/sd-models")
+        except Exception as e:
+            logger.error(f"Error listing checkpoints: {e}")
+            raise e
 
     def set_checkpoint(self, checkpoint_path: str) -> Any:
         """
         Example:
         "pony/cyberrealisticPony_v110"
         """
-        self.post("sdapi/v1/options", {"sd_model_checkpoint": checkpoint_path})
+        logger.info(f"Attempting to set checkpoint to: {checkpoint_path}")
+        try:
+            self.post("sdapi/v1/options", {"sd_model_checkpoint": checkpoint_path})
+        except Exception as e:
+            logger.error(f"Error setting checkpoint: {e}")
+            raise e
 
         # Validate
         active_checkpoint = self.get_current_checkpoint()
         if active_checkpoint != checkpoint_path:
+            logger.error(
+                f"Failed to set checkpoint. Active checkpoint is {active_checkpoint} but expected {checkpoint_path}"
+            )
             raise ValueError(
                 f"Failed to set checkpoint. Active checkpoint is {active_checkpoint} but expected {checkpoint_path}"
             )
 
+        logger.info(f"Successfully set checkpoint to: {checkpoint_path}")
+
     def get_current_checkpoint(self) -> str:
-        options = self.get("sdapi/v1/options")
+        try:
+            options = self.get("sdapi/v1/options")
+        except Exception as e:
+            logger.error(f"Error getting current checkpoint: {e}")
+            raise e
+
         return str(options.get("sd_model_checkpoint", ""))
 
 
@@ -160,7 +197,7 @@ class RisaA1111Wrapper(A1111Wrapper):
     def gen_xy_each_epoch_in_range(
         self,
         sd_checkpoint_id: str,
-        lora_model_name: str,
+        lora_output_name: str,
         text2img_settings: Text2ImgSettings,
         start_epoch: int,
         end_epoch: int,
@@ -170,9 +207,13 @@ class RisaA1111Wrapper(A1111Wrapper):
     ) -> Any:
         """Will generate a XY plot for each epoch of the Lora Model in the range."""
 
+        logger.debug("Starting RisaA1111Wrapper.gen_xy_each_epoch_in_range()")
+
         checkpoint_path = self._convert_sd_checkpoint_id_to_checkpoint_path(
             sd_checkpoint_id=sd_checkpoint_id
         )
+
+        logger.debug(f"checkpoint_path: {checkpoint_path}")
 
         xy_plot_settings = XYPlotSettings(
             x_type=1,  # 1=Seed
@@ -182,6 +223,10 @@ class RisaA1111Wrapper(A1111Wrapper):
                 start_epoch, end_epoch, max_epochs
             ),
         )
+
+        logger.debug(f"xy_plot_settings: {xy_plot_settings}")
+
+        logger.debug(f"text2img_settings: {text2img_settings}")
 
         return self.generate_xy_plot(
             checkpoint_path=checkpoint_path,
