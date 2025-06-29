@@ -12,11 +12,12 @@ class Settings(PythonFastAPIBaseSettings):
     HUB_PATH: str = ""
     EXPORT_API_KEY: str = ""
     WORKSPACE_PATH: str = "/workspace"
-    DASHBOARD_CONFIG_PATH: str = "/app/data/config_dashboard.yaml"
-    DATASET_TAGGER_WALKTHROUGH_PATH: str = "/app/data/dataset_tagger_walkthrough.yaml"
+    DASHBOARD_CONFIG_PATH: str = "app/data/config_dashboard.yaml"
+    DATASET_TAGGER_WALKTHROUGH_PATH: str = "app/data/dataset_tagger_walkthrough.yaml"
 
     # Job Queue
-    HUEY_SQLITE_PATH: str = "/app/data/huey_jobs.db"
+    HUEY_SQLITE_PATH: str = "app/data/huey_jobs.db"
+    HUEY_LOG_PATH: str = "app/data/logs/huey_consumer.log"
     IDLE_TIMEOUT_MINUTES: int = 30
 
     @validator("EXPORT_API_KEY")

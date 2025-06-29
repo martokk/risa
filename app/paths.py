@@ -14,10 +14,14 @@ def convert_relative_path_to_absolute(path: str) -> Path:
     if str(path).startswith("/app/"):
         joined_path = f"{PROJECT_PATH}{path}"
         return Path(joined_path)
+    if str(path).startswith("app/"):
+        joined_path = f"{PROJECT_PATH}/{path}"
+        return Path(joined_path)
     return Path(path)
 
 
 HUEY_DB_PATH = convert_relative_path_to_absolute(settings.HUEY_SQLITE_PATH)
+HUEY_LOG_PATH = convert_relative_path_to_absolute(settings.HUEY_LOG_PATH)
 
 DASHBOARD_CONFIG_FILE = convert_relative_path_to_absolute(settings.DASHBOARD_CONFIG_PATH)
 DATASET_TAGGER_WALKTHROUGH_PATH = convert_relative_path_to_absolute(
