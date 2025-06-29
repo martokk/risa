@@ -255,6 +255,14 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
                 run_script_job(db_job)
                 job_succeeded = True
 
+        except requests.exceptions.Timeout as e:
+            logger.error(f"Job {db_job.id}: REQUEST TIMEOUT: {e}", exc_info=True)
+
+            # Update Status to error
+            obj_in = models.JobUpdate(status=models.JobStatus.error)
+            db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
+            push_jobs_to_websocket()
+
         except Exception as e:
             logger.error(f"Job {db_job.id}: FAILED: {e}", exc_info=True)
 

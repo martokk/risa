@@ -38,6 +38,7 @@ class JobStatus(str, Enum):
     failed = "failed"
     done = "done"
     cancelled = "cancelled"
+    error = "error"
 
 
 class JobBase(SQLModel):

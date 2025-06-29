@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 import requests
@@ -9,23 +10,89 @@ from framework.core.db import get_db_context
 
 
 class Text2ImgSettings(BaseModel):
+    """
+        {
+      "prompt": "",
+      "negative_prompt": "",
+      "styles": [
+        "string"
+      ],
+      "seed": -1,
+      "subseed": -1,
+      "subseed_strength": 0,
+      "seed_resize_from_h": -1,
+      "seed_resize_from_w": -1,
+      "sampler_name": "string",
+      "scheduler": "string",
+      "batch_size": 1,
+      "n_iter": 1,
+      "steps": 50,
+      "cfg_scale": 7,
+      "width": 512,
+      "height": 512,
+      "restore_faces": true,
+      "tiling": true,
+      "do_not_save_samples": false,
+      "do_not_save_grid": false,
+      "eta": 0,
+      "denoising_strength": 0,
+      "s_min_uncond": 0,
+      "s_churn": 0,
+      "s_tmax": 0,
+      "s_tmin": 0,
+      "s_noise": 0,
+      "override_settings": {},
+      "override_settings_restore_afterwards": true,
+      "refiner_checkpoint": "string",
+      "refiner_switch_at": 0,
+      "disable_extra_networks": false,
+      "firstpass_image": "string",
+      "comments": {},
+      "enable_hr": false,
+      "firstphase_width": 0,
+      "firstphase_height": 0,
+      "hr_scale": 2,
+      "hr_upscaler": "string",
+      "hr_second_pass_steps": 0,
+      "hr_resize_x": 0,
+      "hr_resize_y": 0,
+      "hr_checkpoint_name": "string",
+      "hr_sampler_name": "string",
+      "hr_scheduler": "string",
+      "hr_prompt": "",
+      "hr_negative_prompt": "",
+      "force_task_id": "string",
+      "sampler_index": "Euler",
+      "script_name": "string",
+      "script_args": [],
+      "send_images": true,
+      "save_images": false,
+      "alwayson_scripts": {},
+      "infotext": "string"
+    }
+
+
+    """
+
     prompt: str = Field(default="")
     negative_prompt: str = Field(default="")
     styles: list[str] = Field(default_factory=list)
-    sampler_name: str = Field(default="Euler a")
     seed: int = Field(default=-1)
+    sampler_name: str = Field(default="Euler a")
+    scheduler: str = Field(default="")
+    batch_size: int = Field(default=1)
+    n_iter: int = Field(default=1)
     steps: int = Field(default=20)
     cfg_scale: float = Field(default=7.0)
     width: int = Field(default=768)
     height: int = Field(default=768)
-    batch_size: int = Field(default=1)
-    n_iter: int = Field(default=1)
     restore_faces: bool = Field(default=False)
     tiling: bool = Field(default=False)
-    enable_hr: bool = Field(default=False)
     override_settings: dict[str, Any] = Field(default_factory=dict)
     script_name: str = Field(default="")
     script_args: list[Any] = Field(default_factory=list)
+    send_images: bool = Field(default=True)
+    save_images: bool = Field(default=False)
 
 
 class XYPlotSettings(BaseModel):
@@ -60,6 +127,10 @@ class XYPlotSettings(BaseModel):
 class A1111Wrapper:
     """
     A wrapper for the A1111 API.
+
+    For possible endpoints, see (A1111 Local Docs):
+        https://localhost:3001/docs/
+
     """
 
     def __init__(self, base_url: str = "http://localhost:3001"):
@@ -67,11 +138,11 @@ class A1111Wrapper:
         self.session = requests.Session()
         logger.debug(f"A1111Wrapper initialized with base_url: {self.base_url}")
 
-    def post(self, endpoint: str, payload: dict) -> Any:
+    def post(self, endpoint: str, payload: dict[str, Any]) -> Any:
         url = f"{self.base_url}/{endpoint}"
 
         try:
-            resp = self.session.post(url, json=payload)
+            resp = self.session.post(url, json=payload, timeout=14400)  # 4 hours
             resp.raise_for_status()
             return resp.json()
         except Exception as e:
@@ -82,12 +153,23 @@ class A1111Wrapper:
         url = f"{self.base_url}/{endpoint}"
 
         try:
-            resp = self.session.get(url)
+            resp = self.session.get(url, timeout=30)
             resp.raise_for_status()
-            return resp.json()
+            resp_json = resp.json()
+
+            # convert to dict
+            return json.loads(resp_json)
         except Exception as e:
             logger.error(f"Error getting from {url}: {e}")
             raise e
+
+    def get_progress(self) -> dict[str, Any]:
+        """Get current generation progress."""
+        return self.get("sdapi/v1/progress")
+
+    def interrupt(self) -> dict[str, Any]:
+        """Interrupt current generation."""
+        return self.post("sdapi/v1/interrupt", {})
 
     def generate_txt2img(self, text2img_settings: Text2ImgSettings) -> Any:
         payload = text2img_settings.dict()
@@ -156,6 +238,76 @@ class A1111Wrapper:
             raise e
 
         return str(options.get("sd_model_checkpoint", ""))
+
+    def get_samplers(self) -> list[dict[str, Any]]:
+        try:
+            return self.get("sdapi/v1/samplers")
+        except Exception as e:
+            logger.error(f"Error getting samplers: {e}")
+            raise e
+
+    def get_sd_models(self) -> list[dict[str, Any]]:
+        try:
+            return self.get("sdapi/v1/sd-models")
+        except Exception as e:
+            logger.error(f"Error getting sd models: {e}")
+            raise e
+
+    def get_options(self) -> dict[str, Any]:
+        try:
+            return self.get("sdapi/v1/options")
+        except Exception as e:
+            logger.error(f"Error getting options: {e}")
+            raise e
+
+    def ping(self) -> dict[str, Any]:
+        try:
+            return self.get("internal/ping")
+        except Exception as e:
+            logger.error(f"Error pinging: {e}")
+            raise e
+
+    def unload_checkpoint(self) -> dict[str, Any]:
+        try:
+            return self.post("sdapi/v1/unload-checkpoint", {})
+        except Exception as e:
+            logger.error(f"Error unloading checkpoint: {e}")
+            raise e
+
+    def reload_checkpoint(self) -> dict[str, Any]:
+        try:
+            return self.post("sdapi/v1/reload-checkpoint", {})
+        except Exception as e:
+            logger.error(f"Error reloading checkpoint: {e}")
+            raise e
+
+    def get_memory(self) -> dict[str, Any]:
+        try:
+            return self.get("sdapi/v1/memory")
+        except Exception as e:
+            logger.error(f"Error getting memory: {e}")
+            raise e
+
+    def refresh_checkpoints(self) -> dict[str, Any]:
+        try:
+            return self.post("sdapi/v1/refresh-checkpoints", {})
+        except Exception as e:
+            logger.error(f"Error refreshing checkpoints: {e}")
+            raise e
+
+    def get_options(self) -> dict[str, Any]:
+        try:
+            return self.get("sdapi/v1/options")
+        except Exception as e:
+            logger.error(f"Error getting options: {e}")
+            raise e
+
+    def set_options(self, options: dict[str, Any]) -> dict[str, Any]:
+        try:
+            return self.post("sdapi/v1/options", options)
+        except Exception as e:
+            logger.error(f"Error setting options: {e}")
+            raise e
 
 
 class RisaA1111Wrapper(A1111Wrapper):
