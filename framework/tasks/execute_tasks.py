@@ -133,23 +133,7 @@ def run_script_job(db_job: models.Job) -> None:
 
     script_output = script_class().run(**db_job.meta)
 
-    # script_output = ScriptGenerateXYForLoraEpochs().run(
-    #     character_id="ashley_pasco",
-    #     sd_checkpoint_id="cyberrealisticPony_v110",
-    #     lora_model_name="ashley_pasco_cyberrealisticPony_v110_1",
-    #     start_epoch=9,
-    #     end_epoch=30,
-    #     max_epochs=30,
-    #     seeds_per_epoch=1,
-    #     text2img_settings=Text2ImgSettings(
-    #         prompt="<lora:ashley_pasco_cyberrealisticPony_v110_1-000009:1> ashleyp, smile, 1girl",
-    #         styles=["general"],
-    #         override_settings={
-    #             "CLIP_stop_at_last_layers": 2,
-    #             "sd_vae": "Automatic",
-    #         },
-    #     ),
-    # )
+    logger.info(f"Script {script_class_name} \noutput: {script_output}")
 
 
 def run_api_post_job(job: models.Job) -> None:  # TODO: Not implemented yet (dummy code)
@@ -184,8 +168,10 @@ def push_jobs_to_websocket() -> None:
                 f"{settings.BASE_URL}/api/v1/jobs/push-jobs-to-websocket",
             )
 
+        logger.debug("Pushed jobs to websocket via api call")
+
     except Exception as e:
-        logger.error(f"Failed to push jobs to websocket: {e}")
+        logger.error(f"Failed to push jobs to websocket via api call: {e}")
 
 
 @huey.task()

@@ -21,11 +21,14 @@ HUEY_PID_FILE = paths.DATA_PATH / "huey_consumer.pid"
 
 
 async def broadcast_consumer_status(status: str) -> None:
-    await job_queue_ws_manager.broadcast(
-        {
-            "consumer_status": status,
-        }
-    )
+    try:
+        await job_queue_ws_manager.broadcast(
+            {
+                "consumer_status": status,
+            }
+        )
+    except Exception as e:
+        logger.error(f"Failed to broadcast consumer status: {e}")
 
 
 async def trigger_next_job(db: Session) -> models.Job | None:
