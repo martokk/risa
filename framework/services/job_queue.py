@@ -105,8 +105,8 @@ async def start_consumer_process() -> dict[str, Any]:
     Redirect output to app/data/logs/huey_consumer.log and write the PID to HUEY_PID_FILE.
     Returns a dict with success and message.
     """
-    log_path = paths.DATA_PATH / "logs" / "huey_consumer.log"
-    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    paths.HUEY_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     if is_consumer_running():
         return {"success": False, "message": "Huey consumer is already running."}
@@ -115,11 +115,11 @@ async def start_consumer_process() -> dict[str, Any]:
         # Build the command string
         cmd = (
             f"nohup poetry run huey_consumer app.tasks.huey --worker-type=process"
-            f"> {log_path} 2>&1 & echo $!"
+            f"> {paths.HUEY_LOG_PATH} 2>&1 & echo $!"
         )
 
         # Append "\n Starting consumer..." to the log file
-        with open(log_path, "a") as f:
+        with open(paths.HUEY_LOG_PATH, "a") as f:
             f.write("\n Starting consumer...")
 
         # Start the process and capture the PID
