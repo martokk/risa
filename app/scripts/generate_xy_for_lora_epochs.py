@@ -1,7 +1,9 @@
 import base64
+import os
+from datetime import datetime, timezone
 from typing import Any
 
-from app import logger
+from app import logger, paths
 from app.services.a1111_wrapper import RisaA1111Wrapper, Text2ImgSettings
 from framework.services import scripts
 
@@ -63,54 +65,21 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
             character_id=character_id,
         )
 
-        # logger.debug(f"response: {response}")
-
-        # payload = {
-        #     "prompt": "woman",
-        #     "negative_prompt": "",
-        #     "steps": 25,
-        #     "cfg_scale": 7,
-        #     "width": 512,
-        #     "height": 512,
-        #     "seed": -1,
-        #     "script_name": "x/y/z plot",
-        #     "script_args": [
-        #         1,  # x_type (Seed)
-        #         "-1,-1,-1,-1,-1,-1",
-        #         [],  # x_values_dropdown
-        #         7,  # y_type (Prompt S/R)
-        #         "-000009,-000010,-000011,-000012,-000013,-000014,-000015,-000016,-000017,-000018,-000019,-000020,-000021,-000022,-000023,-000024,-000025,-000026,-000027,-000028,-000029,",
-        #         [],  # y_values_dropdown
-        #         0,  # z_type (Nothing)
-        #         "",
-        #         [],  # z_values_dropdown
-        #         True,  # draw_legend
-        #         False,  # include_lone_images
-        #         False,  # include_sub_grids
-        #         False,  # no_fixed_seeds
-        #         False,  # vary_seeds_x
-        #         False,  # vary_seeds_y
-        #         False,  # vary_seeds_z
-        #         0,  # margin_size
-        #         False,  # csv_mode
-        #     ],
-        # }
-
-        # response = requests.post(
-        #     "http://127.0.0.1:3001/sdapi/v1/txt2img", json=a1111_payload.model_dump_json()
-        # )
-        # response.raise_for_status()
-
         images_data = response["images"]
 
         image_paths = []
 
+        output_folder = paths.OUTPUTS_PATH / "risa" / "scripts" / "generate_xy_for_lora_epochs"
+
         for i, image_data in enumerate(images_data):
             # Convert base64 to png file
-            image_path = f"/workspace/__OUTPUTS__/xy_output_{i}.png"
+            timestamp = datetime.now(timezone.utc).strftime("%y%m%d-%H%M%S")
+            image_filename = f"{timestamp}_{lora_output_name}_{start_epoch}-{end_epoch}.png"
+            image_path = os.path.join(output_folder, image_filename)
             with open(image_path, "wb") as f:
                 f.write(base64.b64decode(image_data))
             image_paths.append(image_path)
+        # End of Selection
 
         return scripts.ScriptOutput(
             success=True,

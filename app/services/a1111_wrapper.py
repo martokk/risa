@@ -166,7 +166,7 @@ class RisaA1111Wrapper(A1111Wrapper):
     def _convert_range_to_comma_separated_string(
         self, start_epoch: int, end_epoch: int, max_epochs: int
     ) -> str:
-        prompt_sr_list = [f"-{i:06d}" for i in range(start_epoch, end_epoch)]
+        prompt_sr_list = [f"-{i:06d}" for i in range(start_epoch, end_epoch + 1)]
 
         if end_epoch == max_epochs:
             prompt_sr_list.pop(-1)
