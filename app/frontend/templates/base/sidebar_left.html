@@ -1,21 +1,17 @@
 {% extends 'base/_html.html' %}
 
 {% block layout %}
-<div class="row">
+<div class="row p-2">
     <!-- Column 1: Sidebar Left -->
     <div class="col-md-3">
         {% block sidebar_left %} {% endblock sidebar_left %}
     </div>
 
     <!-- Column 2: Content -->
-    <div class="col-md-6">
+    <div class="col-md-9">
         {% include 'base/_alerts.html' %}
         {% block content %} {% endblock content %}
     </div>
 
-    <!-- Column 3: Sidebar Right -->
-    <div class="col-md-3">
-        
-    </div>
 </div>
 {% endblock layout %}
