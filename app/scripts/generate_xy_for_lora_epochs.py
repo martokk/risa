@@ -70,6 +70,7 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
         image_paths = []
 
         output_folder = paths.OUTPUTS_PATH / "risa" / "scripts" / "generate_xy_for_lora_epochs"
+        output_folder.mkdir(parents=True, exist_ok=True)
 
         for i, image_data in enumerate(images_data):
             # Convert base64 to png file
