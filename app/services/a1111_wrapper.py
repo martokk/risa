@@ -1,4 +1,3 @@
-import json
 from typing import Any
 
 import requests
@@ -155,10 +154,7 @@ class A1111Wrapper:
         try:
             resp = self.session.get(url, timeout=30)
             resp.raise_for_status()
-            resp_json = resp.json()
-
-            # convert to dict
-            return json.loads(resp_json)
+            return resp.json()
         except Exception as e:
             logger.error(f"Error getting from {url}: {e}")
             raise e
