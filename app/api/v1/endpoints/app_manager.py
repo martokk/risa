@@ -30,6 +30,26 @@ async def start_app(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
 
+@router.post("/{app_id}/restart", status_code=status.HTTP_200_OK)
+async def restart_app(
+    app_id: str,
+    current_user: models.User = Depends(get_current_active_user),
+) -> dict[str, str]:
+    """Restart an application."""
+    config = get_config()
+    app = next((app for app in config["apps"] if app.id == app_id), None)
+
+    if not app:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
+
+    try:
+        # Using Popen to run in the background
+        app.restart()
+        return {"status": "restarting", "app_id": app_id}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
+
+
 @router.post("/{app_id}/stop", status_code=status.HTTP_200_OK)
 async def stop_app(
     app_id: str,

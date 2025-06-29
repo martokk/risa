@@ -10,6 +10,7 @@ class AppManagerApp(BaseModel):
     id: str = Field()
     name: str = Field()
     command_start: str | None = Field(default=None)
+    command_restart: str | None = Field(default=None)
     command_stop: str | None = Field(default=None)
     command_check_running: str | None = Field(default=None)
     port_connect: int | None = Field(default=None)
@@ -62,6 +63,23 @@ class AppManagerApp(BaseModel):
         return {
             "success": True,
             "message": f"Called command_start for `{self.id}`",
+        }
+
+    def restart(self) -> dict[str, Any]:
+        """Restarts the application."""
+        if not self.command_restart:
+            raise ValueError(f"command_restart is not set for `{self.id}`")
+
+        try:
+            subprocess.run(self.command_restart, shell=True, check=True, capture_output=True)
+        except subprocess.CalledProcessError as e:
+            raise ValueError(
+                f"Failed to restart the application. Command: {self.command_restart}"
+            ) from e
+
+        return {
+            "success": True,
+            "message": f"Called command_restart for `{self.id}`",
         }
 
     def kill(self) -> dict[str, Any]:
