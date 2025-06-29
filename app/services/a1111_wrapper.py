@@ -103,10 +103,12 @@ class A1111Wrapper:
         self.set_checkpoint(checkpoint_path=checkpoint_path)
 
         xy_plot_settings = xy_plot_settings or XYPlotSettings()
+        xy_plot_settings_dict = xy_plot_settings.model_dump()
+        xy_plot_settings_values = list(xy_plot_settings_dict.values())
 
         payload = text2img_settings.model_dump()
         payload["script_name"] = "x/y/z plot"
-        payload["script_args"] = xy_plot_settings.model_dump()
+        payload["script_args"] = xy_plot_settings_values
         logger.info(f"Generating xy plot with payload: {payload}")
 
         try:
