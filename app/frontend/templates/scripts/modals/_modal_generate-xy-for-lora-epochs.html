@@ -184,6 +184,7 @@
 {% block modal_scripts %}
     {{ super() }}
     <script type="module">
+        import { uiHelpers } from '/static/js/api_utils.js';
         document.addEventListener('DOMContentLoaded', () => {
             const loraSelect = document.getElementById('lora_output_name');
             const characterSelect = document.getElementById('character_id');
@@ -192,6 +193,7 @@
             const endEpochInput = document.getElementById('end_epoch');
             const maxEpochsInput = document.getElementById('max_epochs');
             const promptInput = document.getElementById('prompt');
+            const form = document.getElementById('scriptInputForm');
 
             if (!loraSelect || !characterSelect || !checkpointSelect) return;
 
@@ -238,6 +240,28 @@
             
                 if (!foundCkpt) checkpointSelect.value = '';
             });
+
+            // Add validation for 'trigger' in prompt and for startEpoch padded value in prompt
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    const promptValue = promptInput.value || '';
+                    const startEpochPadded = (startEpochInput.value || '').padStart(6, '0');
+                    if (/\btrigger\b/i.test(promptValue)) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        uiHelpers.showToast('The word "trigger" is not allowed in the prompt.', 'danger');
+                        promptInput.focus();
+                        return false;
+                    }
+                    if (startEpochPadded && !promptValue.includes(startEpochPadded)) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        uiHelpers.showToast(`The start epoch value (${startEpochPadded}) must appear in the prompt.`, 'danger');
+                        promptInput.focus();
+                        return false;
+                    }
+                }, true); // Use capture to run before base handler
+            }
         });
     </script>
 {% endblock %} 
