@@ -75,12 +75,11 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
         for i, image_data in enumerate(images_data):
             # Convert base64 to png file
             timestamp = datetime.now(timezone.utc).strftime("%y%m%d-%H%M%S")
-            image_filename = f"{timestamp}_{lora_output_name}_{start_epoch}-{end_epoch}.png"
+            image_filename = f"{timestamp}__{lora_output_name}__{start_epoch}-{end_epoch}.png"
             image_path = os.path.join(output_folder, image_filename)
             with open(image_path, "wb") as f:
                 f.write(base64.b64decode(image_data))
             image_paths.append(image_path)
-        # End of Selection
 
         return scripts.ScriptOutput(
             success=True,

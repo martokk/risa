@@ -138,7 +138,7 @@ class A1111Wrapper:
 
         # Validate
         active_checkpoint = self.get_current_checkpoint()
-        if active_checkpoint != checkpoint_path:
+        if str(active_checkpoint).lower() != str(checkpoint_path).lower():
             logger.error(
                 f"Failed to set checkpoint. Active checkpoint is {active_checkpoint} but expected {checkpoint_path}"
             )
