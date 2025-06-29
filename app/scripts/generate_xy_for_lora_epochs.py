@@ -62,7 +62,7 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
             character_id=character_id,
         )
 
-        logger.debug(f"response: {response}")
+        # logger.debug(f"response: {response}")
 
         # payload = {
         #     "prompt": "woman",
@@ -100,7 +100,7 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
         # )
         # response.raise_for_status()
 
-        images_data = response.json()["images"]
+        images_data = response["images"]
 
         image_paths = []
 
