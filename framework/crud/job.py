@@ -36,11 +36,15 @@ def broadcast_jobs_after(func: Callable[..., T]) -> Callable[..., T]:
 
         # Broadcast all jobs to the websocket
         jobs = await self.get_all_jobs_for_env_name(db, settings.ENV_NAME)
-        await job_queue_ws_manager.broadcast(
-            {
-                "jobs": [j.model_dump(mode="json") for j in jobs],
-            }
-        )
+
+        try:
+            await job_queue_ws_manager.broadcast(
+                {
+                    "jobs": [j.model_dump(mode="json") for j in jobs],
+                }
+            )
+        except Exception as e:
+            logger.error(f"Failed to broadcast jobs: {e}")
 
         return result
 
