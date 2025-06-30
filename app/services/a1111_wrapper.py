@@ -329,6 +329,22 @@ class RisaA1111Wrapper(A1111Wrapper):
     def _convert_seeds_per_epoch_to_comma_separated_string(self, seeds_per_epoch: int) -> str:
         return ",".join(["-1" for i in range(seeds_per_epoch)])
 
+    def _convert_selected_epochs_to_comma_separated_string(
+        self, selected_epochs: list[str], start_epoch: int
+    ) -> str:
+        # Convert epochs to list of strings
+        epoch_strings = [f"-{epoch:06d}" for epoch in selected_epochs]
+
+        # Remove start_epoch if it exists in the list
+        start_epoch_str = f"-{start_epoch:06d}"
+        if start_epoch_str in epoch_strings:
+            epoch_strings.remove(start_epoch_str)
+
+        # Add start_epoch to beginning
+        epoch_strings.insert(0, start_epoch_str)
+
+        return ",".join(epoch_strings)
+
     def _convert_sd_checkpoint_to_checkpoint_path(self, sd_checkpoint: SDCheckpoint) -> str:
         if not sd_checkpoint.local_file_path:
             raise ValueError(
@@ -346,38 +362,48 @@ class RisaA1111Wrapper(A1111Wrapper):
             sd_checkpoint = crud.sd_checkpoint.sync.get(db, id=sd_checkpoint_id)
         return self._convert_sd_checkpoint_to_checkpoint_path(sd_checkpoint=sd_checkpoint)
 
-    def gen_xy_each_epoch_in_range(
+    def generate_xy_for_lora_epochs(
         self,
-        sd_checkpoint_id: str,
-        lora_output_name: str,
-        text2img_settings: Text2ImgSettings,
-        start_epoch: int,
-        end_epoch: int,
-        max_epochs: int,
-        seeds_per_epoch: int,
         character_id: str | None,
+        sd_checkpoint_id: str,
+        start_epoch: int,
+        max_epochs: int,
+        epoch_selection: str,
+        end_epoch: int,
+        selected_epochs: list[str],
+        seeds_per_epoch: int,
+        prompt: str,
+        text2img_settings: Text2ImgSettings,
     ) -> Any:
-        """Will generate a XY plot for each epoch of the Lora Model in the range."""
-
-        logger.debug("Starting RisaA1111Wrapper.gen_xy_each_epoch_in_range()")
+        logger.debug("Starting RisaA1111Wrapper.gen_xy_each_epoch_in_selected_epochs()")
 
         checkpoint_path = self._convert_sd_checkpoint_id_to_checkpoint_path(
             sd_checkpoint_id=sd_checkpoint_id
         )
-
         logger.debug(f"checkpoint_path: {checkpoint_path}")
 
-        xy_plot_settings = XYPlotSettings(
-            x_type=1,  # 1=Seed
-            x_values=self._convert_seeds_per_epoch_to_comma_separated_string(seeds_per_epoch),
-            y_type=7,  # 7=Prompt S/R
-            y_values=self._convert_range_to_comma_separated_string(
-                start_epoch, end_epoch, max_epochs
-            ),
-        )
+        if epoch_selection == "range":
+            xy_plot_settings = XYPlotSettings(
+                x_type=1,  # 1=Seed
+                x_values=self._convert_seeds_per_epoch_to_comma_separated_string(seeds_per_epoch),
+                y_type=7,  # 7=Prompt S/R
+                y_values=self._convert_range_to_comma_separated_string(
+                    start_epoch, end_epoch, max_epochs
+                ),
+            )
 
+        else:
+            xy_plot_settings = XYPlotSettings(
+                x_type=1,  # 1=Seed
+                x_values=self._convert_seeds_per_epoch_to_comma_separated_string(seeds_per_epoch),
+                y_type=7,  # 7=Prompt S/R
+                y_values=self._convert_selected_epochs_to_comma_separated_string(
+                    selected_epochs=selected_epochs, start_epoch=start_epoch
+                ),
+            )
         logger.debug(f"xy_plot_settings: {xy_plot_settings}")
 
+        text2img_settings.prompt = prompt
         logger.debug(f"text2img_settings: {text2img_settings}")
 
         return self.generate_xy_plot(

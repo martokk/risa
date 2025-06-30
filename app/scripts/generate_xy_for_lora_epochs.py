@@ -21,6 +21,17 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
     def _validate_input(self, *args: Any, **kwargs: Any) -> bool:
         return True
 
+    def _parse_selected_epochs(self, selected_epochs: str) -> list[str]:
+        if selected_epochs:
+            # convert to a list of strings with epochs as such "-000001,-000002,-000003"
+            selected_epochs = [f"-{epoch:06d}" for epoch in selected_epochs]
+        return selected_epochs
+
+    def _add_lora_and_trigger_to_prompt(
+        self, prompt: str, start_epoch: int, lora_output_name: str, trigger: str, lora_weight: float
+    ) -> str:
+        return f"<lora:{lora_output_name}-{start_epoch:06d}:{lora_weight}> {trigger}, {prompt}"
+
     def _run(self, *args: Any, **kwargs: Any) -> Any:
         logger.debug("Starting ScriptGenerateXYForLoraEpochs._run()")
         logger.debug(f"kwargs: {kwargs}")
@@ -31,38 +42,63 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
         text2img_settings = Text2ImgSettings(**kwargs)
         logger.debug(f"text2img_settings: {text2img_settings}")
 
-        sd_checkpoint_id = str(kwargs["sd_checkpoint_id"])
-        logger.debug(f"sd_checkpoint_id: {sd_checkpoint_id}")
-
         lora_output_name = str(kwargs["lora_output_name"])
         logger.debug(f"lora_output_name: {lora_output_name}")
-
-        start_epoch = int(kwargs.get("start_epoch", 9))
-        logger.debug(f"start_epoch: {start_epoch}")
-
-        end_epoch = int(kwargs.get("end_epoch", 30))
-        logger.debug(f"end_epoch: {end_epoch}")
-
-        max_epochs = int(kwargs.get("max_epochs", 30))
-        logger.debug(f"max_epochs: {max_epochs}")
-
-        seeds_per_epoch = int(kwargs.get("seeds_per_epoch", 1))
-        logger.debug(f"seeds_per_epoch: {seeds_per_epoch}")
 
         character_id = kwargs.get("character_id")
         logger.debug(f"character_id: {character_id}")
 
-        logger.info("Calling risa_a1111_wrapper.gen_xy_each_epoch_in_range()")
+        sd_checkpoint_id = str(kwargs["sd_checkpoint_id"])
+        logger.debug(f"sd_checkpoint_id: {sd_checkpoint_id}")
 
-        response = risa_a1111_wrapper.gen_xy_each_epoch_in_range(
-            sd_checkpoint_id=sd_checkpoint_id,
-            lora_output_name=lora_output_name,
-            text2img_settings=text2img_settings,
+        trigger = str(kwargs["trigger"])
+        logger.debug(f"trigger: {trigger}")
+
+        lora_weight = float(kwargs.get("lora_weight", 1.0))
+        logger.debug(f"lora_weight: {lora_weight}")
+
+        start_epoch = int(kwargs.get("start_epoch", 9))
+        logger.debug(f"start_epoch: {start_epoch}")
+
+        max_epochs = int(kwargs.get("max_epochs", 30))
+        logger.debug(f"max_epochs: {max_epochs}")
+
+        epoch_selection = str(kwargs.get("epoch_selection", "range"))
+        logger.debug(f"epoch_selection: {epoch_selection}")
+
+        end_epoch = int(kwargs.get("end_epoch", 30))
+        logger.debug(f"end_epoch: {end_epoch}")
+
+        selected_epochs = kwargs.get("selected_epochs", "")
+        selected_epochs = self._parse_selected_epochs(selected_epochs)
+        logger.debug(f"selected_epochs: {selected_epochs}")
+
+        seeds_per_epoch = int(kwargs.get("seeds_per_epoch", 1))
+        logger.debug(f"seeds_per_epoch: {seeds_per_epoch}")
+
+        prompt = str(kwargs.get("prompt", ""))
+        prompt = self._add_lora_and_trigger_to_prompt(
+            prompt=prompt,
             start_epoch=start_epoch,
-            end_epoch=end_epoch,
-            max_epochs=max_epochs,
-            seeds_per_epoch=seeds_per_epoch,
+            lora_output_name=lora_output_name,
+            trigger=trigger,
+            lora_weight=lora_weight,
+        )
+        logger.debug(f"prompt: {prompt}")
+
+        logger.info("Calling risa_a1111_wrapper.generate_xy_for_lora_epochs()")
+
+        response = risa_a1111_wrapper.generate_xy_for_lora_epochs(
             character_id=character_id,
+            sd_checkpoint_id=sd_checkpoint_id,
+            start_epoch=start_epoch,
+            max_epochs=max_epochs,
+            epoch_selection=epoch_selection,
+            end_epoch=end_epoch,
+            selected_epochs=selected_epochs,
+            seeds_per_epoch=seeds_per_epoch,
+            prompt=prompt,
+            text2img_settings=text2img_settings,
         )
 
         images_data = response["images"]
