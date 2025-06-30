@@ -1,9 +1,7 @@
 {% extends "scripts/modals/_modal_script_base.html" %}
 
-{% block modal_id %}modalGenerateXyForLoraEpochs{% endblock %}
-{% block modal_label_id %}modalGenerateXyForLoraEpochsLabel{% endblock %}
-{% block modal_title %}Generate XY Plot for Lora Epochs{% endblock %}
-{% block script_id %}generate-xy-for-lora-epochs{% endblock %} {# API endpoint #}
+
+{% block modal_title %}Generate XY for Lora Epochs{% endblock %}
 
 {% block modal_input %}
     <div class="mb-3">
@@ -273,7 +271,7 @@
             const promptInput = document.getElementById('prompt');
             const triggerInput = document.getElementById('trigger');
             const loraWeightInput = document.getElementById('lora_weight');
-            const form = document.getElementById('scriptInputForm');
+            const form = document.getElementById('scriptInputFormGenerateXyForLoraEpochs');
 
             if (!loraSelect || !characterSelect || !checkpointSelect) return;
 

@@ -166,6 +166,10 @@ async def stop_consumer_process() -> dict[str, Any]:
         with open(HUEY_PID_FILE) as f:
             pid = int(f.read().strip())
         os.kill(pid, signal.SIGTERM)
+
+        # killall huey_consumer
+        subprocess.run(["killall", "huey_consumer"], check=True)
+
         os.remove(HUEY_PID_FILE)
         print("HUEY_PID_FILE removed")
 

@@ -11,9 +11,9 @@
             </li>
 
             <li class="list-group-item">
-                <a href="#" class="text-decoration-none text-white" data-bs-toggle="modal" data-bs-target="#script2Modal">
+                <a href="#" class="text-decoration-none text-white" data-bs-toggle="modal" data-bs-target="#modalChooseBestEpoch">
                     <i class="fas fa-dumbbell me-1"></i>
-                    <span>Script 2</span>
+                    <span>Choose Best Epoch</span>
                 </a>
             </li>
 
@@ -55,7 +55,5 @@
     </div>
 </div>
 
-{# Include modals for each script. Only example modal is implemented. #}
 {% include "scripts/modals/_modal_generate-xy-for-lora-epochs.html" %}
-{# Future: {% include "scripts/modals/_modal_script2.html" %} #}
-{# Future: {% include "scripts/modals/_modal_script3.html" %} #}
+{% include "scripts/modals/_modal_choose_best_epoch.html" %}

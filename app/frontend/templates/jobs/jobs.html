@@ -29,6 +29,7 @@
     </td>
     <td class="text-end">
         <div class="btn-group" role="group">
+            %}
 
             {% if job.status == 'pending' %}
                 <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="queueJob(event, '{{ job.id }}')"><i class="fas fa-play"></i></button>
@@ -340,10 +341,11 @@
         }
     };
 
-    window.viewLog = function(event, jobId) {
+
+    window.viewLog = function (event, jobId) {
         event.stopPropagation();
         if (logStreamer) {
-            logStreamer.viewLog(jobId, 'job');
+            logStreamer.viewLog({ topic: jobId, type: 'job' });
         } else {
             console.error("Log streamer is not initialized.");
         }
@@ -552,7 +554,7 @@
 
         if (viewLogBtn && logStreamer) {
             viewLogBtn.addEventListener('click', () => {
-                logStreamer.viewLog('consumer', 'consumer');
+                logStreamer.viewLog({ topic: 'consumer', type: 'consumer' });
             });
         }
 

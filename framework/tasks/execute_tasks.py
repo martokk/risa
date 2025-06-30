@@ -12,7 +12,7 @@ from huey import crontab
 from sqlmodel import Session
 
 from app import logger, paths, settings
-from app.scripts.generate_xy_for_lora_epochs import ScriptGenerateXYForLoraEpochs
+from app.tasks.execute_tasks import hook_get_script_class_from_class_name
 from framework import crud, models
 from framework.core.db import get_db_context
 from framework.core.huey import huey
@@ -122,16 +122,32 @@ def run_script_job(db_job: models.Job) -> None:
     """
     Executes a script job using the script class.
     """
-    logger.debug(f"\nJob {str(db_job.id)[:8]}: Recieved run_script_job() request.")
+    logger.debug(f"Job {str(db_job.id)[:8]}: Recieved run_script_job() request.")
 
-    script_class_name = db_job.command
+    log_file_name = f"job_{db_job.id}_retry_{db_job.retry_count}.txt"
+    log_path = paths.JOB_LOGS_PATH / log_file_name
 
-    if script_class_name == "ScriptGenerateXYForLoraEpochs":
-        script_class = ScriptGenerateXYForLoraEpochs
-    else:
-        raise ValueError(f"Unknown script class name: {script_class_name}")
+    # Ensure the logs directory exists
+    log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    script_output = script_class().run(**db_job.meta)
+    # Open the log file for writing
+    with open(log_path, "w") as log_file:
+        script_class_name = db_job.command
+        log_file.write(f"Job {str(db_job.id)[:8]}")
+        log_file.write(f"Script: {script_class_name}")
+        log_file.write(f"Meta: {db_job.meta}")
+        log_file.write("----------------------------------------")
+
+        # Get scripts from the app: app.tasks.execute_tasks.py via hook
+        script_class = hook_get_script_class_from_class_name(script_class_name=script_class_name)
+
+        try:
+            script_output = script_class().run(**db_job.meta)
+        except Exception as e:
+            log_file.write(f"Error: {e}")
+            raise
+
+        log_file.write(f"Output: {script_output}")
 
     logger.info(f"Script {script_class_name} \noutput: {script_output}")
 
@@ -250,7 +266,7 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
             push_jobs_to_websocket()
 
         except Exception as e:
-            logger.error(f"Job {db_job.id}: FAILED: {e}", exc_info=True)
+            logger.error(f"\nJob {db_job.id}: FAILED: {e}", exc_info=True)
 
             # Update Status to failed
             obj_in = models.JobUpdate(status=models.JobStatus.failed)
