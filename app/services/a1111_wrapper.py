@@ -330,7 +330,7 @@ class RisaA1111Wrapper(A1111Wrapper):
         return ",".join(["-1" for i in range(seeds_per_epoch)])
 
     def _convert_selected_epochs_to_comma_separated_string(
-        self, selected_epochs: list[str], start_epoch: int
+        self, selected_epochs: list[int], start_epoch: int
     ) -> str:
         # Convert epochs to list of strings
         epoch_strings = [f"-{epoch:06d}" for epoch in selected_epochs]
@@ -370,7 +370,7 @@ class RisaA1111Wrapper(A1111Wrapper):
         max_epochs: int,
         epoch_selection: str,
         end_epoch: int,
-        selected_epochs: list[str],
+        selected_epochs: list[int],
         seeds_per_epoch: int,
         prompt: str,
         text2img_settings: Text2ImgSettings,

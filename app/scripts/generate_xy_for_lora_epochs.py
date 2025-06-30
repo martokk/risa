@@ -21,12 +21,13 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
     def _validate_input(self, *args: Any, **kwargs: Any) -> bool:
         return True
 
-    def _parse_selected_epochs(self, selected_epochs_str: str) -> list[str]:
-        selected_epochs = selected_epochs_str.split(",")
+    def _parse_selected_epochs(self, selected_epochs_str: str) -> list[int]:
+        selected_epochs_str_list = selected_epochs_str.split(",")
 
-        if selected_epochs:
-            # convert to a list of strings with epochs as such "-000001,-000002,-000003"
-            selected_epochs = [f"-{epoch:06d}" for epoch in selected_epochs]
+        selected_epochs: list[int] = []
+        if selected_epochs_str_list:
+            selected_epochs = [int(epoch) for epoch in selected_epochs_str_list]
+
         return selected_epochs
 
     def _add_lora_and_trigger_to_prompt(
@@ -71,8 +72,8 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
         end_epoch = int(kwargs.get("end_epoch", 30))
         logger.debug(f"end_epoch: {end_epoch}")
 
-        selected_epochs = kwargs.get("selected_epochs", "")
-        selected_epochs = self._parse_selected_epochs(selected_epochs)
+        selected_epochs_str = kwargs.get("selected_epochs", "")
+        selected_epochs = self._parse_selected_epochs(selected_epochs_str=selected_epochs_str)
         logger.debug(f"selected_epochs: {selected_epochs}")
 
         seeds_per_epoch = int(kwargs.get("seeds_per_epoch", 1))
