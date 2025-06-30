@@ -15,12 +15,12 @@
             <h3 class="mb-0">Base Models</h3>
         </div>
         <div class="card-body">
-            {% for hub_model in hub_models | sort(attribute="name") %}
-                {% if hub_model.safetensors_checkpoints %}
+            {% for hub_base_model in hub_base_models | sort(attribute="name") %}
+                {% if hub_base_model.safetensors_checkpoints %}
                     <div class="mb-4">
-                        <h4 class="text-primary">{{ hub_model.name }}</h4>
+                        <h4 class="text-primary">{{ hub_base_model.name }}</h4>
                         <ul class="list-group">
-                            {% for safetensor_base_model in hub_model.safetensors_checkpoints | sort(attribute="name") %}
+                            {% for safetensor_base_model in hub_base_model.safetensors_checkpoints | sort(attribute="name") %}
                                 {% if safetensor_base_model.id not in existing_sd_checkpoints_ids %}
                                     <li class="list-group-item">
                                     <div class="row align-items-center">
@@ -60,12 +60,12 @@
         </div>
         <div class="card-body">
             {% set ns = namespace(seen_sha256s=[]) %}
-            {% for hub_model in hub_models | sort(attribute="name") %}
-                {% if hub_model.safetensors_loras %}
+            {% for hub_base_model in hub_base_models | sort(attribute="name") %}
+                {% if hub_base_model.safetensors_loras %}
                     <div class="mb-4">
-                        <h4 class="text-success">{{ hub_model.name }}</h4>
+                        <h4 class="text-success">{{ hub_base_model.name }}</h4>
                         <ul class="list-group">
-                            {% for safetensor_lora in hub_model.safetensors_loras | sort(attribute="name") %}
+                            {% for safetensor_lora in hub_base_model.safetensors_loras | sort(attribute="name") %}
                                 {% set sha256 = safetensor_lora.sha256 %}
                                 {% set has_already_been_seen = sha256 in ns.seen_sha256s %}
                                 {% set _ = ns.seen_sha256s.append(sha256) %}
