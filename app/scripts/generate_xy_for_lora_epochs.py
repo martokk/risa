@@ -63,7 +63,7 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
         max_epochs = int(kwargs.get("max_epochs", 30))
         logger.debug(f"max_epochs: {max_epochs}")
 
-        epoch_selection = str(kwargs.get("epoch_selection", "range"))
+        epoch_selection = str(kwargs.get("epoch_selection", "off"))
         logger.debug(f"epoch_selection: {epoch_selection}")
 
         end_epoch = int(kwargs.get("end_epoch", 30))

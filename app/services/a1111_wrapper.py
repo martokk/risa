@@ -382,7 +382,16 @@ class RisaA1111Wrapper(A1111Wrapper):
         )
         logger.debug(f"checkpoint_path: {checkpoint_path}")
 
-        if epoch_selection == "range":
+        if epoch_selection == "on":
+            xy_plot_settings = XYPlotSettings(
+                x_type=1,  # 1=Seed
+                x_values=self._convert_seeds_per_epoch_to_comma_separated_string(seeds_per_epoch),
+                y_type=7,  # 7=Prompt S/R
+                y_values=self._convert_selected_epochs_to_comma_separated_string(
+                    selected_epochs=selected_epochs, start_epoch=start_epoch
+                ),
+            )
+        else:
             xy_plot_settings = XYPlotSettings(
                 x_type=1,  # 1=Seed
                 x_values=self._convert_seeds_per_epoch_to_comma_separated_string(seeds_per_epoch),
@@ -392,15 +401,6 @@ class RisaA1111Wrapper(A1111Wrapper):
                 ),
             )
 
-        else:
-            xy_plot_settings = XYPlotSettings(
-                x_type=1,  # 1=Seed
-                x_values=self._convert_seeds_per_epoch_to_comma_separated_string(seeds_per_epoch),
-                y_type=7,  # 7=Prompt S/R
-                y_values=self._convert_selected_epochs_to_comma_separated_string(
-                    selected_epochs=selected_epochs, start_epoch=start_epoch
-                ),
-            )
         logger.debug(f"xy_plot_settings: {xy_plot_settings}")
 
         text2img_settings.prompt = prompt
