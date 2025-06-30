@@ -21,7 +21,9 @@ class ScriptGenerateXYForLoraEpochs(scripts.Script):
     def _validate_input(self, *args: Any, **kwargs: Any) -> bool:
         return True
 
-    def _parse_selected_epochs(self, selected_epochs: str) -> list[str]:
+    def _parse_selected_epochs(self, selected_epochs_str: str) -> list[str]:
+        selected_epochs = selected_epochs_str.split(",")
+
         if selected_epochs:
             # convert to a list of strings with epochs as such "-000001,-000002,-000003"
             selected_epochs = [f"-{epoch:06d}" for epoch in selected_epochs]
