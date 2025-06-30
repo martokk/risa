@@ -1,0 +1,453 @@
+{% extends "scripts/modals/_modal_script_base.html" %}
+
+
+{% block modal_title %}Generate XY for Lora Epochs{% endblock %}
+
+{% block modal_input %}
+    <div class="mb-3">
+        <!-- SD Checkpoint ID and Lora Output Name in a row -->
+        <div class="row g-2 mb-2">
+
+            <!-- Lora Output Name -->
+            <div class="col">
+                <label for="lora_output_name" class="form-label">Lora Output Name</label>
+                <select class="form-select" id="lora_output_name" name="lora_output_name">
+                    <option value="">Trained Lora</option>
+                    {% for trained_lora_safetensors in trained_lora_safetensors %}
+                        <option value="{{ trained_lora_safetensors.lora_output_name }}"
+                                data-min-epoch="{{ trained_lora_safetensors.min_epoch }}"
+                                data-max-epoch="{{ trained_lora_safetensors.max_epoch }}">
+                            {{ trained_lora_safetensors.lora_output_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Character -->
+            <div class="col">
+                <label for="character_id" class="form-label">Character</label>
+                <select class="form-select" id="character_id" name="character_id">
+                    <option value="">Character</option>
+                    {% for character in characters %}
+                    <option value="{{ character.id }}">{{ character.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- SD Checkpoint ID -->
+            <div class="col">
+                <label for="sd_checkpoint_id" class="form-label">SD Checkpoint ID</label>
+                <select class="form-select" id="sd_checkpoint_id" name="sd_checkpoint_id">
+                    <option value="">Checkpoint</option>
+                    {% for sd_checkpoint in sd_checkpoints %}
+                    <option value="{{ sd_checkpoint.id }}">{{ sd_checkpoint.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+        </div>
+
+        <!-- Divider -->
+        <hr class="my-4 accent-border">
+
+
+        <div class="row g-2 mb-2">
+            
+            <!-- Trigger -->
+            <div class="col">
+                <label for="trigger" class="form-label">Trigger</label>
+                <input type="text" class="form-control" id="trigger" name="trigger" value="trigger">
+            </div>
+
+            <!-- Lora Weight -->
+            <div class="col">
+                <label for="lora_weight" class="form-label">Lora Weight</label>
+                <input type="number" class="form-control" id="lora_weight" name="lora_weight" value="1.0">
+            </div>
+
+            <!-- Start Epoch -->
+            <div class="col">
+                <label for="start_epoch" class="form-label">Start Epoch</label>
+                <input type="number" class="form-control" id="start_epoch" name="start_epoch" value="9" required>
+            </div>
+
+            <!-- Max Epochs -->
+            <div class="col">
+                <label for="max_epochs" class="form-label">Max Epochs</label>
+                <input type="number" class="form-control" id="max_epochs" name="max_epochs" value="30" required>
+            </div>
+
+        </div>
+
+        <!-- Divider -->
+        <hr class="my-4 accent-border">
+        <div class="row g-2 mb-2 justify-content-center">
+            <!-- Choose Epoch Selection Type -->
+            <div class="col-auto">
+                <div class="btn-group" role="group" aria-label="Epoch selection type">
+                    <input type="radio" class="btn-check" name="epoch_selection" id="radio_epoch_range" autocomplete="off" checked>
+                    <label class="btn btn-outline-primary" for="radio_epoch_range">Epoch Range</label>
+
+                    <input type="radio" class="btn-check" name="epoch_selection" id="radio_select_epochs" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="radio_select_epochs">Select Epochs</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Epoch Range -->
+        <div class="row g-2 mb-2" id="epoch_range">
+            <div class="col">
+                <label for="end_epoch" class="form-label">End Epoch</label>
+                <input type="number" class="form-control" id="end_epoch" name="end_epoch" value="30">
+            </div>
+        </div>
+
+        <!-- Select Epochs (dynamic checkboxes) -->
+        <div class="row g-2 mb-2" id="select_epochs">
+            <div class="col">
+                <label class="form-label">Choose Epochs:</label>
+                <div id="epochs_checkbox_container" class="d-flex flex-wrap gap-2"></div>
+                <input type="hidden" id="selected_epochs" name="selected_epochs" value="9,10,11">
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="my-4 accent-border">
+
+        <div class="row g-2 mb-2">
+            
+            <!-- Seeds/Epoch -->
+            <div class="col">
+                <label for="seeds_per_epoch" class="form-label">Seeds(Images)/Epoch</label>
+                <input type="number" class="form-control" id="seeds_per_epoch" name="seeds_per_epoch" value="1" required>
+            </div>
+            
+        </div>
+
+        <div class="row g-2 mb-2">
+            <!-- List of Presets in a column (not a dropdown) (onclick updates the prompt) -->
+            <div class="col-4">
+                <label for="presets" class="form-label">Presets</label>
+                <div id="presets_container" class="d-flex flex-wrap gap-2">
+                    <div class="btn btn-outline-secondary" onclick="updatePrompt('1girl, smile, portrait')">1girl, smile, portrait</div>
+                    <div class="btn btn-outline-secondary" onclick="updatePrompt('1girl, smile, portrait')">1girl, smile, portrait</div>
+                </div>
+            </div>
+
+            <!-- Prompt -->
+            <div class="col">
+                <label for="prompt" class="form-label">Prompt (minus Lora/trigger)</label>
+                <textarea class="form-control" id="prompt" name="prompt" rows="4">1girl, smile, portrait</textarea>
+            </div>
+        </div>
+
+       
+
+        <!-- Divider -->
+        <hr class="my-4 accent-border">
+
+        <!-- Accordion for Settings -->
+        <div class="accordion mb-3" id="settingsAccordion">
+            <!-- Text2Img Settings Accordion Item -->
+            <div class="accordion-item">
+
+                <!-- Text2Img Settings Accordion Header -->
+                <h2 class="accordion-header" id="headingText2Img">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseText2Img" aria-expanded="true" aria-controls="collapseText2Img">
+                        Text2Img Settings
+                    </button>
+                </h2>
+
+                <!-- Text2Img Settings Accordion Body -->
+                <div id="collapseText2Img" class="accordion-collapse collapse" aria-labelledby="headingText2Img" data-bs-parent="#settingsAccordion">
+                    <div class="accordion-body">
+                        <div class="row g-2 mb-2">
+
+                            <!-- Sampler Name -->
+                            <div class="col">
+                                <label for="sampler_name" class="form-label">Sampler Name</label>
+                                <input type="text" class="form-control" id="sampler_name" name="sampler_name" value="Euler a">
+                            </div>
+
+                            <!-- Seed --> 
+                            <div class="col">
+                                <label for="seed" class="form-label">Seed</label>
+                                <input type="number" class="form-control" id="seed" name="seed" value="-1">
+                            </div>
+
+                            <!-- Steps -->
+                            <div class="col">
+                                <label for="steps" class="form-label">Steps</label>
+                                <input type="number" class="form-control" id="steps" name="steps" value="25">
+                            </div>
+
+                            <!-- CFG Scale -->
+                            <div class="col">
+                                <label for="cfg_scale" class="form-label">CFG Scale</label>
+                                <input type="number" step="0.1" class="form-control" id="cfg_scale" name="cfg_scale" value="7.0">
+                            </div>
+
+                        </div>
+
+                        <div class="row g-2 mb-2">
+
+                            <!-- Width -->
+                            <div class="col">
+                                <label for="width" class="form-label">Width</label>
+                                <input type="number" class="form-control" id="width" name="width" value="1024">
+                            </div>
+
+                            <!-- Height -->
+                            <div class="col">
+                                <label for="height" class="form-label">Height</label>
+                                <input type="number" class="form-control" id="height" name="height" value="1024">
+                            </div>
+
+                            <!-- Batch Size -->
+                            <div class="col">
+                                <label for="batch_size" class="form-label">Batch Size</label>
+                                <input type="number" class="form-control" id="batch_size" name="batch_size" value="1">
+                            </div>
+
+                            <!-- N Inter -->
+                            <div class="col">
+                                <label for="n_iter" class="form-label">N Iter</label>
+                                <input type="number" class="form-control" id="n_iter" name="n_iter" value="1">
+                            </div>
+
+                        </div>
+
+                        <!-- Styles -->
+                        <div class="mb-2">
+                            <label for="styles" class="form-label">Styles (comma separated)</label>
+                            <input type="text" class="form-control" id="styles" name="styles" value='["general"]'>
+                        </div>
+
+                        {# <!-- Prompt -->
+                        <div class="mb-2">
+                            <label for="prompt" class="form-label">Prompt</label>
+                            <textarea class="form-control" id="prompt" name="prompt" rows="2" value="<lora:XXX:1> trigger, 1girl, smile, portrait"></textarea>
+                        </div> #}
+
+                        <!-- Negative Prompt -->
+                        <div class="mb-2">
+                            <label for="negative_prompt" class="form-label">Negative Prompt</label>
+                            <textarea class="form-control" id="negative_prompt" name="negative_prompt" rows="2" value=""></textarea>
+                        </div>
+        
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <button type="submit" class="btn btn-primary float-end">Add to Job Queue</button>
+{% endblock %}
+
+
+{% block modal_output %}
+        <!-- Output/result will be rendered here by JS -->
+{% endblock %}
+
+
+{% block modal_footer %}
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+{% endblock %}
+
+
+{% block modal_scripts %}
+    {{ super() }}
+    <script type="module">
+        import { uiHelpers } from '/static/js/api_utils.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            const loraSelect = document.getElementById('lora_output_name');
+            const characterSelect = document.getElementById('character_id');
+            const checkpointSelect = document.getElementById('sd_checkpoint_id');
+            const startEpochInput = document.getElementById('start_epoch');
+            const endEpochInput = document.getElementById('end_epoch');
+            const maxEpochsInput = document.getElementById('max_epochs');
+            const promptInput = document.getElementById('prompt');
+            const triggerInput = document.getElementById('trigger');
+            const loraWeightInput = document.getElementById('lora_weight');
+            const form = document.getElementById('scriptInputFormGenerateXyForLoraEpochs');
+
+            if (!loraSelect || !characterSelect || !checkpointSelect) return;
+
+            // Collect all character and checkpoint IDs from the options (skip empty value)
+            const characterIds = Array.from(characterSelect.options)
+                .map(opt => opt.value)
+                .filter(val => val);
+            const checkpointIds = Array.from(checkpointSelect.options)
+                .map(opt => opt.value)
+                .filter(val => val);
+
+            loraSelect.addEventListener('change', () => {
+                const selectedOption = loraSelect.options[loraSelect.selectedIndex];
+                const minEpoch = selectedOption.getAttribute('data-min-epoch');
+                const maxEpochs = selectedOption.getAttribute('data-max-epoch');
+                if (minEpoch && maxEpochs && startEpochInput && endEpochInput) {
+                    startEpochInput.value = minEpoch;
+                    endEpochInput.value = maxEpochs;
+                    maxEpochsInput.value = maxEpochs;
+                }
+                // Character selection
+                let foundChar = false;
+                for (const charId of characterIds) {
+                    if (loraSelect.value.toLowerCase().includes(charId.toLowerCase())) {
+                        characterSelect.value = charId;
+                        foundChar = true;
+                        break;
+                    }
+                }
+                if (!foundChar) characterSelect.value = '';
+
+                // Checkpoint selection
+                let foundCkpt = false;
+                for (const ckptId of checkpointIds) {
+                    if (loraSelect.value.toLowerCase().includes(ckptId.toLowerCase())) {
+                        checkpointSelect.value = ckptId;
+                        foundCkpt = true;
+                        break;
+                    }
+                }
+
+                if (!foundCkpt) checkpointSelect.value = '';
+            });
+
+            // Add validation for 'trigger' in prompt and for startEpoch padded value in prompt
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    const promptValue = promptInput.value || '';
+                    const triggerValue = triggerInput.value || 'trigger';
+                    const loraOutputNameValue = loraSelect.value || 'Trained Lora';
+                    const characterValue = characterSelect.value || 'Character';
+                    const checkpointValue = checkpointSelect.value || 'Checkpoint';
+                    
+
+                    if (loraOutputNameValue === 'Trained Lora') {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        uiHelpers.showToast('A Lora Output Name is required.', 'danger');
+                        loraSelect.focus();
+                        return false;
+                    }
+
+                    if (characterValue === 'Character') {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        uiHelpers.showToast('A character is required.', 'danger');
+                        characterSelect.focus();
+                        return false;
+                    }
+
+                    if (checkpointValue === 'Checkpoint') {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        uiHelpers.showToast('A checkpoint is required.', 'danger');
+                        checkpointSelect.focus();
+                        return false;
+                    }
+
+                    if (triggerValue === 'trigger') {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        uiHelpers.showToast('A trigger is required.', 'danger');
+                        triggerInput.focus();
+                        return false;
+                    }
+
+
+                }, true); // Use capture to run before base handler
+            }
+
+            // --- Dynamic Epoch Checkbox Logic ---
+            const selectEpochsDiv = document.getElementById('select_epochs');
+            const epochsCheckboxContainer = document.getElementById('epochs_checkbox_container');
+            const selectedEpochsInput = document.getElementById('selected_epochs');
+
+            // Helper to get checked epochs as array
+            function getCheckedEpochs() {
+                return Array.from(epochsCheckboxContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+            }
+
+            // Helper to get all epochs in range
+            function getEpochRange() {
+                const start = parseInt(startEpochInput.value, 10);
+                const end = parseInt(maxEpochsInput.value, 10);
+                if (isNaN(start) || isNaN(end)) return [];
+                const min = Math.min(start, end);
+                const max = Math.max(start, end);
+                return Array.from({length: max - min + 1}, (_, i) => (min + i).toString());
+            }
+
+            // Store previous selections
+            let previousSelections = (selectedEpochsInput.value || '').split(',').map(s => s.trim()).filter(Boolean);
+
+            function renderEpochCheckboxes() {
+                const epochs = getEpochRange();
+                // Preserve checked states for overlapping epochs
+                const checkedSet = new Set(previousSelections);
+                epochsCheckboxContainer.innerHTML = '';
+                epochs.forEach(epoch => {
+                    const id = `epoch_cb_${epoch}`;
+                    const checked = checkedSet.has(epoch);
+                    const label = document.createElement('label');
+                    label.className = 'form-check form-check-inline';
+                    label.innerHTML = `
+                        <input class="form-check-input" type="checkbox" id="${id}" value="${epoch}" ${checked ? 'checked' : ''}>
+                        <span class="form-check-label">${epoch}</span>
+                    `;
+                    epochsCheckboxContainer.appendChild(label);
+                });
+            }
+
+            // Update hidden input on checkbox change
+            function updateSelectedEpochsInput() {
+                const checked = getCheckedEpochs();
+                selectedEpochsInput.value = checked.join(',');
+                previousSelections = checked;
+            }
+
+            // Regenerate checkboxes on start/end change
+            [startEpochInput, maxEpochsInput].forEach(input => {
+                input.addEventListener('input', () => {
+                    renderEpochCheckboxes();
+                    updateSelectedEpochsInput();
+                });
+            });
+
+            // Also update on checkbox change
+            epochsCheckboxContainer.addEventListener('change', updateSelectedEpochsInput);
+
+            // Initial render
+            renderEpochCheckboxes();
+            updateSelectedEpochsInput();
+
+            // Show/hide logic for radio buttons
+            const radioEpochRange = document.getElementById('radio_epoch_range');
+            const radioSelectEpochs = document.getElementById('radio_select_epochs');
+            const epochRangeDiv = document.getElementById('epoch_range');
+            function updateEpochVisibility() {
+                if (radioEpochRange && radioEpochRange.checked) {
+                    if (epochRangeDiv) epochRangeDiv.style.display = '';
+                    if (selectEpochsDiv) selectEpochsDiv.style.display = 'none';
+                } else if (radioSelectEpochs && radioSelectEpochs.checked) {
+                    if (epochRangeDiv) epochRangeDiv.style.display = 'none';
+                    if (selectEpochsDiv) selectEpochsDiv.style.display = '';
+                }
+            }
+            if (radioEpochRange) radioEpochRange.addEventListener('change', updateEpochVisibility);
+            if (radioSelectEpochs) radioSelectEpochs.addEventListener('change', updateEpochVisibility);
+            updateEpochVisibility();
+
+            function updatePrompt(prompt) {
+                promptInput.value = prompt;
+            }
+
+            window.updatePrompt = updatePrompt;
+
+        });
+    </script>
+{% endblock %} 

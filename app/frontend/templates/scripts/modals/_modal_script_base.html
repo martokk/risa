@@ -1,0 +1,123 @@
+{% set modal_title %}{% block modal_title %}{% endblock %}{% endset %}
+{% set title_camel_case %}{{ modal_title|title|replace(' ', '') }}{% endset %}
+{% set title_snake_case %}{{ modal_title|lower|replace(' ', '_') }}{% endset %}
+{% set title_kebab_case %}{{ modal_title|lower|replace(' ', '-') }}{% endset %}
+
+{% set modal_id %}modal{{ title_camel_case }}{% endset %}
+{% set modal_label_id %}modal{{ title_camel_case }}Label{% endset %}
+{% set script_input_form_id %}scriptInputForm{{ title_camel_case }}{% endset %}
+{% set script_id %}{{ title_kebab_case }}{% endset %} {# API endpoint #}
+{% set script_output_id %}scriptOutput{{ title_camel_case }}{% endset %}
+
+<!-- Script Modal Base Template -->
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1" aria-labelledby="{{ modal_label_id }}" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h6 class="modal-title" id="{{ modal_label_id }}">
+                    {{ modal_title }}
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="row">
+
+                    <!-- Input Section: Child templates should override modal_input to provide a form. -->
+                    <div class="col-12 col-md-6 mb-3 mb-md-0">
+                        <div class="card h-100">
+
+                            <!-- Card Header -->
+                            <div class="card-header">
+                                Input
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="card-body">
+                                <form id="{{ script_input_form_id }}" data-script-id="{{ script_id }}">
+                                    {% block modal_input %}
+                                        <!-- Form fields go here in child template -->
+                                        <button type="submit" class="btn btn-primary">Run Script</button>
+                                    {% endblock %}
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Output Section: This will be updated after API response. -->
+                    <div class="col-12 col-md-6">
+                        <div class="card h-100">
+
+                            <!-- Card Header -->
+                            <div class="card-header">
+                                Output
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="card-body">
+                                <div id="{{ script_output_id }}" class="bg-dark-subtle">
+                                    {% block modal_output %}
+                                        <!-- Output/result will be rendered here by JS -->
+                                    {% endblock %}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                {% block modal_footer %}
+                    <!-- Optional: Add custom buttons or info here in child template -->
+                {% endblock %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% block modal_scripts %}
+<script type="module">
+    import { apiCrud } from '/static/js/api_utils.js';
+    // This script can be overridden or extended in child templates
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('{{ script_input_form_id }}');
+
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const outputDiv = document.getElementById('{{ script_output_id }}');
+                
+                outputDiv.innerHTML = '<span class="text-muted">Running script...</span>';
+
+                try {
+                    // Collect form data
+                    const formData = new FormData(form);
+                    const data = Object.fromEntries(formData.entries());
+
+                    const script_id = form.getAttribute('data-script-id');
+                    if (!script_id) throw new Error('Script ID not specified.');
+
+                    const script_endpoint = `scripts/${script_id}/add-to-queue`;
+
+                    // Use api_utils.js for the API call (POST)
+                    const result = await apiCrud.postText(script_endpoint, data);
+
+                    // Render output (child template can override this block for custom rendering)
+                    outputDiv.innerHTML = `<pre class="bg-dark text-light p-2">${JSON.stringify(result, null, 2)}</pre>`;
+                } catch (err) {
+                    outputDiv.innerHTML = `<span class="text-danger">${err.message}</span>`;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

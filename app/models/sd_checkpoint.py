@@ -38,13 +38,7 @@ class SDCheckpointCreate(SDCheckpointBase):
                 )
 
             id_raw = safetensors_name if safetensors_name else name
-            id = (
-                id_raw.lower()
-                .replace(" ", "_")
-                .replace(".", "_")
-                .replace("-", "_")
-                .replace(":", "_")
-            )
+            id = id_raw.replace(" ", "_").replace("/", "").replace("\\", "").replace(":", "_")
 
             values["id"] = id
         return values

@@ -3,7 +3,7 @@
 {% block title %}Job Queue{% endblock %}
 
 {% block sidebar_right %}
-    {% include "/jobs/_quick_jobs.html" %}
+    {% include "/scripts/_scripts_jobs.html" %}
 {% endblock sidebar_right %}
 
 
@@ -29,6 +29,7 @@
     </td>
     <td class="text-end">
         <div class="btn-group" role="group">
+            %}
 
             {% if job.status == 'pending' %}
                 <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="queueJob(event, '{{ job.id }}')"><i class="fas fa-play"></i></button>
@@ -87,7 +88,7 @@
     <!-- Active Queue -->
     <div class="card">
         <div class="card-header">
-            <h5>Queue</h5>
+            Queue
         </div>
         <div class="card-body">
             <table class="table table-striped">
@@ -124,7 +125,7 @@
     <!-- History -->
     <div class="card mt-4">
         <div class="card-header">
-            <h5>History</h5>
+            History
         </div>
         <div class="card-body">
             <table class="table table-striped">
@@ -181,6 +182,7 @@
                         <select class="form-select" id="jobType" name="type" required>
                             <option value="command">Command</option>
                             <option value="api_post">API Post</option>
+                            <option value="script">Script</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -207,7 +209,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="jobMeta" class="form-label">Meta (JSON for API Post)</label>
-                        <textarea class="form-control" id="jobMeta" name="meta" rows="3">{}</textarea>
+                        <textarea class="form-control" id="jobMeta" name="meta" rows="12">{}</textarea>
                     </div>
                 </form>
             </div>
@@ -339,10 +341,11 @@
         }
     };
 
-    window.viewLog = function(event, jobId) {
+
+    window.viewLog = function (event, jobId) {
         event.stopPropagation();
         if (logStreamer) {
-            logStreamer.viewLog(jobId, 'job');
+            logStreamer.viewLog({ topic: jobId, type: 'job' });
         } else {
             console.error("Log streamer is not initialized.");
         }
@@ -551,7 +554,7 @@
 
         if (viewLogBtn && logStreamer) {
             viewLogBtn.addEventListener('click', () => {
-                logStreamer.viewLog('consumer', 'consumer');
+                logStreamer.viewLog({ topic: 'consumer', type: 'consumer' });
             });
         }
 

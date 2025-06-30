@@ -3,6 +3,7 @@ import asyncio
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlmodel import Session
 
+from app import logger
 from framework import crud
 from framework.core.db import get_db
 from framework.services import job_queue
@@ -37,12 +38,12 @@ async def websocket_job_queue(websocket: WebSocket, db: Session = Depends(get_db
                 msg = json.loads(data)
             except Exception:
                 msg = None
-            if msg and msg.get("type") == "subscribe_log" and "job_id" in msg:
+            if msg and msg.get("type") == "subscribe_log" and "topic" in msg:
                 # Cancel any previous log task
                 if log_task:
                     log_task.cancel()
-                job_id = msg["job_id"]
-                log_task = asyncio.create_task(stream_job_log(websocket, job_id))
+                topic = msg["topic"]
+                log_task = asyncio.create_task(stream_job_log(websocket, topic))
             elif msg and msg.get("type") == "subscribe_consumer_log":
                 if log_task:
                     log_task.cancel()
@@ -57,24 +58,26 @@ async def websocket_job_queue(websocket: WebSocket, db: Session = Depends(get_db
             log_task.cancel()
 
 
-async def stream_job_log(websocket: WebSocket, job_id: str) -> None:
+async def stream_job_log(websocket: WebSocket, topic: str) -> None:
     """Stream the job log file to the websocket client in real-time."""
-    log_file_name = f"job_{job_id}_retry_0.txt"
+    log_file_name = f"job_{topic}_retry_0.txt"
     from app import paths
 
     log_path = paths.JOB_LOGS_PATH / log_file_name
+    logger.debug(f"log_path: {log_path}")
     last_pos = 0
     try:
         while True:
             if not log_path.exists():
                 await asyncio.sleep(0.5)
+                logger.warning(f"log_path does not exist: {log_path}")
                 continue
             with open(log_path) as f:
                 f.seek(last_pos)
                 new_content = f.read()
                 if new_content:
                     await websocket.send_json(
-                        {"type": "log_update", "job_id": job_id, "content": new_content}
+                        {"type": "log_update", "topic": topic, "content": new_content}
                     )
                     last_pos = f.tell()
             await asyncio.sleep(0.5)
@@ -82,7 +85,7 @@ async def stream_job_log(websocket: WebSocket, job_id: str) -> None:
         pass
     except Exception as e:
         try:
-            await websocket.send_json({"type": "log_error", "job_id": job_id, "error": str(e)})
+            await websocket.send_json({"type": "log_error", "topic": topic, "error": str(e)})
         except Exception:
             pass
 
@@ -99,7 +102,7 @@ async def stream_consumer_log(websocket: WebSocket) -> None:
                 content = f.read()
                 if content:
                     await websocket.send_json(
-                        {"type": "log_update", "job_id": "consumer", "content": content}
+                        {"type": "log_update", "topic": "consumer", "content": content}
                     )
                 last_pos = f.tell()
 
@@ -113,7 +116,7 @@ async def stream_consumer_log(websocket: WebSocket) -> None:
                 new_content = f.read()
                 if new_content:
                     await websocket.send_json(
-                        {"type": "log_update", "job_id": "consumer", "content": new_content}
+                        {"type": "log_update", "topic": "consumer", "content": new_content}
                     )
                     last_pos = f.tell()
             await asyncio.sleep(0.5)
@@ -121,6 +124,6 @@ async def stream_consumer_log(websocket: WebSocket) -> None:
         pass
     except Exception as e:
         try:
-            await websocket.send_json({"type": "log_error", "job_id": "consumer", "error": str(e)})
+            await websocket.send_json({"type": "log_error", "topic": "consumer", "error": str(e)})
         except Exception:
             pass

@@ -93,6 +93,7 @@ The Risa Application can have different DEPLOYMENT_TYPE's:
    	- Has access to local files
    	- Has access to local backups
    	- Has access to the internet
+   	- Has access to desktop notifications
 - **Hosts**:
    	- Web App: rLocal
 

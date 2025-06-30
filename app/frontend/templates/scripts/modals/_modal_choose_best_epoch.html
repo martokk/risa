@@ -1,0 +1,165 @@
+{% extends "scripts/modals/_modal_script_base.html" %}
+
+{% block modal_title %}Choose Best Epoch{% endblock %}
+
+{% block modal_input %}
+    <div class="mb-3">
+        <div class="row g-2 mb-2">
+        
+            <!-- Lora Output Name -->
+            <div class="col">
+                <label for="select_lora_output_name" class="form-label">Lora Output Name</label>
+                <select class="form-select" id="select_lora_output_name" name="select_lora_output_name">
+                    <option value="">Trained Lora</option>
+                    {% for trained_lora_safetensors in trained_lora_safetensors %}
+                    <option value="{{ trained_lora_safetensors.lora_output_name }}"
+                        data-min-epoch="{{ trained_lora_safetensors.min_epoch }}"
+                        data-max-epoch="{{ trained_lora_safetensors.max_epoch }}">
+                        {{ trained_lora_safetensors.lora_output_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+            <!-- Character -->
+            <div class="col">
+                <label for="select_character_id" class="form-label">Character</label>
+                <select class="form-select" id="select_character_id" name="select_character_id">
+                    <option value="">Character</option>
+                    {% for character in characters %}
+                    <option value="{{ character.id }}">{{ character.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+            <!-- SD Checkpoint ID -->
+            <div class="col">
+                <label for="select_sd_checkpoint_id" class="form-label">SD Checkpoint ID</label>
+                <select class="form-select" id="select_sd_checkpoint_id" name="select_sd_checkpoint_id">
+                    <option value="">Checkpoint</option>
+                    {% for sd_checkpoint in sd_checkpoints %}
+                    <option value="{{ sd_checkpoint.id }}">{{ sd_checkpoint.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+        </div>
+
+        <div class="row g-2 mb-2">
+
+            <!-- Select Best Epoch -->
+            <div class="col">
+                <label for="select_best_epoch" class="form-label">Select Best Epoch</label>
+                <select class="form-select" id="select_best_epoch" name="select_best_epoch">
+                    <option value="">Select Best Epoch</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="my-4 accent-border">
+
+
+        <div class="row g-2 mb-2">
+            
+            <p>After selecing the best epoch, this script will move the epoch's safetensors to the "hub".</p>
+            <p>After verifying the safetensors are in the "hub", this script will delete all the other trained epoch safetensors for this lora model.</p>
+            <p>This will NOT back up the safetensors locally, only to the cloud "hub".</p>
+        </div>
+
+    </div>
+
+    <button type="submit" class="btn btn-primary float-end">Save Epoch & Delete Others</button>
+{% endblock %}
+
+
+{% block modal_output %}
+        <!-- Output/result will be rendered here by JS -->
+{% endblock %}
+
+
+{% block modal_footer %}
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+{% endblock %}
+
+
+{% block modal_scripts %}
+    {{ super() }}
+    <script type="module">
+        import { uiHelpers } from '/static/js/api_utils.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            const loraSelect = document.getElementById('select_lora_output_name');
+            const epochSelect = document.getElementById('select_best_epoch');
+            const characterSelect = document.getElementById('select_character_id');
+            const checkpointSelect = document.getElementById('select_sd_checkpoint_id');
+
+            if (!loraSelect || !characterSelect || !checkpointSelect) return;
+
+            // Collect all character and checkpoint IDs from the options (skip empty value)
+            const characterIds = Array.from(characterSelect.options)
+                .map(opt => opt.value)
+                .filter(val => val);
+            const checkpointIds = Array.from(checkpointSelect.options)
+                .map(opt => opt.value)
+                .filter(val => val);
+
+            function populateEpochOptions(minEpoch, maxEpoch) {
+                epochSelect.innerHTML = '<option value="">Select Best Epoch</option>';
+                if (!minEpoch || !maxEpoch) return;
+                const min = parseInt(minEpoch, 10);
+                const max = parseInt(maxEpoch, 10);
+                if (isNaN(min) || isNaN(max)) return;
+                for (let i = min; i <= max; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = i;
+                    epochSelect.appendChild(opt);
+                }
+            }
+
+            loraSelect.addEventListener('change', () => {
+                const selectedOption = loraSelect.options[loraSelect.selectedIndex];
+                const minEpoch = selectedOption.getAttribute('data-min-epoch');
+                const maxEpoch = selectedOption.getAttribute('data-max-epoch');
+                populateEpochOptions(minEpoch, maxEpoch);
+
+                // Character selection
+                let foundChar = false;
+                for (const charId of characterIds) {
+                    if (loraSelect.value.toLowerCase().includes(charId.toLowerCase())) {
+                        characterSelect.value = charId;
+                        foundChar = true;
+                        break;
+                    }
+                }
+                if (!foundChar) characterSelect.value = '';
+
+                // Checkpoint selection
+                let foundCkpt = false;
+                for (const ckptId of checkpointIds) {
+                    if (loraSelect.value.toLowerCase().includes(ckptId.toLowerCase())) {
+                        checkpointSelect.value = ckptId;
+                        foundCkpt = true;
+                        break;
+                    }
+                }
+
+                if (!foundCkpt) checkpointSelect.value = '';
+
+            });
+
+            // Optionally, trigger on page load if a value is pre-selected
+            if (loraSelect.value) {
+                const selectedOption = loraSelect.options[loraSelect.selectedIndex];
+                const minEpoch = selectedOption.getAttribute('data-min-epoch');
+                const maxEpoch = selectedOption.getAttribute('data-max-epoch');
+                populateEpochOptions(minEpoch, maxEpoch);
+            }
+
+
+
+
+
+        });
+    </script>
+{% endblock %} 

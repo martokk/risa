@@ -21,11 +21,14 @@ HUEY_PID_FILE = paths.DATA_PATH / "huey_consumer.pid"
 
 
 async def broadcast_consumer_status(status: str) -> None:
-    await job_queue_ws_manager.broadcast(
-        {
-            "consumer_status": status,
-        }
-    )
+    try:
+        await job_queue_ws_manager.broadcast(
+            {
+                "consumer_status": status,
+            }
+        )
+    except Exception as e:
+        logger.error(f"Failed to broadcast consumer status: {e}")
 
 
 async def trigger_next_job(db: Session) -> models.Job | None:
@@ -102,8 +105,8 @@ async def start_consumer_process() -> dict[str, Any]:
     Redirect output to app/data/logs/huey_consumer.log and write the PID to HUEY_PID_FILE.
     Returns a dict with success and message.
     """
-    log_path = paths.DATA_PATH / "logs" / "huey_consumer.log"
-    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    paths.HUEY_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     if is_consumer_running():
         return {"success": False, "message": "Huey consumer is already running."}
@@ -112,11 +115,11 @@ async def start_consumer_process() -> dict[str, Any]:
         # Build the command string
         cmd = (
             f"nohup poetry run huey_consumer app.tasks.huey --worker-type=process"
-            f"> {log_path} 2>&1 & echo $!"
+            f"> {paths.HUEY_LOG_PATH} 2>&1 & echo $!"
         )
 
         # Append "\n Starting consumer..." to the log file
-        with open(log_path, "a") as f:
+        with open(paths.HUEY_LOG_PATH, "a") as f:
             f.write("\n Starting consumer...")
 
         # Start the process and capture the PID
@@ -163,6 +166,10 @@ async def stop_consumer_process() -> dict[str, Any]:
         with open(HUEY_PID_FILE) as f:
             pid = int(f.read().strip())
         os.kill(pid, signal.SIGTERM)
+
+        # killall huey_consumer
+        subprocess.run(["killall", "huey_consumer"], check=True)
+
         os.remove(HUEY_PID_FILE)
         print("HUEY_PID_FILE removed")
 
