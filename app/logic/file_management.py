@@ -15,10 +15,10 @@ class TrainedLoraSafetensors(BaseModel):
 
 
 def get_trained_lora_safetensors() -> list[TrainedLoraSafetensors]:
-    """Get all files from the OUTPUTS_KOHYA_SS_PATH folder that end with .safetensors.
-    For each unique lora_output_name, find the min and max epoch (max+1) among its files.
-    If only the non-epoch file exists, set min_epoch and max_epoch to 1.
-    If both exist, treat the non-epoch file as the latest (max+1) version.
+    """
+    Gets all 'trained_lora_safetensors' files in the OUTPUTS_KOHYA_SS_PATH folder.
+
+    This will returns the lora_output_name, min_epoch, and max_epoch for each trained lora.
     """
 
     files = glob.glob(str(OUTPUTS_KOHYA_SS_PATH / "*.safetensors"))

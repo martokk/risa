@@ -2,6 +2,7 @@
 This module defines the Huey tasks for background job processing.
 """
 
+import json
 import subprocess
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -133,10 +134,10 @@ def run_script_job(db_job: models.Job) -> None:
     # Open the log file for writing
     with open(log_path, "w") as log_file:
         script_class_name = db_job.command
-        log_file.write(f"Job {str(db_job.id)[:8]}")
-        log_file.write(f"Script: {script_class_name}")
-        log_file.write(f"Meta: {db_job.meta}")
-        log_file.write("----------------------------------------")
+        log_file.write(f"job_id: {str(db_job.id)}\n")
+        log_file.write(f"script_class_name: {script_class_name}\n")
+        log_file.write(f"meta: \n{json.dumps(db_job.meta, indent=4)}\n")
+        log_file.write("----------------------------------------\n\n")
 
         # Get scripts from the app: app.tasks.execute_tasks.py via hook
         script_class = hook_get_script_class_from_class_name(script_class_name=script_class_name)
@@ -144,10 +145,12 @@ def run_script_job(db_job: models.Job) -> None:
         try:
             script_output = script_class().run(**db_job.meta)
         except Exception as e:
-            log_file.write(f"Error: {e}")
-            raise
+            log_file.write(f"Error: {e}\n")
+            raise e
 
-        log_file.write(f"Output: {script_output}")
+        log_file.write(
+            f"Output: \n\n success: {script_output.success}\n message: {script_output.message}\n data: \n{json.dumps(script_output.data, indent=4)}\n"
+        )
 
     logger.info(f"Script {script_class_name} \noutput: {script_output}")
 
@@ -311,9 +314,9 @@ def check_and_process_queued_jobs() -> None:
                 )
                 trigger_next_queued_job()
             else:
-                logger.info("No running jobs and no queued jobs found.")
+                logger.debug("No running jobs and no queued jobs found.")
         else:
-            logger.info(f"Found {len(running_jobs)} running job(s). Skipping queued job check.")
+            logger.debug(f"Found {len(running_jobs)} running job(s). Skipping queued job check.")
 
 
 @huey.periodic_task(crontab(minute="*/5"))  # Check every 5 minutes

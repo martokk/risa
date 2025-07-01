@@ -1,0 +1,48 @@
+{% extends "scripts/modals/_modal_script_base.html" %}
+
+{% block modal_title %}Fix Civitai Download Filenames{% endblock %}
+
+{% block modal_input %}
+<div class="mb-3">
+    <div class="row g-2 mb-2">
+
+        <div class="col">
+            <p>
+                Models downloaded by the Civitai Extension for A1111 append a 6 or 7 digit model id to the end of the filename.
+                This script removes those numbers.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="row g-2 mb-2">
+
+        <!-- Hub Path -->
+        <div class="col">
+            <label for="hub_path" class="form-label">Hub Path</label>
+            <input type="text" class="form-control" id="hub_path" name="hub_path">
+        </div>
+    </div>
+
+</div>
+
+<button type="submit" class="btn btn-primary float-end">Fix Filenames</button>
+{% endblock %}
+
+
+{% block modal_output %}
+<!-- Output/result will be rendered here by JS -->
+{% endblock %}
+
+
+{% block modal_footer %}
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+{% endblock %}
+
+
+{% block modal_scripts %}
+{{ super() }}
+<script type="module">
+    
+</script>
+{% endblock %}
