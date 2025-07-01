@@ -74,8 +74,8 @@ body {
     position: fixed;
     bottom: 30px;
     right: 30px;
-    background-color: var(--gold);
-    color: var(--black);
+    background-color: var(--accent);
+    color: #fff;
     width: 45px;
     height: 45px;
     border-radius: 50%;
