@@ -35,7 +35,7 @@ def broadcast_jobs_after(func: Callable[..., T]) -> Callable[..., T]:
         result = await func(self, db, *args, **kwargs)
 
         # Broadcast all jobs to the websocket
-        jobs = await self.get_all_jobs_for_env_name(db, settings.ENV_NAME)
+        jobs = await self.get_all_jobs_for_env_name(db, settings.ENV_NAME, include_archived=False)
 
         try:
             await job_queue_ws_manager.broadcast(
@@ -72,7 +72,7 @@ def broadcast_jobs_after_sync(func: Callable[..., T]) -> Callable[..., T]:
         # Spawn async task to broadcast (fire-and-forget)
         async def broadcast_jobs() -> None:
             try:
-                jobs = self.get_all_jobs_for_env_name(db, settings.ENV_NAME)
+                jobs = self.get_all_jobs_for_env_name(db, settings.ENV_NAME, include_archived=False)
                 await job_queue_ws_manager.broadcast(
                     {
                         "jobs": [j.model_dump(mode="json") for j in jobs],
@@ -142,8 +142,13 @@ class JobCRUD(BaseCRUD[models.Job, models.JobCreate, models.JobUpdate]):
             self._sync = JobCRUDSync(model=self.model)
         return self._sync
 
-    async def get_all_jobs_for_env_name(self, db: Session, env_name: str) -> list[models.Job]:
-        return await self.get_multi(db, env_name=env_name, limit=1000)
+    async def get_all_jobs_for_env_name(
+        self, db: Session, env_name: str, include_archived: bool = False
+    ) -> list[models.Job]:
+        if include_archived:
+            return await self.get_multi(db, env_name=env_name)
+        else:
+            return await self.get_multi(db, env_name=env_name, archived=False)
 
     @broadcast_jobs_after
     async def create(self, db: Session, *, obj_in: models.JobCreate, **kwargs: Any) -> models.Job:

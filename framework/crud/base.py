@@ -106,7 +106,7 @@ class BaseCrudMixin(Generic[ModelType, ModelCreateType, ModelUpdateType]):
         db: Session,
         *args: BinaryExpression[Any],
         skip: int = 0,
-        limit: int = 100,
+        limit: int = 999999,
         **kwargs: Any,
     ) -> list[ModelType]:
         """
@@ -251,7 +251,7 @@ class BaseCRUDSync(BaseCrudMixin[ModelType, ModelCreateType, ModelUpdateType]):
         db: Session,
         *args: BinaryExpression[Any],
         skip: int = 0,
-        limit: int = 100,
+        limit: int = 999999,
         **kwargs: Any,
     ) -> list[ModelType]:
         return self._get_multi(db, *args, skip=skip, limit=limit, **kwargs)
@@ -319,7 +319,7 @@ class BaseCRUD(BaseCrudMixin[ModelType, ModelCreateType, ModelUpdateType]):
         db: Session,
         *args: BinaryExpression[Any],
         skip: int = 0,
-        limit: int = 100,
+        limit: int = 999999,
         **kwargs: Any,
     ) -> list[ModelType]:
         return self._get_multi(db, *args, skip=skip, limit=limit, **kwargs)
