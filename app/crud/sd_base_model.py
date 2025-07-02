@@ -57,7 +57,7 @@ class SDBaseModelCRUD(
         character_id: str,
         trained_on_checkpoint: str | None = None,
         local_file_path: str | None = None,
-        remote_file_path: str | None = None,
+        download_url: str | None = None,
         network: str | None = None,
         network_trigger: str | None = None,
         network_weight: float | None = None,
@@ -89,7 +89,7 @@ class SDBaseModelCRUD(
             extra_network_create_schema = models.SDExtraNetworkCreate(
                 character_id=character_id,
                 local_file_path=local_file_path,
-                remote_file_path=remote_file_path,
+                download_url=download_url,
                 network=network,
                 network_trigger=network_trigger,
                 network_weight=network_weight,

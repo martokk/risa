@@ -25,7 +25,7 @@ class SDExtraNetworkBase(SQLModel):
         default=None, description="The checkpoint the network was trained on"
     )
     local_file_path: str | None = Field(default=None)
-    remote_file_path: str | None = Field(default=None)
+    download_url: str | None = Field(default=None)
 
     network: str | None = Field(default=None, description="The name of the network (ie. 'lora')")
     network_trigger: str | None = Field(default=None, description="The trigger words for the lora")

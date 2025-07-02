@@ -26,8 +26,8 @@
                     <input type="text" class="form-control" id="sdCheckpointLocalFilePath" name="local_file_path" value="{{ sd_checkpoint.local_file_path if sd_checkpoint.local_file_path else '' }}">
                 </div>
                 <div class="form-group">
-                    <label for="sdCheckpointRemoteFilePath">Remote File Path</label>
-                    <input type="text" class="form-control" id="sdCheckpointRemoteFilePath" name="remote_file_path" value="{{ sd_checkpoint.remote_file_path if sd_checkpoint.remote_file_path else '' }}">
+                    <label for="sdCheckpointRemoteFilePath">Download URL</label>
+                    <input type="text" class="form-control" id="sdCheckpointRemoteFilePath" name="download_url" value="{{ sd_checkpoint.download_url if sd_checkpoint.download_url else '' }}">
                 </div>
                 <div class="form-group">
                     <label for="sdBaseModelId">Base Model</label>

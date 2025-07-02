@@ -157,14 +157,14 @@
                     </div>
                 </div>
 
-                <!-- Remote File Path -->
+                <!-- Download URL -->
                 <div class="row mb-1 align-items-center">
                     <label for="remoteFilePath"
-                        class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Remote File Path</label>
+                        class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Download URL</label>
                     <div class="col-md-9">
                         <input type="text" class="form-control form-control-sm" id="remoteFilePath"
-                            name="remote_file_path"
-                            value="{{ item.remote_file_path if item and item.remote_file_path else '' }}" {% if
+                            name="download_url"
+                            value="{{ item.download_url if item and item.download_url else '' }}" {% if
                             view_mode %}disabled{% endif %}>
                     </div>
                 </div>
