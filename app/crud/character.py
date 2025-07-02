@@ -22,7 +22,7 @@ class CharacterCRUD(
         id: str,
         sd_base_model_id: str,
         trained_on_checkpoint: str | None = None,
-        local_file_path: str | None = None,
+        hub_file_path: str | None = None,
         download_url: str | None = None,
         network: str | None = None,
         network_trigger: str | None = None,
@@ -41,10 +41,10 @@ class CharacterCRUD(
         if not db_character:
             raise ValueError(f"Character with id '{id}' not found")
 
-        safetensors_name = Path(local_file_path).stem if local_file_path else None
+        safetensors_name = Path(hub_file_path).stem if hub_file_path else None
         if not safetensors_name:
             raise ValueError(
-                "safetensors_name must be provided to generate an ID. Enter a local file path."
+                "safetensors_name must be provided to generate an ID. Enter a Hub File Path."
             )
 
         extra_network_id = f"{db_character.id}_{safetensors_name}_{sd_base_model_id}"
@@ -58,7 +58,7 @@ class CharacterCRUD(
                 sd_base_model_id=sd_base_model_id,
                 character_id=db_character.id,
                 trained_on_checkpoint=trained_on_checkpoint,
-                local_file_path=local_file_path,
+                hub_file_path=hub_file_path,
                 download_url=download_url,
                 network=network,
                 network_trigger=network_trigger,

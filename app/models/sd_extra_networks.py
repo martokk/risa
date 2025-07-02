@@ -24,7 +24,7 @@ class SDExtraNetworkBase(SQLModel):
     trained_on_checkpoint: str | None = Field(
         default=None, description="The checkpoint the network was trained on"
     )
-    local_file_path: str | None = Field(default=None)
+    hub_file_path: str | None = Field(default=None)
     download_url: str | None = Field(default=None)
 
     network: str | None = Field(default=None, description="The name of the network (ie. 'lora')")
@@ -48,8 +48,8 @@ class SDExtraNetworkBase(SQLModel):
 
     @property
     def safetensors(self) -> Safetensor | None:
-        if self.local_file_path:
-            return Safetensor(path=Path(self.local_file_path))
+        if self.hub_file_path:
+            return Safetensor(path=Path(self.hub_file_path))
         return None
 
     @property
@@ -57,8 +57,8 @@ class SDExtraNetworkBase(SQLModel):
         return (
             self.safetensors.name
             if self.safetensors
-            else Path(self.local_file_path).stem
-            if self.local_file_path
+            else Path(self.hub_file_path).stem
+            if self.hub_file_path
             else None
         )
 
@@ -106,18 +106,18 @@ class SDExtraNetworkCreate(SDExtraNetworkBase):
     def generate_id(cls, values: dict[str, Any]) -> dict[str, Any]:
         if values.get("id") is None:
             network_trigger_value = values.get("network_trigger")
-            local_file_path_value = values.get("local_file_path")
+            hub_file_path_value = values.get("hub_file_path")
             character_id = values.get("character_id")
             sd_base_model_id = values.get("sd_base_model_id")
 
-            safetensors_name = Path(local_file_path_value).stem if local_file_path_value else None
+            safetensors_name = Path(hub_file_path_value).stem if hub_file_path_value else None
 
             if not network_trigger_value:
                 raise ValueError("network_trigger must be provided to generate an ID")
 
             if not safetensors_name:
                 raise ValueError(
-                    "safetensors_name must be provided to generate an ID. Enter a local file path."
+                    "safetensors_name must be provided to generate an ID. Enter a Hub File Path."
                 )
 
             if not character_id or not sd_base_model_id:

@@ -115,7 +115,7 @@
         // Assuming your SD Checkpoint creation page is at '/sd-checkpoints-page/add'
         // And it can accept 'id_from_safetensor' and 'name_from_safetensor' as query parameters.
         // You'll need to adjust the URL to your actual SD Checkpoint creation page.
-        const createUrl = `/sd-checkpoint/create_OLD?id=${encodeURIComponent(safetensorId)}&name=${encodeURIComponent(safetensorName)}&sd_base_model=${encodeURIComponent(baseModelId)}&local_file_path=${encodeURIComponent(safetensorPath)}&redirect_url=${encodeURIComponent(window.location.href)}`;
+        const createUrl = `/sd-checkpoint/create_OLD?id=${encodeURIComponent(safetensorId)}&name=${encodeURIComponent(safetensorName)}&sd_base_model=${encodeURIComponent(baseModelId)}&hub_file_path=${encodeURIComponent(safetensorPath)}&redirect_url=${encodeURIComponent(window.location.href)}`;
         window.location.href = createUrl;
     };
 
@@ -124,7 +124,7 @@
             `sd_base_model_id=${encodeURIComponent(sdBaseModelId)}`,
             `network=${encodeURIComponent(network)}`,
             `network_trigger=${encodeURIComponent(activationText)}`,
-            `local_file_path=${encodeURIComponent(loraPath)}`,
+            `hub_file_path=${encodeURIComponent(loraPath)}`,
             `sha256=${encodeURIComponent(sha256)}`,
             `redirect_url=${encodeURIComponent(window.location.href)}`
         ];

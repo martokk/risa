@@ -104,21 +104,21 @@
             <!-- File Paths Card Body -->
             <div class="card-body py-1">
 
-                <!-- Local File Path -->
+                <!-- Hub File Path -->
                 <div class="row mb-2 align-items-center">
                     <label for="localFilePath" class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Local
                         File Path</label>
                     <div class="col-md-9">
                         <input type="text" class="form-control form-control-sm" id="localFilePath"
-                            name="local_file_path"
-                            value="{{ item.local_file_path if item and item.local_file_path else local_file_path or '' }}"
+                            name="hub_file_path"
+                            value="{{ item.hub_file_path if item and item.hub_file_path else hub_file_path or '' }}"
                             {% if view_mode %}disabled{% endif %}>
                         
                         <!-- Open .json file -->
-                        {% if item and item.local_file_path %}
+                        {% if item and item.hub_file_path %}
                             <small class="form-text">
                                 <a class="text-info font-weight-bold"
-                                    href="file://{{ item.local_file_path | replace('.safetensors', '.json') }}"
+                                    href="file://{{ item.hub_file_path | replace('.safetensors', '.json') }}"
                                     target="_blank" rel="noopener noreferrer">Open .json file
                                 </a>
                             </small>

@@ -61,7 +61,7 @@ async def create_sd_checkpoint_page(
     context: Annotated[dict[str, Any], Depends(get_template_context)],
     id: str = Query(None),
     name: str = Query(None),
-    local_file_path: str = Query(None),
+    hub_file_path: str = Query(None),
     download_url: str = Query(None),
     is_realistic: bool = Query(False),
     sd_base_model_id: str = Query(None),
@@ -84,7 +84,7 @@ async def create_sd_checkpoint_page(
 
     context["name"] = name
     context["id"] = id
-    context["local_file_path"] = local_file_path
+    context["hub_file_path"] = hub_file_path
     context["download_url"] = download_url
     context["is_realistic"] = is_realistic
     context["sd_base_model_id"] = sd_base_model_id
