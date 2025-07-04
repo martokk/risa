@@ -34,9 +34,9 @@ export class LogStreamer {
 
                 // Handle Log Updates
                 if (msg.type === 'log_update') {
-                    // if (msg.topic === this.topic) {
-                    this._appendLog(msg.content);
-                    // }
+                    if (msg.topic === this.topic) {
+                        this._appendLog(msg.content);
+                    }
 
                     // Handle Log Errors
                 } else if (msg.type === 'log_error') {
@@ -109,6 +109,12 @@ export class LogStreamer {
         this.logContentEl.textContent = 'Loading...';
         this.modal.show();
         this.topic = topic;
+
+        // Update the modal title to include type and topic
+        const logModalLabel = document.getElementById('logModalLabel');
+        if (logModalLabel) {
+            logModalLabel.textContent = `Log Viewer: ${type} ${topic}`;
+        }
 
         const message = {
             type: type === 'job' ? 'subscribe_log' : `subscribe_${type}_log`,

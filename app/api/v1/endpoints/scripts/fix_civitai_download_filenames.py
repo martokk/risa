@@ -37,11 +37,12 @@ async def fix_civitai_download_filenames(
         db,
         obj_in=models.JobCreate(
             env_name=settings.ENV_NAME if settings.ENV_NAME == "dev" else "playground",
+            queue_name="default",
             name=f"Fix Civitai Download Filenames: {hub_path}",
             type=models.JobType.script,
             command="ScriptFixCivitaiDownloadFilenames",
             meta=body,
-            status=models.JobStatus.pending,
+            status=models.JobStatus.queued,
         ),
     )
 

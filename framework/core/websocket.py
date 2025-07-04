@@ -2,8 +2,6 @@ from typing import Any
 
 from fastapi import WebSocket
 
-from framework.utils.asysnc import allow_sync
-
 
 class WebSocketManager:
     def __init__(self) -> None:
@@ -17,7 +15,6 @@ class WebSocketManager:
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
 
-    @allow_sync
     async def broadcast(self, message: dict[str, Any]) -> None:
         for connection in self.active_connections:
             try:

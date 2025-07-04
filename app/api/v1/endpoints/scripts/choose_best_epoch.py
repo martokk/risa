@@ -38,11 +38,12 @@ async def generate_xy_for_lora_epochs(
         db,
         obj_in=models.JobCreate(
             env_name=settings.ENV_NAME if settings.ENV_NAME == "dev" else "playground",
+            queue_name="default",
             name=f"Choose Best Epoch: {lora_output_name}",
             type=models.JobType.script,
             command="ScriptChooseBestEpoch",
             meta=body,
-            status=models.JobStatus.pending,
+            status=models.JobStatus.queued,
         ),
     )
 

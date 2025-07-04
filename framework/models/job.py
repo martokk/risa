@@ -60,6 +60,9 @@ class JobBase(SQLModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     recurrence: str | None = Field(default=None)
     archived: bool = Field(default=False)
+    queue_name: str = Field(
+        default="default", description="Queue this job belongs to (default or reserved)"
+    )
 
 
 class Job(JobBase, table=True):
@@ -81,6 +84,7 @@ class JobUpdate(SQLModel):
     retry_count: int | None = None
     recurrence: str | None = None
     archived: bool | None = None
+    queue_name: str | None = None
 
 
 class JobCreate(JobBase):

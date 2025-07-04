@@ -21,7 +21,6 @@ def convert_relative_path_to_absolute(path: str) -> Path:
 
 
 HUEY_DB_PATH = convert_relative_path_to_absolute(settings.HUEY_SQLITE_PATH)
-HUEY_LOG_PATH = convert_relative_path_to_absolute(settings.HUEY_LOG_PATH)
 
 DASHBOARD_CONFIG_FILE = convert_relative_path_to_absolute(settings.DASHBOARD_CONFIG_PATH)
 DATASET_TAGGER_WALKTHROUGH_PATH = convert_relative_path_to_absolute(
@@ -61,3 +60,10 @@ VENVS_PATH = CACHE_PATH / "venvs"
 
 # HUB
 HUB_MODELS_PATH = HUB_PATH / "models"
+
+HUEY_DEFAULT_DB_PATH = convert_relative_path_to_absolute(settings.HUEY_DEFAULT_SQLITE_PATH)
+HUEY_RESERVED_DB_PATH = convert_relative_path_to_absolute(settings.HUEY_RESERVED_SQLITE_PATH)
+HUEY_DEFAULT_LOG_PATH = convert_relative_path_to_absolute(settings.HUEY_DEFAULT_LOG_PATH)
+HUEY_RESERVED_LOG_PATH = convert_relative_path_to_absolute(settings.HUEY_RESERVED_LOG_PATH)
+HUEY_DEFAULT_PID_FILE = HUEY_DEFAULT_LOG_PATH.with_suffix(".pid")
+HUEY_RESERVED_PID_FILE = HUEY_RESERVED_LOG_PATH.with_suffix(".pid")

@@ -35,7 +35,8 @@ async def generate_xy_for_lora_epochs(
         db,
         obj_in=models.JobCreate(
             env_name=settings.ENV_NAME if settings.ENV_NAME == "dev" else "playground",
-            name=f"Generate XY for Lora Epochs: {lora_output_name}",
+            queue_name="reserved",
+            name=f"GenXY: {lora_output_name}",
             type=models.JobType.script,
             command="ScriptGenerateXYForLoraEpochs",
             meta=body,
