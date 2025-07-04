@@ -52,7 +52,7 @@ class SDExtraNetworkCRUD(
 
                         # Save the changes
                         if sha256_from_json:
-                            return str(sha256_from_json)
+                            return str(sha256_from_json).upper()
                 return None
 
             # If there are multiple files, raise an error

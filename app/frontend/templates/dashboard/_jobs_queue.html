@@ -102,9 +102,11 @@
             const statusBadge = job.status === 'running' ? 'bg-primary'
                 : job.status === 'queued' ? 'bg-info text-dark'
                 : 'bg-secondary';
+            // Add reserved badge if needed
+            const reservedBadge = job.queue_name === 'reserved' ? '<span class="badge bg-primary ms-1">Reserved</span>' : '';
             return `
                 <tr>
-                    <td><small>${job.name}</small></td>
+                    <td><small>${job.name} ${reservedBadge}</small></td>
                     <td><small>${job.type.charAt(0).toUpperCase() + job.type.slice(1)}</small></td>
                     <td class="text-center"><span class="badge ${priorityBadge}">${job.priority.charAt(0).toUpperCase() + job.priority.slice(1)}</span></td>
                     <td class="text-center"><span class="badge ${statusBadge}">${job.status.charAt(0).toUpperCase() + job.status.slice(1)}</span></td>

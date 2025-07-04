@@ -56,8 +56,8 @@ class SDBaseModelCRUD(
         id: str,
         character_id: str,
         trained_on_checkpoint: str | None = None,
-        local_file_path: str | None = None,
-        remote_file_path: str | None = None,
+        hub_file_path: str | None = None,
+        download_url: str | None = None,
         network: str | None = None,
         network_trigger: str | None = None,
         network_weight: float | None = None,
@@ -75,10 +75,10 @@ class SDBaseModelCRUD(
         if not db_base_model:
             raise ValueError(f"SDBaseModel with id '{id}' not found")
 
-        if not local_file_path:
-            raise ValueError("local_file_path cannot be None when adding an extra network")
+        if not hub_file_path:
+            raise ValueError("hub_file_path cannot be None when adding an extra network")
 
-        safetensors_name = Path(local_file_path).stem
+        safetensors_name = Path(hub_file_path).stem
         extra_network_id = f"{character_id}_{safetensors_name}_{db_base_model.id}"
 
         actual_extra_network: models.SDExtraNetwork | None = db.get(
@@ -88,8 +88,8 @@ class SDBaseModelCRUD(
         if not actual_extra_network:
             extra_network_create_schema = models.SDExtraNetworkCreate(
                 character_id=character_id,
-                local_file_path=local_file_path,
-                remote_file_path=remote_file_path,
+                hub_file_path=hub_file_path,
+                download_url=download_url,
                 network=network,
                 network_trigger=network_trigger,
                 network_weight=network_weight,

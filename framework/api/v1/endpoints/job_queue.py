@@ -9,7 +9,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlmodel import Session
 
-from app import paths
+from app import paths, settings
 from framework import crud, models
 from framework.core.db import get_db
 from framework.services.job_queue import (
@@ -56,11 +56,11 @@ async def delete_job(job_id: str, db: Session = Depends(get_db)) -> None:
 
 
 @router.post("/push-jobs-to-websocket")
-async def push_jobs_to_websocket(db: Session = Depends(get_db)) -> None:
+async def push_jobs_to_websocket_endpoint(db: Session = Depends(get_db)) -> None:
     """
     Push all jobs to the websocket.
     """
-    jobs = await crud.job.get_all(db)
+    jobs = await crud.job.get_all_jobs_for_env_name(db, env_name=settings.ENV_NAME)
     await job_queue_ws_manager.broadcast(
         {
             "jobs": [j.model_dump(mode="json") for j in jobs],
@@ -139,16 +139,20 @@ def get_job_log(job_id: str) -> PlainTextResponse:
 
 
 @router.post("/start-consumer")
-async def start_huey_consumer():
-    result = await start_consumer_process()
-    status = 200 if result.get("success") else 400
+async def start_huey_consumer(body: dict = Body(default={})) -> JSONResponse:
+    """Start Huey consumer for the specified queue (or all if not specified)."""
+    queue_name = body.get("queue_name")
+    result = await start_consumer_process(queue_name=queue_name)
+    status = 200 if all(r.get("success") for r in result.get("results", [])) else 400
     return JSONResponse(content=result, status_code=status)
 
 
 @router.post("/stop-consumer")
-async def stop_huey_consumer():
-    result = await stop_consumer_process()
-    status = 200 if result.get("success") else 400
+async def stop_huey_consumer(body: dict = Body(default={})) -> JSONResponse:
+    """Stop Huey consumer for the specified queue (or all if not specified)."""
+    queue_name = body.get("queue_name")
+    result = await stop_consumer_process(queue_name=queue_name)
+    status = 200 if all(r.get("success") for r in result.get("results", [])) else 400
     return JSONResponse(content=result, status_code=status)
 
 

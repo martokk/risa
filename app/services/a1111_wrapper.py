@@ -346,14 +346,14 @@ class RisaA1111Wrapper(A1111Wrapper):
         return ",".join(epoch_strings)
 
     def _convert_sd_checkpoint_to_checkpoint_path(self, sd_checkpoint: SDCheckpoint) -> str:
-        if not sd_checkpoint.local_file_path:
+        if not sd_checkpoint.hub_file_path:
             raise ValueError(
-                "SDCheckpoint.local_file_path is required to convert to checkpoint path. There is room for improvement here."
+                "SDCheckpoint.hub_file_path is required to convert to checkpoint path. There is room for improvement here."
             )
 
         local_checkpoint_folder = "/media/martokk/FILES/AI/hub/models/SDXL/checkpoints/"
 
-        checkpoint_path = sd_checkpoint.local_file_path.replace(local_checkpoint_folder, "")
+        checkpoint_path = sd_checkpoint.hub_file_path.replace(local_checkpoint_folder, "")
 
         return checkpoint_path
 

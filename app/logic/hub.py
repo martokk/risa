@@ -1,11 +1,97 @@
-import re
+import json
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel
+from safetensors import safe_open
 
-from app.models import settings
-from app.models.sd_extra_networks import Safetensor
 from app.paths import HUB_MODELS_PATH
+
+
+class SafetensorJSON(BaseModel):
+    path: Path
+    activation_text: str | None = None
+    sha256: str | None = None
+
+    def __init__(self, path: Path):
+        super().__init__(path=path)
+        if self.path.exists():
+            with open(self.path) as f:
+                json_data = json.load(f)
+                self.activation_text = json_data.get("activation_text")
+                self.sha256 = json_data.get("sha256").upper()
+
+
+class Safetensor(BaseModel):
+    path: Path
+
+    @property
+    def name(self) -> str:
+        return self.path.stem
+
+    @property
+    def id(self) -> str:
+        return self.name.lower().replace(" ", "_")
+
+    @property
+    def json_file_path(self) -> Path | None:
+        json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
+        if json_file_path.exists():
+            return json_file_path
+        return None
+
+    @property
+    def json_file(self) -> SafetensorJSON | None:
+        if self.json_file_path:
+            return SafetensorJSON(path=self.json_file_path)
+        return None
+
+    def generate_sha256(self) -> str | None:
+        # get the sha256 from the safetensors file
+        import hashlib
+
+        _sha256 = hashlib.sha256()
+        with open(self.path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                _sha256.update(chunk)
+        sha256 = _sha256.hexdigest()
+        if sha256 and sha256 != "None":
+            # Load existing JSON data if file exists
+            existing_json_data = {}
+            if self.json_file_path and self.json_file_path.exists():
+                with open(self.json_file_path) as f:
+                    existing_json_data = json.load(f)
+
+            # Update only the sha256 field
+            existing_json_data["sha256"] = sha256.upper()
+
+            # Save updated JSON data
+            json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
+            with open(json_file_path, "w") as f:
+                json.dump(existing_json_data, f)
+
+            return sha256.upper()
+        return None
+
+    @property
+    def sha256(self) -> str | None:
+        if self.json_file:
+            return self.json_file.sha256.upper() if self.json_file.sha256 else None
+
+        return None
+
+    @property
+    def size(self) -> int:
+        return self.path.stat().st_size
+
+    @property
+    def metadata(self) -> dict[str, Any] | None:
+        if self.path and self.path.exists():
+            with safe_open(self.path, framework="pt") as f:
+                metadata = f.metadata()
+                if metadata:
+                    return dict(metadata)
+        return None
 
 
 class HubBaseModel(BaseModel):
@@ -38,7 +124,6 @@ class HubBaseModel(BaseModel):
 
 class Hub(BaseModel):
     hub_base_models: list[HubBaseModel]
-    hub_env_name: str
 
 
 def _get_hub_base_models() -> list[HubBaseModel]:
@@ -117,5 +202,5 @@ def _get_hub_base_models() -> list[HubBaseModel]:
 def get_hub() -> Hub:
     """Get the hub."""
     hub_base_models = _get_hub_base_models()
-    hub = Hub(hub_base_models=hub_base_models, hub_env_name=settings.ENV_NAME)
+    hub = Hub(hub_base_models=hub_base_models)
     return hub

@@ -51,7 +51,7 @@ async def safetensor_import_helper_page(
 
     existing_sd_extra_networks = await crud.sd_extra_network.get_all(db)
     existing_sd_extra_networks_file_paths = [
-        sd_extra_network.local_file_path for sd_extra_network in existing_sd_extra_networks
+        sd_extra_network.hub_file_path for sd_extra_network in existing_sd_extra_networks
     ]
     context["existing_sd_extra_networks_file_paths"] = existing_sd_extra_networks_file_paths
 

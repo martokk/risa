@@ -104,21 +104,21 @@
             <!-- File Paths Card Body -->
             <div class="card-body py-1">
 
-                <!-- Local File Path -->
+                <!-- Hub File Path -->
                 <div class="row mb-2 align-items-center">
-                    <label for="localFilePath" class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Local
+                    <label for="localFilePath" class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Hub
                         File Path</label>
                     <div class="col-md-9">
-                        <input type="text" class="form-control form-control-sm" id="localFilePath"
-                            name="local_file_path"
-                            value="{{ item.local_file_path if item and item.local_file_path else local_file_path or '' }}"
+                        <input type="text" class="form-control form-control-sm" id="hubFilePath"
+                            name="hub_file_path"
+                            value="{{ item.hub_file_path if item and item.hub_file_path else hub_file_path or '' }}"
                             {% if view_mode %}disabled{% endif %}>
                         
                         <!-- Open .json file -->
-                        {% if item and item.local_file_path %}
+                        {% if item and item.hub_file_path %}
                             <small class="form-text">
                                 <a class="text-info font-weight-bold"
-                                    href="file://{{ item.local_file_path | replace('.safetensors', '.json') }}"
+                                    href="file://{{ item.hub_file_path | replace('.safetensors', '.json') }}"
                                     target="_blank" rel="noopener noreferrer">Open .json file
                                 </a>
                             </small>
@@ -157,14 +157,14 @@
                     </div>
                 </div>
 
-                <!-- Remote File Path -->
+                <!-- Download URL -->
                 <div class="row mb-1 align-items-center">
                     <label for="remoteFilePath"
-                        class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Remote File Path</label>
+                        class="col-md-3 col-form-label col-form-label-sm font-weight-bold">Download URL</label>
                     <div class="col-md-9">
                         <input type="text" class="form-control form-control-sm" id="remoteFilePath"
-                            name="remote_file_path"
-                            value="{{ item.remote_file_path if item and item.remote_file_path else '' }}" {% if
+                            name="download_url"
+                            value="{{ item.download_url if item and item.download_url else '' }}" {% if
                             view_mode %}disabled{% endif %}>
                     </div>
                 </div>
@@ -448,6 +448,25 @@
                 console.error(`Failed to save ${objectName}:`, error);
                 const errorMessage = error.responseJSON?.detail || error.message || 'Failed to save. Check console.';
                 uiHelpers.showError(errorMessage);
+            }
+        });
+    }
+
+    // --- Hub File Path normalization ---
+    function normalizeHubFilePath(path) {
+        const hubIndex = path.indexOf('/hub/');
+        if (hubIndex !== -1) {
+            return path.substring(hubIndex + 5); // 5 = length of '/hub/'
+        }
+        return path;
+    }
+
+    const hubFilePathInput = document.getElementById('hubFilePath');
+    if (hubFilePathInput) {
+        hubFilePathInput.addEventListener('input', function() {
+            const normalized = normalizeHubFilePath(this.value);
+            if (this.value !== normalized) {
+                this.value = normalized;
             }
         });
     }

@@ -37,8 +37,8 @@ async def create_sd_extra_network_page(
     context: Annotated[dict[str, Any], Depends(get_template_context)],
     character_id: str = Query(None),
     trained_on_checkpoint: str = Query(None),
-    local_file_path: str = Query(None),
-    remote_file_path: str = Query(None),
+    hub_file_path: str = Query(None),
+    download_url: str = Query(None),
     network: str = Query(None),
     network_trigger: str = Query(None),
     network_weight: float = Query(None),
@@ -59,8 +59,8 @@ async def create_sd_extra_network_page(
 
     context["character_id"] = character_id
     context["trained_on_checkpoint"] = trained_on_checkpoint
-    context["local_file_path"] = local_file_path
-    context["remote_file_path"] = remote_file_path
+    context["hub_file_path"] = hub_file_path
+    context["download_url"] = download_url
     context["network"] = network
     context["network_trigger"] = network_trigger
     context["network_weight"] = network_weight

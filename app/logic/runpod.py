@@ -3,10 +3,10 @@ import os
 
 def convert_local_checkpoint_path_to_runpod_path(local_path: str) -> str:
     """
-    Converts a local file path to the corresponding RunPod path.
+    Converts a Hub File Path to the corresponding RunPod path.
 
     Args:
-        local_path: The local file path to convert
+        local_path: The Hub File Path to convert
 
     Returns:
         str: The converted RunPod path

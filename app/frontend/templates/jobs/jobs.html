@@ -3,13 +3,19 @@
 {% block title %}Job Queue{% endblock %}
 
 {% block sidebar_right %}
+    {% include "/jobs/_huey_consumer.html" %}
     {% include "/scripts/_scripts_jobs.html" %}
 {% endblock sidebar_right %}
 
 
 {% macro job_row(job) %}
 <tr id="job-row-{{ job.id }}" onclick="openEditModal('{{ job.id }}')" style="cursor: pointer;">
-    <td>{{ job.name }}</td>
+    <td>
+        {{ job.name }}
+        {% if job.queue_name == 'reserved' %}
+            <span class="badge bg-primary ms-1">Reserved</span>
+        {% endif %}
+    </td>
     <td>{{ job.env_name }}</td>
     <td><small>{{ job.id|string|truncate(8, True, '') }}</small></td>
     <td>{{ job.recurrence | default('None', True) | title }}</td>
@@ -29,29 +35,30 @@
     </td>
     <td class="text-end">
         <div class="btn-group" role="group">
-            %}
 
             {% if job.status == 'pending' %}
-                <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="queueJob(event, '{{ job.id }}')"><i class="fas fa-play"></i></button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-primary" title="Queue Job" onclick="queueJob(event, '{{ job.id }}')"><i class="fas fa-plus"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
 
             {% elif job.status == 'queued' %}
                 <button class="btn btn-sm btn-outline-warning" title="Unqueue Job" onclick="unqueueJob(event, '{{ job.id }}')"><i class="fas fa-clock"></i></button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
 
             {% elif job.status == 'running' %}
                 <button class="btn btn-sm btn-outline-warning" title="Stop Job" onclick="stopJob(event, '{{ job.id }}')"><i class="fas fa-stop"></i></button>
-                <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i
+                <button class="btn btn-sm btn-outline-secondary" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i
                         class="fas fa-file-alt"></i></button>
         
             {% elif job.status == 'failed' %}
-                <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="queueJob(event, '{{ job.id }}')"><i class="fas fa-sync-alt"></i></button>
-                <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i class="fas fa-file-alt"></i></button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button
-                >
+                <button class="btn btn-sm btn-success" title="Retry Job" onclick="queueJob(event, '{{ job.id }}')"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i class="fas fa-file-alt"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Archive Job" onclick="archiveJob(event, '{{ job.id }}')"><i class="fas fa-archive"></i></button>
             {% elif job.status == 'done' %}
-                <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i class="fas fa-file-alt"></i></button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Retry Job" onclick="queueJob(event, '{{ job.id }}')"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="View Log" onclick="viewLog(event, '{{ job.id }}')"><i class="fas fa-file-alt"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Delete Job" onclick="deleteJob(event, '{{ job.id }}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-outline-warning" title="Archive Job" onclick="archiveJob(event, '{{ job.id }}')"><i class="fas fa-archive"></i></button>
                 
             {% endif %}
         </div>
@@ -61,25 +68,11 @@
 
 {% block content %}
 <div class="">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3>Jobs ({{ ENV_NAME }})</h3>
-
-        <div class="d-flex align-items-center">
-            <span id="consumerStatusBadge" class="ms-2 me-2"></span>
-            <div class="btn-group me-2" role="group">
-                <button type="button" class="btn btn-outline-secondary" id="startConsumerBtn" title="Start Huey Consumer">
-                    <i class="fas fa-play"></i>                 </button>
-                <button type="button" class="btn btn-outline-secondary" id="stopConsumerBtn" title="Stop Huey Consumer">
-                    <i class="fas fa-stop"></i>
-                </button>
-                <button type="button" class="btn btn-outline-secondary" id="viewLogBtn" title="View Log">
-                    <i class="fas fa-file-alt"></i>
-                </button>
-            </div>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <h5>Job Queue ({{ ENV_NAME }})</h5>
 
         <div class="d-flex justify-content-end">
-            <button type="button" class="btn btn-primary ms-5" data-bs-toggle="modal" data-bs-target="#jobModal">
+            <button type="button" class="btn btn-dark ms-5" data-bs-toggle="modal" data-bs-target="#jobModal">
                 <i class="fas fa-plus"></i> Add Job
             </button>
         </div>
@@ -122,8 +115,21 @@
         </div>
     </div>
 
+    <!-- Clear History Button -->
+    
+
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-1">
+        <h5>History ({{ ENV_NAME }})</h5>
+    
+        <div class="d-flex justify-content-end align-items-center">
+            <button type="button" class="btn btn-dark" id="clearHistoryBtn">
+                <i class="fas fa-archive"></i> Clear History
+            </button>
+        </div>
+    </div>
+
     <!-- History -->
-    <div class="card mt-4">
+    <div class="card mt-1">
         <div class="card-header">
             History
         </div>
@@ -172,7 +178,13 @@
                 <form id="jobForm">
                     <input type="hidden" id="jobId" name="id">
                     <input type="hidden" id="jobEnvName" name="env_name" value="{{ ENV_NAME }}">
-
+                    <div class="mb-3">
+                        <label for="jobQueueName" class="form-label">Queue</label>
+                        <select class="form-select" id="jobQueueName" name="queue_name">
+                            <option value="default">Default</option>
+                            <option value="reserved">Reserved</option>
+                        </select>
+                    </div>
                     <div class="mb-3">
                         <label for="jobName" class="form-label">Job Name</label>
                         <input type="text" class="form-control" id="jobName" name="name">
@@ -211,6 +223,10 @@
                         <label for="jobMeta" class="form-label">Meta (JSON for API Post)</label>
                         <textarea class="form-control" id="jobMeta" name="meta" rows="12">{}</textarea>
                     </div>
+                    <div class="mb-3">
+                        <label for="jobArchived" class="form-label">Archived</label>
+                        <input type="checkbox" class="form-check-input" id="jobArchived" name="archived">
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -222,22 +238,7 @@
 </div>
 
 <!-- Log Viewer Modal -->
-<div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="logModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="logModalLabel">Job Log</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body position-relative">
-                <pre id="logContent" class="bg-dark small" style="word-wrap: break-word; max-height: 70vh; overflow-y: auto;font-size: x-small;"></pre>
-                <button id="scrollToBottomBtn" class="btn btn-sm btn-primary position-absolute end-0 bottom-0 m-3" style="display:none; z-index:10;">
-                    Scroll to Latest
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+{% include "/logs/_modal_view_log.html" %}
 
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
@@ -334,7 +335,8 @@
             document.getElementById('jobPriority').value = job.priority;
             document.getElementById('jobRecurrence').value = job.recurrence || '';
             document.getElementById('jobMeta').value = JSON.stringify(job.meta || {}, null, 2);
-
+            document.getElementById('jobArchived').checked = job.archived;
+            document.getElementById('jobQueueName').value = job.queue_name || 'default';
             jobModal.show();
         } catch (error) {
             toast.show(error.message || `Failed to fetch job ${jobId}`, 'danger');
@@ -399,6 +401,16 @@
         deleteModal.show();
     };
 
+    window.archiveJob = async function (event, jobId) {
+        event.stopPropagation();
+        try {
+            await apiCrud.update('jobs', jobId, { "archived": true });
+            toast.show('Job archived.', 'success');
+        } catch (error) {
+            toast.show(error.message || 'Failed to archive job', 'danger');
+        }
+    };
+
 
     window.stopJob = async function (event, jobId) {
         event.stopPropagation();
@@ -426,35 +438,39 @@
         let actions = '';
         if (job.status === 'pending') {
             actions = `
-                <button class="btn btn-sm btn-outline-primary" title="Start Job" onclick="queueJob(event, '${job.id}')"><i class="fas fa-plus"></i></button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-primary" title="Queue Job" onclick="queueJob(event, '${job.id}')"><i class="fas fa-plus"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
             `;
         } else if (job.status === 'queued') {
             actions = `
                 <button class="btn btn-sm btn-outline-warning" title="Unqueue Job" onclick="unqueueJob(event, '${job.id}')"><i class="fas fa-clock"></i></button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
             `;
         } else if (job.status === 'running') {
             actions = `
                 <button class="btn btn-sm btn-outline-warning" title="Stop Job" onclick="stopJob(event, '${job.id}')"><i class="fas fa-stop"></i></button>
-                <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '${job.id}')"><i class="fas fa-file-alt"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="View Log" onclick="viewLog(event, '${job.id}')"><i class="fas fa-file-alt"></i></button>
             `;
         } else if (job.status === 'failed') {
             actions = `
-                <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="queueJob(event, '${job.id}')"><i class="fas fa-sync-alt"></i></button>
-                <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '${job.id}')"><i class="fas fa-file-alt"></i></button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-success" title="Retry Job" onclick="queueJob(event, '${job.id}')"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="View Log" onclick="viewLog(event, '${job.id}')"><i class="fas fa-file-alt"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Archive Job" onclick="archiveJob(event, '${job.id}')"><i class="fas fa-archive"></i></button>
             `;
         } else if (job.status === 'done') {
             actions = `
-                <button class="btn btn-sm btn-outline-success" title="Retry Job" onclick="queueJob(event, '${job.id}')"><i class="fas fa-sync-alt"></i></button>
-                <button class="btn btn-sm btn-outline-info" title="View Log" onclick="viewLog(event, '${job.id}')"><i class="fas fa-file-alt"></i></button>
-                <button class="btn btn-sm btn-outline-danger" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Retry Job" onclick="queueJob(event, '${job.id}')"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="View Log" onclick="viewLog(event, '${job.id}')"><i class="fas fa-file-alt"></i></button>
+                <button class="btn btn-sm btn-outline-secondary" title="Delete Job" onclick="deleteJob(event, '${job.id}')"><i class="fas fa-trash"></i></button>
+                <button class="btn btn-sm btn-outline-warning" title="Archive Job" onclick="archiveJob(event, '${job.id}')"><i class="fas fa-archive"></i></button>
             `;
         }
+        // Add Reserved badge if needed
+        const reservedBadge = job.queue_name === 'reserved' ? ' <span class="badge bg-primary ms-1">Reserved</span>' : '';
         return `
 <tr id="job-row-${job.id}" onclick="openEditModal('${job.id}')" style="cursor: pointer;">
-    <td>${job.name}</td>
+    <td>${job.name}${reservedBadge}</td>
     <td>${job.env_name}</td>
     <td><small>${String(job.id).substring(0, 8)}</small></td>
     <td>${job.recurrence ? job.recurrence.charAt(0).toUpperCase() + job.recurrence.slice(1) : 'None'}</td>
@@ -495,26 +511,6 @@
             : '<tr><td colspan="8" class="text-center">No jobs in history.</td></tr>';
     }
 
-    function updateConsumerStatusBadge(status) {
-        const badge = document.getElementById('consumerStatusBadge');
-        const startBtn = document.getElementById('startConsumerBtn');
-        const stopBtn = document.getElementById('stopConsumerBtn');
-        if (!badge) return;
-        if (status === 'running') {
-            badge.innerHTML = '<span class="badge bg-success">Consumer<br>Running</span>';
-            startBtn.classList = "btn btn-outline-secondary";
-            stopBtn.classList = "btn btn-danger";
-        } else if (status === 'stopped') {
-            badge.innerHTML = '<span class="badge bg-secondary">Consumer<br>Stopped</span>';
-            startBtn.classList = "btn btn-success";
-            stopBtn.classList = "btn btn-outline-secondary";
-        } else {
-            badge.innerHTML = '<span class="badge bg-warning text-dark"><i class="fas fa-question"></i><br> Unknown</span>';
-            startBtn.classList = "btn btn-outline-warning";
-            stopBtn.classList = "btn btn-outline-warning";
-        }
-    }
-
     function connectJobQueueWebSocket() {
         let protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         let wsUrl = `${protocol}://${window.location.host}/api/v1/ws/job-queue`;
@@ -531,15 +527,11 @@
                 if (data.jobs) {
                     updateJobTables(data.jobs);
                 }
-                if (data.consumer_status) {
-                    updateConsumerStatusBadge(data.consumer_status);
-                }
             } catch (e) {
                 console.error('Failed to parse WebSocket message:', e);
             }
         };
         logSocket.onclose = function() {
-            updateConsumerStatusBadge('unknown');
             setTimeout(connectJobQueueWebSocket, 3000);
         };
     }
@@ -547,36 +539,47 @@
     document.addEventListener('DOMContentLoaded', () => {
         connectJobQueueWebSocket();
 
-        // Start/Stop Huey Consumer buttons
-        const startBtn = document.getElementById('startConsumerBtn');
-        const stopBtn = document.getElementById('stopConsumerBtn');
-        const viewLogBtn = document.getElementById('viewLogBtn');
 
-        if (viewLogBtn && logStreamer) {
-            viewLogBtn.addEventListener('click', () => {
-                logStreamer.viewLog({ topic: 'consumer', type: 'consumer' });
-            });
-        }
-
-        if (startBtn) {
-            startBtn.addEventListener('click', async () => {
+        // --- Clear History Button ---
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        if (clearHistoryBtn) {
+            clearHistoryBtn.addEventListener('click', async () => {
+                clearHistoryBtn.disabled = true;
                 try {
-                    const resp = await fetch('/api/v1/jobs/start-consumer', { method: 'POST' });
-                    const data = await resp.json();
-                    toast.show(data.message, data.success ? 'success' : 'danger');
+                    // Find all job rows in history with status 'done' or 'failed'
+                    const historyTbody = document.querySelector('.card.mt-4 .card-body table tbody');
+                    const rows = historyTbody.querySelectorAll('tr[id^="job-row-"]');
+                    const jobsToArchive = [];
+                    for (const row of rows) {
+                        // Get job id from row id
+                        const jobId = row.id.replace('job-row-', '');
+                        // Get status from the badge in the row
+                        const statusBadge = row.querySelector('span.badge');
+                        if (!statusBadge) continue;
+                        const status = statusBadge.textContent.trim().toLowerCase();
+                        if (status === 'done' || status === 'failed') {
+                            jobsToArchive.push(jobId);
+                        }
+                    }
+                    if (jobsToArchive.length === 0) {
+                        toast.show('No history jobs to archive.', 'info');
+                        clearHistoryBtn.disabled = false;
+                        return;
+                    }
+                    let archivedCount = 0;
+                    for (const jobId of jobsToArchive) {
+                        try {
+                            await apiCrud.update('jobs', jobId, { archived: true });
+                            archivedCount++;
+                        } catch (err) {
+                            // Continue archiving others even if one fails
+                        }
+                    }
+                    toast.show(`Archived ${archivedCount} job(s) from history.`, 'success');
                 } catch (err) {
-                    toast.show('Failed to start consumer', 'danger');
-                }
-            });
-        }
-        if (stopBtn) {
-            stopBtn.addEventListener('click', async () => {
-                try {
-                    const resp = await fetch('/api/v1/jobs/stop-consumer', { method: 'POST' });
-                    const data = await resp.json();
-                    toast.show(data.message, data.success ? 'success' : 'danger');
-                } catch (err) {
-                    toast.show('Failed to stop consumer', 'danger');
+                    toast.show('Failed to clear history.', 'danger');
+                } finally {
+                    clearHistoryBtn.disabled = false;
                 }
             });
         }

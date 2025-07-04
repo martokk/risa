@@ -1,0 +1,168 @@
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-bold">
+        Huey Consumer Workers
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-dark table-bordered align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col" class="w-25">Queue</th>
+                        <th scope="col" class="w-25">State</th>
+                        <th scope="col" class="w-50">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Default</td>
+                        <td>
+                            <span class="consumerStatusBadge" data-queue-name="default"></span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group" aria-label="Consumer Actions">
+                                <button type="button" class="btn btn-outline-secondary startConsumerBtn" title="Start Huey Consumer" data-queue-name="default">
+                                    <i class="fas fa-play"></i> <span class="d-none d-md-inline">Start</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary stopConsumerBtn" title="Stop Huey Consumer" data-queue-name="default">
+                                    <i class="fas fa-stop"></i> <span class="d-none d-md-inline">Stop</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary viewLogBtn" title="View Log" data-queue-name="default">
+                                    <i class="fas fa-file-alt"></i> <span class="d-none d-md-inline">Log</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Reserved</td>
+                        <td>
+                            <span class="consumerStatusBadge" data-queue-name="reserved"></span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group" aria-label="Consumer Actions">
+                                <button type="button" class="btn btn-outline-secondary startConsumerBtn" title="Start Huey Consumer" data-queue-name="reserved">
+                                    <i class="fas fa-play"></i> <span class="d-none d-md-inline">Start</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary stopConsumerBtn" title="Stop Huey Consumer" data-queue-name="reserved">
+                                    <i class="fas fa-stop"></i> <span class="d-none d-md-inline">Stop</span>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary viewLogBtn" title="View Log" data-queue-name="reserved">
+                                    <i class="fas fa-file-alt"></i> <span class="d-none d-md-inline">Log</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Log Viewer Modal -->
+{% include "/logs/_modal_view_log.html" %}
+
+
+<script type="module">
+    import { apiCrud, uiHelpers } from '/static/js/api_utils.js';
+    import { toast } from '/static/js/toast.js';
+    import { LogStreamer } from '/static/js/tools/log_streamer.js';
+
+    let logSocket = null;
+    let logStreamer = null;
+
+    function updateConsumerStatusBadges(statusMap) {
+        document.querySelectorAll('.consumerStatusBadge').forEach(badge => {
+            const queue = badge.getAttribute('data-queue-name');
+            const status = statusMap && statusMap[queue] ? statusMap[queue] : 'unknown';
+            const startBtn = document.querySelector(`.startConsumerBtn[data-queue-name="${queue}"]`);
+            const stopBtn = document.querySelector(`.stopConsumerBtn[data-queue-name="${queue}"]`);
+            if (status === 'running') {
+                badge.innerHTML = '<span class="badge bg-success">Running</span>';
+                startBtn.classList = "btn btn-outline-secondary startConsumerBtn";
+                stopBtn.classList = "btn btn-outline-danger stopConsumerBtn";
+            } else if (status === 'stopped') {
+                badge.innerHTML = '<span class="badge bg-secondary">Stopped</span>';
+                startBtn.classList = "btn btn-success startConsumerBtn";
+                stopBtn.classList = "btn btn-outline-secondary stopConsumerBtn";
+            } else {
+                badge.innerHTML = '<span class="badge bg-secondary text-dark"><i class="fas fa-question"></i> Unknown</span>';
+                startBtn.classList = "btn btn-outline-secondary startConsumerBtn";
+                stopBtn.classList = "btn btn-outline-secondary stopConsumerBtn";
+            }
+        });
+    }
+
+    function connectJobQueueWebSocket() {
+        let protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        let wsUrl = `${protocol}://${window.location.host}/api/v1/ws/job-queue`;
+        logSocket = new WebSocket(wsUrl);
+
+        // Initialize the LogStreamer once the socket is created
+        logStreamer = new LogStreamer('logModal', 'logContent', 'scrollToBottomBtn', logSocket);
+
+        logSocket.onmessage = function (event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.consumer_status) {
+                    updateConsumerStatusBadges(data.consumer_status);
+                }
+            } catch (e) {
+                console.error('Failed to parse WebSocket message:', e);
+            }
+        };
+        logSocket.onclose = function () {
+            updateConsumerStatusBadges({});
+            setTimeout(connectJobQueueWebSocket, 3000);
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        connectJobQueueWebSocket();
+
+        // Start/Stop Huey Consumer buttons
+        document.querySelectorAll('.startConsumerBtn').forEach(startBtn => {
+            startBtn.addEventListener('click', async () => {
+                const queue = startBtn.getAttribute('data-queue-name');
+                try {
+                    const resp = await fetch('/api/v1/jobs/start-consumer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ queue_name: queue })
+                    });
+                    const data = await resp.json();
+                    toast.show(data.results?.map(r => r.message).join('\n') || 'Started', data.results?.every(r => r.success) ? 'success' : 'danger');
+                } catch (err) {
+                    toast.show('Failed to start consumer', 'danger');
+                }
+            });
+        });
+        document.querySelectorAll('.stopConsumerBtn').forEach(stopBtn => {
+            stopBtn.addEventListener('click', async () => {
+                const queue = stopBtn.getAttribute('data-queue-name');
+                try {
+                    const resp = await fetch('/api/v1/jobs/stop-consumer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ queue_name: queue })
+                    });
+                    const data = await resp.json();
+                    toast.show(data.results?.map(r => r.message).join('\n') || 'Stopped', data.results?.every(r => r.success) ? 'success' : 'danger');
+                } catch (err) {
+                    toast.show('Failed to stop consumer', 'danger');
+                }
+            });
+        });
+        document.querySelectorAll('.viewLogBtn').forEach(viewLogBtn => {
+            viewLogBtn.addEventListener('click', () => {
+                const queue = viewLogBtn.getAttribute('data-queue-name');
+                if (logStreamer) {
+                    logStreamer.viewLog({ topic: queue, type: 'consumer' });
+                }
+            });
+        });
+    });
+</script>

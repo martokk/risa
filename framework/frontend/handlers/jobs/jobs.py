@@ -30,7 +30,10 @@ async def jobs_page(
     Returns:
         An HTML response rendering the jobs page.
     """
-    jobs = await crud.job.get_all_jobs_for_env_name(db, env_name=settings.ENV_NAME)
+    jobs = await crud.job.get_all_jobs_for_env_name(
+        db, env_name=settings.ENV_NAME, include_archived=False
+    )
+
     # Sort jobs by status and priority for display
     status_order = {
         "running": 0,

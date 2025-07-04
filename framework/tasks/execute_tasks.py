@@ -7,7 +7,6 @@ import subprocess
 from datetime import datetime, timezone
 from uuid import uuid4
 
-import httpx
 import requests
 from huey import crontab
 from sqlmodel import Session
@@ -16,10 +15,11 @@ from app import logger, paths, settings
 from app.tasks.execute_tasks import hook_get_script_class_from_class_name
 from framework import crud, models
 from framework.core.db import get_db_context
-from framework.core.huey import huey
+from framework.core.huey import huey_default, huey_reserved
+from framework.logic.jobs import push_jobs_to_websocket
 
 
-def trigger_next_queued_job() -> None:
+def _trigger_next_queued_job(queue_name: str) -> None:
     """
     Finds the next queued job and triggers it for execution.
     This function is called after a job completes to ensure continuous processing.
@@ -28,7 +28,9 @@ def trigger_next_queued_job() -> None:
 
     with get_db_context() as db:
         # Get all jobs and filter for queued status
-        all_jobs = crud.job.sync.get_all(db)
+        all_jobs = crud.job.sync.get_all_jobs_for_env_name(
+            db, env_name=settings.ENV_NAME, queue_name=queue_name
+        )
         queued_jobs = [j for j in all_jobs if j.status == models.JobStatus.queued]
 
         if not queued_jobs:
@@ -53,10 +55,10 @@ def trigger_next_queued_job() -> None:
         )
 
         # Enqueue the job for execution in Huey
-        execute_job_task(job_id=str(next_job.id), priority=priority_order[next_job.priority])
+        _execute_job_task(job_id=str(next_job.id), priority=priority_order[next_job.priority])
 
 
-def run_command_job(db: Session, db_job: models.Job) -> None:
+def _run_command_job(db: Session, db_job: models.Job) -> None:
     """
     Executes a command-line job using subprocess and logs output in real-time.
 
@@ -119,7 +121,7 @@ def run_command_job(db: Session, db_job: models.Job) -> None:
         raise
 
 
-def run_script_job(db_job: models.Job) -> None:
+def _run_script_job(db_job: models.Job) -> None:
     """
     Executes a script job using the script class.
     """
@@ -155,7 +157,7 @@ def run_script_job(db_job: models.Job) -> None:
     logger.info(f"Script {script_class_name} \noutput: {script_output}")
 
 
-def run_api_post_job(job: models.Job) -> None:  # TODO: Not implemented yet (dummy code)
+def _run_api_post_job(job: models.Job) -> None:  # TODO: Not implemented yet (dummy code)
     """
     Executes an API POST job using requests.
 
@@ -177,24 +179,7 @@ def run_api_post_job(job: models.Job) -> None:  # TODO: Not implemented yet (dum
         raise
 
 
-def push_jobs_to_websocket() -> None:
-    """
-    Push all jobs to the websocket.
-    """
-    try:
-        with httpx.Client() as client:
-            client.post(
-                f"{settings.BASE_URL}/api/v1/jobs/push-jobs-to-websocket",
-            )
-
-        logger.debug("Pushed jobs to websocket via api call")
-
-    except Exception as e:
-        logger.error(f"Failed to push jobs to websocket via api call: {e}")
-
-
-@huey.task()
-def execute_job_task(job_id: str, priority: int = 100) -> None:
+def _execute_job_task(job_id: str, priority: int = 100) -> None:
     """
     Huey task to execute a job and update its status.
     This is the entry point for background job execution.
@@ -239,7 +224,7 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
             logger.info(f"Job {str(db_job.id)[:8]}: Starting execution...")
             if db_job.type == models.JobType.command:
                 try:
-                    run_command_job(db=db, db_job=db_job)
+                    _run_command_job(db=db, db_job=db_job)
                     job_succeeded = True
                 except Exception as e:
                     if "died with <Signals.SIGKILL: 9>" in str(e):
@@ -254,10 +239,10 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
                     else:
                         raise  # Re-raise other exceptions
             elif db_job.type == models.JobType.api_post:
-                run_api_post_job(db_job)
+                _run_api_post_job(db_job)
                 job_succeeded = True
             elif db_job.type == models.JobType.script:
-                run_script_job(db_job)
+                _run_script_job(db_job)
                 job_succeeded = True
 
         except requests.exceptions.Timeout as e:
@@ -288,21 +273,22 @@ def execute_job_task(job_id: str, priority: int = 100) -> None:
             logger.info(f"--- FINISHED JOB: {str(db_job.id)[:8]} ---\n\n\n")
 
             # Trigger the next queued job after this one completes
-            trigger_next_queued_job()
+            _trigger_next_queued_job(queue_name=db_job.queue_name)
 
 
-@huey.periodic_task(crontab(minute="*/1"))  # Check every minute
-def check_and_process_queued_jobs() -> None:
+def _check_and_process_queued_jobs(queue_name: str) -> None:
     """
     Periodic task that checks for queued jobs and triggers them for processing.
     This ensures that jobs get processed even if the trigger_next_queued_job()
     mechanism fails or if jobs are added while no jobs are running.
     """
-    logger.info("--- HUEY CONSUMER: Periodic check for queued jobs ---")
+    logger.info(f"--- HUEY CONSUMER: Periodic check for queued jobs ({queue_name}) ---")
 
     with get_db_context() as db:
         # Check if there are any running jobs
-        all_jobs = crud.job.sync.get_all(db)
+        all_jobs = crud.job.sync.get_all_jobs_for_env_name(
+            db, env_name=settings.ENV_NAME, queue_name=queue_name
+        )
         running_jobs = [j for j in all_jobs if j.status == models.JobStatus.running]
 
         # If no jobs are running, check for queued jobs
@@ -312,15 +298,14 @@ def check_and_process_queued_jobs() -> None:
                 logger.info(
                     f"Found {len(queued_jobs)} queued jobs with no running jobs. Triggering next job."
                 )
-                trigger_next_queued_job()
+                _trigger_next_queued_job(queue_name=queue_name)
             else:
                 logger.debug("No running jobs and no queued jobs found.")
         else:
             logger.debug(f"Found {len(running_jobs)} running job(s). Skipping queued job check.")
 
 
-@huey.periodic_task(crontab(minute="*/5"))  # Check every 5 minutes
-def cleanup_stuck_jobs() -> None:
+def _cleanup_stuck_jobs(queue_name: str) -> None:
     """
     Periodic task that checks for jobs that have been 'running' for too long
     and may be stuck. This helps recover from situations where a job process
@@ -329,7 +314,9 @@ def cleanup_stuck_jobs() -> None:
     logger.info("--- HUEY CONSUMER: Checking for stuck jobs ---")
 
     with get_db_context() as db:
-        all_jobs = crud.job.sync.get_all(db)
+        all_jobs = crud.job.sync.get_all_jobs_for_env_name(
+            db, env_name=settings.ENV_NAME, queue_name=queue_name
+        )
         running_jobs = [j for j in all_jobs if j.status == models.JobStatus.running]
 
         for job in running_jobs:
@@ -356,14 +343,15 @@ def cleanup_stuck_jobs() -> None:
                 crud.job.sync.update(db, db_obj=job, obj_in=obj_in)
 
 
-@huey.periodic_task(crontab(minute="0"))  # TODO: NOT IMPLEMENTED YET
-def enqueue_hourly_jobs() -> None:
+def _enqueue_hourly_jobs(queue_name: str) -> None:
     """
     Periodically executed task to enqueue jobs marked as "hourly".
     """
     logger.info("Checking for hourly recurring jobs...")
     with get_db_context() as db:
-        all_jobs = crud.job.sync.get_all(db)
+        all_jobs = crud.job.sync.get_all_jobs_for_env_name(
+            db, env_name=settings.ENV_NAME, queue_name=queue_name
+        )
         for job in all_jobs:
             if job.recurrence == "hourly":
                 logger.info(f"Spawning new job from recurring hourly job: {job.id}")
@@ -381,14 +369,15 @@ def enqueue_hourly_jobs() -> None:
                 crud.job.sync.create(db, obj_in=new_job_create)
 
 
-@huey.periodic_task(crontab(minute="0", hour="0"))  # TODO: NOT IMPLEMENTED YET
-def enqueue_daily_jobs() -> None:
+def _enqueue_daily_jobs(queue_name: str) -> None:
     """
     Periodically executed task to enqueue jobs marked as "daily".
     """
     logger.info("Checking for daily recurring jobs...")
     with get_db_context() as db:
-        all_jobs = crud.job.sync.get_all(db)
+        all_jobs = crud.job.sync.get_all_jobs_for_env_name(
+            db, env_name=settings.ENV_NAME, queue_name=queue_name
+        )
         for job in all_jobs:
             if job.recurrence == "daily":
                 logger.info(f"Spawning new job from recurring daily job: {job.id}")
@@ -406,11 +395,74 @@ def enqueue_daily_jobs() -> None:
                 crud.job.sync.create(db, obj_in=new_job_create)
 
 
-@huey.periodic_task(crontab(minute="0"))
-def spawn_recurring_jobs() -> None:
+def _spawn_recurring_jobs(queue_name: str) -> None:
     """
     Periodically executed task to enqueue jobs marked as "hourly" or "daily".
     """
     logger.info("Checking for hourly and daily recurring jobs...")
-    enqueue_hourly_jobs()
-    enqueue_daily_jobs()
+    _enqueue_hourly_jobs(queue_name=queue_name)
+    _enqueue_daily_jobs(queue_name=queue_name)
+
+
+@huey_default.task()
+def execute_job_task_default(job_id: str, priority: int = 100) -> None:
+    _execute_job_task(job_id=job_id, priority=priority)
+
+
+@huey_reserved.task()
+def execute_job_task_reserved(job_id: str, priority: int = 100) -> None:
+    _execute_job_task(job_id=job_id, priority=priority)
+
+
+@huey_default.periodic_task(crontab(minute="*/1"))  # Check every minute
+def check_and_process_queued_jobs_default() -> None:
+    _check_and_process_queued_jobs(queue_name="default")
+
+
+@huey_reserved.periodic_task(crontab(minute="*/1"))
+def check_and_process_queued_jobs_reserved() -> None:
+    _check_and_process_queued_jobs(queue_name="reserved")
+
+
+@huey_default.periodic_task(crontab(minute="*/5"))  # Check every 5 minutes
+def cleanup_stuck_jobs_default() -> None:
+    _cleanup_stuck_jobs(queue_name="default")
+
+
+@huey_reserved.periodic_task(crontab(minute="*/5"))
+def cleanup_stuck_jobs_reserved() -> None:
+    _cleanup_stuck_jobs(queue_name="reserved")
+
+
+@huey_default.periodic_task(crontab(minute="0"), queue_name="default")  # TODO: NOT IMPLEMENTED YET
+def enqueue_hourly_jobs_default() -> None:
+    _enqueue_hourly_jobs(queue_name="default")
+
+
+@huey_reserved.periodic_task(
+    crontab(minute="0"), queue_name="reserved"
+)  # TODO: NOT IMPLEMENTED YET
+def enqueue_hourly_jobs_reserved() -> None:
+    _enqueue_hourly_jobs(queue_name="reserved")
+
+
+@huey_default.periodic_task(
+    crontab(minute="0", hour="0"), queue_name="default"
+)  # TODO: NOT IMPLEMENTED YET
+def enqueue_daily_jobs_default() -> None:
+    _enqueue_daily_jobs(queue_name="default")
+
+
+@huey_reserved.periodic_task(crontab(minute="0", hour="0"), queue_name="reserved")
+def enqueue_daily_jobs_reserved() -> None:
+    _enqueue_daily_jobs(queue_name="reserved")
+
+
+@huey_default.periodic_task(crontab(minute="0"))
+def spawn_recurring_jobs_default() -> None:
+    _spawn_recurring_jobs(queue_name="default")
+
+
+@huey_reserved.periodic_task(crontab(minute="0"))
+def spawn_recurring_jobs_reserved() -> None:
+    _spawn_recurring_jobs(queue_name="reserved")

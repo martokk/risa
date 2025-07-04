@@ -17,7 +17,10 @@ class Settings(PythonFastAPIBaseSettings):
 
     # Job Queue
     HUEY_SQLITE_PATH: str = "app/data/huey_jobs.db"
-    HUEY_LOG_PATH: str = "app/data/logs/huey_consumer.log"
+    HUEY_DEFAULT_SQLITE_PATH: str = "app/data/huey_consumer__default.db"
+    HUEY_RESERVED_SQLITE_PATH: str = "app/data/huey_consumer__reserved.db"
+    HUEY_DEFAULT_LOG_PATH: str = "app/data/logs/huey_consumer__default.log"
+    HUEY_RESERVED_LOG_PATH: str = "app/data/logs/huey_consumer__reserved.log"
     IDLE_TIMEOUT_MINUTES: int = 30
 
     @validator("EXPORT_API_KEY")

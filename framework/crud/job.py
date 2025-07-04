@@ -72,7 +72,7 @@ def broadcast_jobs_after_sync(func: Callable[..., T]) -> Callable[..., T]:
         # Spawn async task to broadcast (fire-and-forget)
         async def broadcast_jobs() -> None:
             try:
-                jobs = self.get_all_jobs_for_env_name(db, settings.ENV_NAME)
+                jobs = self.get_all_jobs_for_env_name(db, settings.ENV_NAME, include_archived=False)
                 await job_queue_ws_manager.broadcast(
                     {
                         "jobs": [j.model_dump(mode="json") for j in jobs],
@@ -97,8 +97,26 @@ def broadcast_jobs_after_sync(func: Callable[..., T]) -> Callable[..., T]:
 
 
 class JobCRUDSync(BaseCRUDSync[models.Job, models.JobCreate, models.JobUpdate]):
-    def get_all_jobs_for_env_name(self, db: Session, env_name: str) -> list[models.Job]:
-        return self.get_multi(db, env_name=env_name, limit=1000)
+    def get_all_jobs_for_env_name(
+        self,
+        db: Session,
+        env_name: str,
+        queue_name: str | None = None,
+        include_archived: bool = False,
+    ) -> list[models.Job]:
+        if queue_name is None:
+            if include_archived:
+                return self.get_multi(db, env_name=env_name)
+            return self.get_multi(db, env_name=env_name, archived=False)
+        if include_archived:
+            return self.get_multi(db, env_name=env_name, queue_name=queue_name)
+        return self.get_multi(db, env_name=env_name, queue_name=queue_name, archived=False)
+
+    def get_queued_jobs_for_queue(self, db: Session, queue_name: str) -> list[models.Job]:
+        return self.get_multi(db, status=models.JobStatus.queued, queue_name=queue_name)
+
+    def get_running_jobs_for_queue(self, db: Session, queue_name: str) -> list[models.Job]:
+        return self.get_multi(db, status=models.JobStatus.running, queue_name=queue_name)
 
     @broadcast_jobs_after_sync
     def create(self, db: Session, *, obj_in: models.JobCreate, **kwargs: Any) -> models.Job:
@@ -142,8 +160,26 @@ class JobCRUD(BaseCRUD[models.Job, models.JobCreate, models.JobUpdate]):
             self._sync = JobCRUDSync(model=self.model)
         return self._sync
 
-    async def get_all_jobs_for_env_name(self, db: Session, env_name: str) -> list[models.Job]:
-        return await self.get_multi(db, env_name=env_name, limit=1000)
+    async def get_all_jobs_for_env_name(
+        self,
+        db: Session,
+        env_name: str,
+        queue_name: str | None = None,
+        include_archived: bool = False,
+    ) -> list[models.Job]:
+        if queue_name is None:
+            if include_archived:
+                return await self.get_multi(db, env_name=env_name)
+            return await self.get_multi(db, env_name=env_name, archived=False)
+        if include_archived:
+            return await self.get_multi(db, env_name=env_name, queue_name=queue_name)
+        return await self.get_multi(db, env_name=env_name, queue_name=queue_name, archived=False)
+
+    async def get_queued_jobs_for_queue(self, db: Session, queue_name: str) -> list[models.Job]:
+        return await self.get_multi(db, status=models.JobStatus.queued, queue_name=queue_name)
+
+    async def get_running_jobs_for_queue(self, db: Session, queue_name: str) -> list[models.Job]:
+        return await self.get_multi(db, status=models.JobStatus.running, queue_name=queue_name)
 
     @broadcast_jobs_after
     async def create(self, db: Session, *, obj_in: models.JobCreate, **kwargs: Any) -> models.Job:

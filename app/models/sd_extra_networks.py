@@ -1,11 +1,10 @@
-import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, root_validator
-from safetensors import safe_open
+from pydantic import root_validator
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
+from app.logic.hub import Safetensor
 from app.models.settings import get_settings
 from framework.paths import ENV_FILE
 
@@ -18,97 +17,6 @@ if TYPE_CHECKING:
 settings = get_settings(env_file_path=ENV_FILE)
 
 
-class SafetensorJSON(BaseModel):
-    path: Path
-    activation_text: str | None = None
-    sha256: str | None = None
-
-    def __init__(self, path: Path):
-        super().__init__(path=path)
-        if self.path.exists():
-            with open(self.path) as f:
-                json_data = json.load(f)
-                self.activation_text = json_data.get("activation_text")
-                self.sha256 = json_data.get("sha256")
-
-
-class Safetensor(BaseModel):
-    path: Path
-    env_name: str = settings.ENV_NAME
-
-    @property
-    def name(self) -> str:
-        return self.path.stem
-
-    @property
-    def id(self) -> str:
-        return self.name.lower().replace(" ", "_")
-
-    @property
-    def json_file_path(self) -> Path | None:
-        if self.env_name in ["local", "dev"]:
-            json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
-            if json_file_path.exists():
-                return json_file_path
-        return None
-
-    @property
-    def json_file(self) -> SafetensorJSON | None:
-        if self.env_name in ["local", "dev"]:
-            if self.json_file_path:
-                return SafetensorJSON(path=self.json_file_path)
-        return None
-
-    @property
-    def sha256(self) -> str | None:
-        if self.env_name != "local" and self.env_name != "dev":
-            return None
-
-        if self.json_file:
-            return self.json_file.sha256
-
-        # get the sha256 from the safetensors file
-        import hashlib
-
-        _sha256 = hashlib.sha256()
-        with open(self.path, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                _sha256.update(chunk)
-        sha256 = _sha256.hexdigest()
-        if sha256 and sha256 != "None":
-            # Load existing JSON data if file exists
-            existing_json_data = {}
-            if self.json_file_path and self.json_file_path.exists():
-                with open(self.json_file_path) as f:
-                    existing_json_data = json.load(f)
-
-            # Update only the sha256 field
-            existing_json_data["sha256"] = sha256
-
-            # Save updated JSON data
-            json_file_path = Path(str(self.path).replace(".safetensors", ".json"))
-            with open(json_file_path, "w") as f:
-                json.dump(existing_json_data, f)
-
-            return sha256
-        return None
-
-    @property
-    def size(self) -> int:
-        if self.env_name != "local" and self.env_name != "dev":
-            return 0
-        return self.path.stat().st_size
-
-    @property
-    def metadata(self) -> dict[str, Any] | None:
-        if self.path and self.path.exists():
-            with safe_open(self.path, framework="pt") as f:
-                metadata = f.metadata()
-                if metadata:
-                    return dict(metadata)
-        return None
-
-
 class SDExtraNetworkBase(SQLModel):
     id: str | None = Field(default=None, primary_key=True, index=True)
     sd_base_model_id: str = Field(foreign_key="sdbasemodel.id")
@@ -116,8 +24,8 @@ class SDExtraNetworkBase(SQLModel):
     trained_on_checkpoint: str | None = Field(
         default=None, description="The checkpoint the network was trained on"
     )
-    local_file_path: str | None = Field(default=None)
-    remote_file_path: str | None = Field(default=None)
+    hub_file_path: str | None = Field(default=None)
+    download_url: str | None = Field(default=None)
 
     network: str | None = Field(default=None, description="The name of the network (ie. 'lora')")
     network_trigger: str | None = Field(default=None, description="The trigger words for the lora")
@@ -140,8 +48,8 @@ class SDExtraNetworkBase(SQLModel):
 
     @property
     def safetensors(self) -> Safetensor | None:
-        if self.local_file_path:
-            return Safetensor(path=Path(self.local_file_path))
+        if self.hub_file_path:
+            return Safetensor(path=Path(self.hub_file_path))
         return None
 
     @property
@@ -149,8 +57,8 @@ class SDExtraNetworkBase(SQLModel):
         return (
             self.safetensors.name
             if self.safetensors
-            else Path(self.local_file_path).stem
-            if self.local_file_path
+            else Path(self.hub_file_path).stem
+            if self.hub_file_path
             else None
         )
 
@@ -198,18 +106,18 @@ class SDExtraNetworkCreate(SDExtraNetworkBase):
     def generate_id(cls, values: dict[str, Any]) -> dict[str, Any]:
         if values.get("id") is None:
             network_trigger_value = values.get("network_trigger")
-            local_file_path_value = values.get("local_file_path")
+            hub_file_path_value = values.get("hub_file_path")
             character_id = values.get("character_id")
             sd_base_model_id = values.get("sd_base_model_id")
 
-            safetensors_name = Path(local_file_path_value).stem if local_file_path_value else None
+            safetensors_name = Path(hub_file_path_value).stem if hub_file_path_value else None
 
             if not network_trigger_value:
                 raise ValueError("network_trigger must be provided to generate an ID")
 
             if not safetensors_name:
                 raise ValueError(
-                    "safetensors_name must be provided to generate an ID. Enter a local file path."
+                    "safetensors_name must be provided to generate an ID. Enter a Hub File Path."
                 )
 
             if not character_id or not sd_base_model_id:

@@ -3,10 +3,10 @@ import asyncio
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlmodel import Session
 
-from app import logger
+from app import logger, paths, settings
 from framework import crud
 from framework.core.db import get_db
-from framework.services import job_queue
+from framework.services.job_queue import get_consumer_status_map
 from framework.services.job_queue_ws_manager import job_queue_ws_manager
 
 
@@ -18,8 +18,8 @@ async def websocket_job_queue(websocket: WebSocket, db: Session = Depends(get_db
     await job_queue_ws_manager.connect(websocket)
 
     # Send initial state
-    jobs = await crud.job.get_all(db=db)
-    consumer_status = "running" if job_queue.is_consumer_running() else "stopped"
+    jobs = await crud.job.get_all_jobs_for_env_name(db=db, env_name=settings.ENV_NAME)
+    consumer_status = get_consumer_status_map()
     print(f"Consumer status: {consumer_status}")
     await websocket.send_json(
         {
@@ -47,7 +47,8 @@ async def websocket_job_queue(websocket: WebSocket, db: Session = Depends(get_db
             elif msg and msg.get("type") == "subscribe_consumer_log":
                 if log_task:
                     log_task.cancel()
-                log_task = asyncio.create_task(stream_consumer_log(websocket))
+                topic = msg["topic"]
+                log_task = asyncio.create_task(stream_consumer_log(websocket, topic))
             # Otherwise, just keep alive
     except WebSocketDisconnect:
         job_queue_ws_manager.disconnect(websocket)
@@ -90,33 +91,33 @@ async def stream_job_log(websocket: WebSocket, topic: str) -> None:
             pass
 
 
-async def stream_consumer_log(websocket: WebSocket) -> None:
+async def stream_consumer_log(websocket: WebSocket, topic: str) -> None:
     """Stream the main application log file to the websocket client."""
-    from app.paths import LOG_FILE
+    log_path = paths.HUEY_DEFAULT_LOG_PATH if topic == "default" else paths.HUEY_RESERVED_LOG_PATH
 
     last_pos = 0
     try:
         # Send existing content first
-        if LOG_FILE.exists():
-            with open(LOG_FILE) as f:
+        if log_path.exists():
+            with open(log_path) as f:
                 content = f.read()
                 if content:
                     await websocket.send_json(
-                        {"type": "log_update", "topic": "consumer", "content": content}
+                        {"type": "log_update", "topic": topic, "content": content}
                     )
                 last_pos = f.tell()
 
         # Now, tail the file for new content
         while True:
-            if not LOG_FILE.exists():
+            if not log_path.exists():
                 await asyncio.sleep(0.5)
                 continue
-            with open(LOG_FILE) as f:
+            with open(log_path) as f:
                 f.seek(last_pos)
                 new_content = f.read()
                 if new_content:
                     await websocket.send_json(
-                        {"type": "log_update", "topic": "consumer", "content": new_content}
+                        {"type": "log_update", "topic": topic, "content": new_content}
                     )
                     last_pos = f.tell()
             await asyncio.sleep(0.5)
@@ -124,6 +125,6 @@ async def stream_consumer_log(websocket: WebSocket) -> None:
         pass
     except Exception as e:
         try:
-            await websocket.send_json({"type": "log_error", "topic": "consumer", "error": str(e)})
+            await websocket.send_json({"type": "log_error", "topic": topic, "error": str(e)})
         except Exception:
             pass
