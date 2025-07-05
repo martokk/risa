@@ -81,6 +81,13 @@ RUN coverage report --fail-under 95
 # -----------------------------------------------------------------------------
 # PRODUCTION - 'production' stage uses the clean 'python-base' stage and copyies in only our runtime deps that were installed in the 'builder-base'
 FROM python-base as production
+
+# Install runtime dependencies
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends \
+  rsync \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder-base $VENV_PATH $VENV_PATH
 
 # Copying in our app
