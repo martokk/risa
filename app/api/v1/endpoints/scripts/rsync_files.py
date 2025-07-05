@@ -23,7 +23,7 @@ async def rsync_files(
     db: Session = Depends(get_db),
 ) -> JSONResponse:
     # Get from body
-    env_name = body.get("env_name", settings.ENV_NAME if settings.ENV_NAME else "dev")
+    env_name = body.get("job_env", settings.ENV_NAME if settings.ENV_NAME else "dev")
     queue_name = body.get("queue_name", "default")
 
     # Add to queue.
