@@ -92,13 +92,6 @@ RUN apt-get update && \
 
 COPY --from=builder-base $VENV_PATH $VENV_PATH
 
-# Create non-root user that matches host UID:GID
-RUN addgroup --gid 1000 appuser \
-    && adduser --uid 1000 --gid 1000 --disabled-password --gecos "" appuser
-
-# Switch to non-root user for everything after this
-USER appuser
-
 # Copying in our app
 COPY /app /app
 COPY /framework /framework
@@ -107,6 +100,13 @@ COPY /migrations /migrations
 COPY /alembic.ini /alembic.ini
 COPY /pyproject.toml /pyproject.toml
 RUN chmod +x /start.sh
+
+# Create non-root user that matches host UID:GID
+RUN addgroup --gid 1000 appuser \
+    && adduser --uid 1000 --gid 1000 --disabled-password --gecos "" appuser
+
+# Switch to non-root user for everything after this
+USER appuser
 
 WORKDIR /
 
