@@ -25,6 +25,10 @@ async def rsync_files(
     # Get from body
     env_name = body.get("job_env", settings.ENV_NAME if settings.ENV_NAME else "dev")
     queue_name = body.get("queue_name", "default")
+    source_env = body["source_env"]
+    destination_env = body["destination_env"]
+    source_location = body["source_location"]
+    destination_location = body["destination_location"]
 
     # Add to queue.
     db_job = await crud.job.create(
@@ -32,7 +36,7 @@ async def rsync_files(
         obj_in=models.JobCreate(
             env_name=env_name,
             queue_name=queue_name,
-            name="Rsync Files",
+            name=f"Rsync Files:  [{source_env.upper()}] `{source_location}`   -->   [{destination_env.upper()}] `{destination_location}`",
             type=models.JobType.script,
             command="ScriptRsyncFiles",
             meta=body,
