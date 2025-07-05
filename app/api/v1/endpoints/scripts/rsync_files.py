@@ -11,14 +11,12 @@ from sqlmodel import Session
 from app import crud, models, settings
 from framework.api.deps import get_current_active_user
 from framework.core.db import get_db
-from framework.routes.restrict_to_env import restrict_to
 
 
 router = APIRouter()
 
 
 @router.post("/scripts/rsync-files/add-to-queue")
-@restrict_to("dev")
 async def rsync_files(
     current_user: Annotated[models.User, Depends(get_current_active_user)],
     body: dict[str, Any] = Body(...),
