@@ -5,9 +5,9 @@ def convert_risa_rsync_options_to_text(
     env_name: str,
     queue_name: str,
     source_env: str,
-    source_loc: str,
-    dest_env: str,
-    dest_loc: str,
+    source_location: str,
+    destination_env: str,
+    destination_location: str,
     option_u: bool,
     option_ignore_existing: bool,
 ) -> str:
@@ -18,9 +18,9 @@ def convert_risa_rsync_options_to_text(
         env_name: The environment name.
         queue_name: The queue name.
         source_env: The source environment.
-        source_loc: The source location.
-        dest_env: The destination environment.
-        dest_loc: The destination location.
+        source_location: The source location.
+        destination_env: The destination environment.
+        destination_location: The destination location.
         option_u: The option u.
         option_ignore_existing: The option ignore existing.
 
@@ -30,11 +30,11 @@ def convert_risa_rsync_options_to_text(
 
     action = "push" if source_env == env_name else "pull"
 
-    return f"Job on r|{env_name.upper()} to {action.upper()} [{source_env}]`{source_loc}` to [{dest_env}]`{dest_loc}`"
+    return f"Job on r|{env_name.upper()} to {action.upper()} [{source_env}]`{source_location}` to [{destination_env}]`{destination_location}`"
 
 
 def generate_rsync_command_job(
-    env_name: str,
+    job_env: str,
     source_env: str,
     source_location: str,
     destination_env: str,
@@ -51,10 +51,10 @@ def generate_rsync_command_job(
     rsync -e "ssh -i ~/.ssh/id_rsync_script" -avz /local/path/ user@remote:/remote/path/
     """
     user = "martokk"
-    ssh_key_path = f"~/.ssh/id_risa_{env_name.lower()}"
+    ssh_key_path = f"~/.ssh/id_risa_{job_env.lower()}"
     remote = "999.999.999.999"
     _user_at_remote = f"{user}@{remote}"
-    action = "push" if source_env == env_name else "pull"
+    action = "push" if source_env == job_env else "pull"
 
     # Start building the command.
     command = f'rsync -e "ssh -i {ssh_key_path}" -tvzP'

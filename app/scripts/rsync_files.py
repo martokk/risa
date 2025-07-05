@@ -1,7 +1,7 @@
 from typing import Any
 
 from app import logger
-from app.logic.rsync import convert_risa_rsync_options_to_text
+from app.logic.rsync import convert_risa_rsync_options_to_text, generate_rsync_command_job
 from framework import crud, models
 from framework.core.db import get_db_context
 from framework.services import scripts
@@ -13,9 +13,9 @@ class ScriptRsyncFiles(scripts.Script):
 
     It uses the following parameters:
     - source_env: The environment to rsync from.
-    - source_loc: The location to rsync from.
-    - dest_env: The environment to rsync to.
-    - dest_loc: The location to rsync to.
+    - source_location: The location to rsync from.
+    - destination_env: The environment to rsync to.
+    - destination_location: The location to rsync to.
     - option_u: Skip destination files that are newer.
     - option_ignore_existing: Skip destination files that already exist.
     - option_recursive: Recursively copy directories.
@@ -35,14 +35,14 @@ class ScriptRsyncFiles(scripts.Script):
         if not kwargs.get("source_env"):
             logger.error("source_env is required")
             return False
-        if not kwargs.get("source_loc"):
-            logger.error("source_loc is required")
+        if not kwargs.get("source_location"):
+            logger.error("source_location is required")
             return False
-        if not kwargs.get("dest_env"):
-            logger.error("dest_env is required")
+        if not kwargs.get("destination_env"):
+            logger.error("destination_env is required")
             return False
-        if not kwargs.get("dest_loc"):
-            logger.error("dest_loc is required")
+        if not kwargs.get("destination_location"):
+            logger.error("destination_location is required")
             return False
         if kwargs.get("option_u") and kwargs.get("option_ignore_existing"):
             logger.error("option_u and option_ignore_existing cannot be used together")
@@ -63,10 +63,11 @@ class ScriptRsyncFiles(scripts.Script):
 
         # Create rsync command job
         rsync_command = generate_rsync_command_job(
+            job_env=kwargs["job_env"],
             source_env=kwargs["source_env"],
-            source_loc=kwargs["source_loc"],
-            dest_env=kwargs["dest_env"],
-            dest_loc=kwargs["dest_loc"],
+            source_location=kwargs["source_location"],
+            destination_env=kwargs["destination_env"],
+            destination_location=kwargs["destination_location"],
             option_u=kwargs.get("option_u", False),
             option_ignore_existing=kwargs.get("option_ignore_existing", False),
             option_recursive=kwargs.get("option_recursive", False),
@@ -77,9 +78,9 @@ class ScriptRsyncFiles(scripts.Script):
             db_job = crud.job.sync.create(
                 db,
                 obj_in=models.JobCreate(
-                    env_name=kwargs["env_name"],
+                    env_name=kwargs["job_env"],
                     queue_name=kwargs["queue_name"],
-                    name=f"Rsync Files: {kwargs['source_loc']} to {kwargs['dest_loc']}",
+                    name=f"Rsync Files: {kwargs['source_location']} to {kwargs['destination_location']}",
                     type=models.JobType.command,
                     command=rsync_command,
                     meta=kwargs,
@@ -88,12 +89,12 @@ class ScriptRsyncFiles(scripts.Script):
             )
 
         job_on_text = convert_risa_rsync_options_to_text(
-            env_name=kwargs.get("env_name"),
+            env_name=kwargs.get("job_env"),
             queue_name=kwargs.get("queue_name"),
             source_env=kwargs.get("source_env"),
-            source_loc=kwargs.get("source_loc"),
-            dest_env=kwargs.get("dest_env"),
-            dest_loc=kwargs.get("dest_loc"),
+            source_location=kwargs.get("source_location"),
+            destination_env=kwargs.get("destination_env"),
+            destination_location=kwargs.get("destination_location"),
             option_u=kwargs.get("option_u"),
             option_ignore_existing=kwargs.get("option_ignore_existing"),
         )
@@ -104,6 +105,6 @@ class ScriptRsyncFiles(scripts.Script):
             data={
                 "rsync_command": rsync_command,
                 "job_on_text": job_on_text,
-                "job_id": db_job.id,
+                "job_id": f"{db_job.id}",
             },
         )
