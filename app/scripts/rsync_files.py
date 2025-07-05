@@ -81,10 +81,16 @@ class ScriptRsyncFiles(scripts.Script):
             destination_location.mkdir(parents=True, exist_ok=True)
 
         # Run command using subprocess save output to file
-        process = subprocess.run(rsync_command, shell=True, capture_output=True, text=True)
-        print(process.stdout)
-        print(process.stderr)
-        print(process.returncode)
+        try:
+            process = subprocess.run(rsync_command, shell=True, capture_output=True, text=True)
+            print(process.stdout)
+            print(process.stderr)
+            print(process.returncode)
+        except Exception as e:
+            logger.error(f"Error running rsync command: {e}")
+            return scripts.ScriptOutput(
+                success=False, message=f"Error running rsync command: {e}", data={}
+            )
 
         # # Add job to queue
         # with get_db_context() as db:
