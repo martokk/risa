@@ -5,6 +5,7 @@ view, and manage jobs in a persistent, file-based database (TinyDB).
 
 import asyncio
 import os
+import shutil
 import signal
 import subprocess
 from pathlib import Path
@@ -89,7 +90,8 @@ async def start_consumer_process(queue_name: str | None = None) -> dict[str, Any
             continue
         try:
             cwd = os.getcwd()
-            cmd = f"nohup poetry run huey_consumer {huey_module} --worker-type=process > {log_path} 2>&1 & echo $!"
+            which_poetry = shutil.which("poetry")
+            cmd = f"nohup {'poetry run' if which_poetry else 'python -m'} huey_consumer {huey_module} --worker-type=process > {log_path} 2>&1 & echo $!"
             with open(log_path, "a") as f:
                 f.write(f"\n Starting {consumer['name']} consumer...")
             proc = subprocess.Popen(
