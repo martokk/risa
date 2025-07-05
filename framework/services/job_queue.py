@@ -91,7 +91,7 @@ async def start_consumer_process(queue_name: str | None = None) -> dict[str, Any
         try:
             cwd = os.getcwd()
             which_poetry = shutil.which("poetry")
-            cmd = f"nohup {'poetry run' if which_poetry else 'python -m'} huey_consumer {huey_module} --worker-type=process > {log_path} 2>&1 & echo $!"
+            cmd = f"nohup {'poetry run ' if which_poetry else ''}huey_consumer {huey_module} --worker-type=process > {log_path} 2>&1 & echo $!"
             with open(log_path, "a") as f:
                 f.write(f"\n Starting {consumer['name']} consumer...")
             proc = subprocess.Popen(
