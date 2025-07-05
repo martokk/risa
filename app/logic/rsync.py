@@ -65,6 +65,7 @@ def generate_rsync_command_job(
     user = None
     host = None
     port = None
+    ssh_dir_path = "~/.ssh"
     if env_state.id == "playground":
         user = "root"
         host = env_state.public_ip
@@ -72,11 +73,13 @@ def generate_rsync_command_job(
     elif env_state.id == "host":
         user = "ubuntu"
         host = env_state.public_ip
+    elif env_state.id == "local":
+        ssh_dir_path = "/root/.ssh"
 
     _user_at_remote = f"{user}@{host}"
 
     # Determine the ssh key path to use for the rsync command.
-    ssh_key_path = f"~/.ssh/id_risa_{job_env.lower()}"
+    ssh_key_path = f"{ssh_dir_path}/id_risa_{job_env.lower()}"
 
     # Start building the command.
     ssh_command = f"ssh -i {ssh_key_path} {'-p ' + str(port) if port else ''} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"  # noqa: E501

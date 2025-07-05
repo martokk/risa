@@ -81,6 +81,15 @@ RUN coverage report --fail-under 95
 # -----------------------------------------------------------------------------
 # PRODUCTION - 'production' stage uses the clean 'python-base' stage and copyies in only our runtime deps that were installed in the 'builder-base'
 FROM python-base as production
+
+# Install runtime dependencies
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends \
+  rsync \
+  openssh-client \
+  lsof \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder-base $VENV_PATH $VENV_PATH
 
 # Copying in our app
@@ -91,6 +100,13 @@ COPY /migrations /migrations
 COPY /alembic.ini /alembic.ini
 COPY /pyproject.toml /pyproject.toml
 RUN chmod +x /start.sh
+
+# Create non-root user that matches host UID:GID
+RUN addgroup --gid 1000 appuser \
+    && adduser --uid 1000 --gid 1000 --disabled-password --gecos "" appuser
+
+# Switch to non-root user for everything after this
+USER appuser
 
 WORKDIR /
 
