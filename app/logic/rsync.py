@@ -1,4 +1,5 @@
-from app import logger
+from app import crud, logger
+from framework.core.db import get_db_context
 
 
 def convert_risa_rsync_options_to_text(
@@ -30,7 +31,7 @@ def convert_risa_rsync_options_to_text(
 
     action = "push" if source_env == env_name else "pull"
 
-    return f"Job on r|{env_name.upper()} to {action.upper()} [{source_env}]`{source_location}` to [{destination_env}]`{destination_location}`"
+    return f"Job on r|{env_name.upper()} to {action.upper()} [{source_env}]`{source_location}` to [{destination_env}]`{destination_location}`"  # noqa: E501
 
 
 def generate_rsync_command_job(
@@ -46,19 +47,42 @@ def generate_rsync_command_job(
     """
     Generate a rsync command job.
 
-    rsync -rtvzP --ignore-existing source/ dest/
-    rsync -tvzP
-    rsync -e "ssh -i ~/.ssh/id_rsync_script" -avz /local/path/ user@remote:/remote/path/
-    """
-    user = "martokk"
-    ssh_key_path = f"~/.ssh/id_risa_{job_env.lower()}"
-    remote = "999.999.999.999"
-    _user_at_remote = f"{user}@{remote}"
+    rsync -e "ssh -i ~/.ssh/id_risa_dev -p 40196  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" -tvzP -r -u root@213.192.2.73:/workspace/__OUTPUTS__/risa/ /media/martokk/FILES/AI/__INBOX__/risa/
+
+    """  # noqa: E501
+
     action = "push" if source_env == job_env else "pull"
 
-    # Start building the command.
-    command = f'rsync -e "ssh -i {ssh_key_path}" -tvzP'
+    # Lookup the environment state from the database.
+    lookup_env = destination_env if action == "push" else source_env
 
+    with get_db_context() as db:
+        env_state = crud.instance_state.sync.get(db, id=lookup_env)
+    if not env_state:
+        raise ValueError(f"Environment {lookup_env} not found")
+
+    # Determine the user, host, and port to use for the rsync command.
+    user = None
+    host = None
+    port = None
+    if env_state.id == "playground":
+        user = "root"
+        host = env_state.public_ip
+        port = env_state.runpod_tcp_port_22
+    elif env_state.id == "host":
+        user = "ubuntu"
+        host = env_state.public_ip
+
+    _user_at_remote = f"{user}@{host}"
+
+    # Determine the ssh key path to use for the rsync command.
+    ssh_key_path = f"~/.ssh/id_risa_{job_env.lower()}"
+
+    # Start building the command.
+    ssh_command = f"ssh -i {ssh_key_path} {'-p ' + str(port) if port else ''} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"  # noqa: E501
+    command = f'rsync -e "{ssh_command}" -tvzP'
+
+    # Add the options to the command.
     if option_recursive:
         command += " -r"
     if option_u:
@@ -66,16 +90,17 @@ def generate_rsync_command_job(
     elif option_ignore_existing:
         command += " --ignore-existing"
 
+    # Add the source and destination to the command.
     if action == "push":
         if destination_env == "local":
             raise ValueError(
-                "Destination environment cannot be 'local' when pushing. A remote server can not connect to 'http://localhost' to push to."
+                "Destination environment cannot be 'local' when pushing. A remote server can not connect to 'http://localhost' to push to."  # noqa: E501
             )
         command += f" {source_location} {_user_at_remote}:{destination_location}"
     else:
         if source_env == "local":
             raise ValueError(
-                "Source environment cannot be 'local' when pulling. A remote server can not connect to 'http://localhost' to pull from."
+                "Source environment cannot be 'local' when pulling. A remote server can not connect to 'http://localhost' to pull from."  # noqa: E501
             )
         command += f" {_user_at_remote}:{source_location} {destination_location}"
 

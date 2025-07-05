@@ -78,6 +78,15 @@
                         <td>{{ network_state.host.base_url }}</td>
                     </tr>
 
+                    <!-- PUBLIC_IP -->
+                    <tr>
+                        <td>PUBLIC_IP</td>
+                        <td>{{ network_state.dev.public_ip }}</td>
+                        <td>{{ network_state.local.public_ip }}</td>
+                        <td>{{ network_state.playground.public_ip }}</td>
+                        <td>{{ network_state.host.public_ip }}</td>
+                    </tr>
+
                     <!-- Theme -->
                     <tr>
                         <td>Accent</td>
@@ -160,6 +169,14 @@
                         <td>{{ network_state.local.runpod_public_ip if network_state.local.runpod_public_ip else '' }}</td>
                         <td>{{ network_state.playground.runpod_public_ip if network_state.playground.runpod_public_ip else '' }}</td>
                         <td>{{ network_state.host.runpod_public_ip if network_state.host.runpod_public_ip else '' }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Runpod TCP Port 22</td>
+                        <td>{{ network_state.dev.runpod_tcp_port_22 if network_state.dev.runpod_tcp_port_22 else '' }}</td>
+                        <td>{{ network_state.local.runpod_tcp_port_22 if network_state.local.runpod_tcp_port_22 else '' }}</td>
+                        <td>{{ network_state.playground.runpod_tcp_port_22 if network_state.playground.runpod_tcp_port_22 else '' }}</td>
+                        <td>{{ network_state.host.runpod_tcp_port_22 if network_state.host.runpod_tcp_port_22 else '' }}</td>
                     </tr>
 
                     <tr>
