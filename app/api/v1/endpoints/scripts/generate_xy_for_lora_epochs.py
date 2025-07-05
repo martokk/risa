@@ -51,8 +51,7 @@ async def generate_xy_for_lora_epochs(
         content={
             "success": True,
             "message": f"Job added to r|{env_name.upper()}'s '{queue_name}' queue.",
-            "job_id": db_job.id,
-            "job": db_job.model_dump(),
+            "job": db_job.model_dump(mode="json"),
         },
         status_code=200,
     )

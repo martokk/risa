@@ -129,25 +129,23 @@ class ScriptChooseBestEpoch(scripts.Script):
         Args:
             best_epoch_file_path: The path to the best epoch file.
         """
-        destination_location = best_epoch_file_path.replace(
-            str(paths.HUB_MODELS_PATH), "/media/martokk/FILES/AI/hub/"
-        )
+        destination_location = best_epoch_file_path.replace(str(paths.HUB_PATH), "/hub")
         # Create a local job to download the epoch from the cloud hub to local hub
         with get_db_context() as db:
             db_job = crud.job.sync.create(
                 db,
                 obj_in=models.JobCreate(
-                    env_name="dev",
+                    env_name="local",
                     queue_name="default",
                     name=f"Rsync: Download Best Epoch: {best_epoch_file_path}",
                     type=models.JobType.script,
                     command="ScriptRsyncFiles",
                     meta={
-                        "job_env": "dev",
+                        "job_env": "local",
                         "queue_name": "default",
                         "source_env": "playground",
                         "source_location": best_epoch_file_path,
-                        "destination_env": "dev",
+                        "destination_env": "local",
                         "destination_location": destination_location,
                         "option_recursive": "on",
                         "option_u": "on",

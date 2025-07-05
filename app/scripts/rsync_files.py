@@ -1,8 +1,9 @@
 import subprocess
+from pathlib import Path
 from typing import Any
 
 from app import logger
-from app.logic.rsync import convert_risa_rsync_options_to_text, generate_rsync_command_job
+from app.logic.rsync import generate_rsync_command_job
 from framework.services import scripts
 
 
@@ -71,6 +72,13 @@ class ScriptRsyncFiles(scripts.Script):
             option_ignore_existing=kwargs.get("option_ignore_existing", False),
             option_recursive=kwargs.get("option_recursive", False),
         )
+
+        # Make destination directory if it doesn't exist
+        destination_location = Path(kwargs["destination_location"])  # could be file or folder
+        if destination_location.is_file():
+            destination_location = destination_location.parent
+        if not destination_location.exists():
+            destination_location.mkdir(parents=True, exist_ok=True)
 
         # Run command using subprocess save output to file
         process = subprocess.run(rsync_command, shell=True, capture_output=True, text=True)
