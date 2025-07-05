@@ -86,6 +86,8 @@ FROM python-base as production
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   rsync \
+  openssh-client \
+  lsof \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder-base $VENV_PATH $VENV_PATH
