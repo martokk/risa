@@ -41,3 +41,7 @@ def get_runpod_gpu_name() -> str | None:
 
 def get_runpod_public_ip() -> str | None:
     return os.environ.get("RUNPOD_PUBLIC_IP")
+
+
+def get_runpod_tcp_port_22() -> int | None:
+    return int(os.environ.get("RUNPOD_TCP_PORT_22", "22"))

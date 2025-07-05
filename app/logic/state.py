@@ -3,7 +3,12 @@ from datetime import datetime, timezone
 from sqlmodel import Session
 
 from app import crud, models, settings
-from app.logic.runpod import get_runpod_gpu_name, get_runpod_pod_id, get_runpod_public_ip
+from app.logic.runpod import (
+    get_runpod_gpu_name,
+    get_runpod_pod_id,
+    get_runpod_public_ip,
+    get_runpod_tcp_port_22,
+)
 from app.models.core.state import InstanceState, NetworkState
 from framework.core.db import get_db_context
 from framework.utils.system_status import get_cpu_stats, get_disk_stats, get_gpu_stats
@@ -14,6 +19,7 @@ async def _get_instance_state() -> InstanceState:
     last_updated = datetime.now(tz=timezone.utc)
     project_name = settings.PROJECT_NAME
     base_url = settings.BASE_URL
+    base_domain = settings.BASE_DOMAIN
 
     # Theme
     accent = settings.ACCENT
@@ -36,12 +42,20 @@ async def _get_instance_state() -> InstanceState:
     runpod_gpu_name = get_runpod_gpu_name()
     runpod_pod_id = get_runpod_pod_id()
     runpod_public_ip = get_runpod_public_ip()
+    runpod_tcp_port_22 = get_runpod_tcp_port_22()
+
+    public_ip = None
+    if id == "playground":
+        public_ip = runpod_public_ip
+    if id == "host":
+        public_ip = base_domain.split(":")[0]
 
     return InstanceState(
         id=id,
         last_updated=last_updated,
         project_name=project_name,
         base_url=base_url,
+        public_ip=public_ip,
         accent=accent,
         gpu_usage=gpu_usage,
         gpu_memory_used=gpu_memory_used,
@@ -53,6 +67,7 @@ async def _get_instance_state() -> InstanceState:
         runpod_gpu_name=runpod_gpu_name,
         runpod_pod_id=runpod_pod_id,
         runpod_public_ip=runpod_public_ip,
+        runpod_tcp_port_22=runpod_tcp_port_22,
     )
 
 

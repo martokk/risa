@@ -6,6 +6,7 @@ from typing import Any
 
 from app import crud, logger, paths
 from app.paths import OUTPUTS_KOHYA_SS_PATH
+from framework import models
 from framework.core.db import get_db_context
 from framework.services import scripts
 
@@ -122,18 +123,36 @@ class ScriptChooseBestEpoch(scripts.Script):
 
         return deleted_paths
 
-    def _create_local_job_to_dl_epoch_from_hub(self, best_epoch_file_path: str) -> str:
+    def _create_local_job_to_dl_epoch_from_hub(self, best_epoch_file_path: str) -> None:
         """Create a local job to download the epoch from the cloud hub to local hub.
 
         Args:
             best_epoch_file_path: The path to the best epoch file.
         """
+        destination_location = best_epoch_file_path.replace(str(paths.HUB_PATH), "/hub")
         # Create a local job to download the epoch from the cloud hub to local hub
-        logger.error(
-            f"PLACEHOLDER: Would create job to download {best_epoch_file_path} from cloud hub to local hub"
-        )
-        # TODO: Implement actual job creation if needed
-        return "123456789"
+        with get_db_context() as db:
+            db_job = crud.job.sync.create(
+                db,
+                obj_in=models.JobCreate(
+                    env_name="local",
+                    queue_name="default",
+                    name=f"Rsync: Download Best Epoch: {best_epoch_file_path}",
+                    type=models.JobType.script,
+                    command="ScriptRsyncFiles",
+                    meta={
+                        "job_env": "local",
+                        "queue_name": "default",
+                        "source_env": "playground",
+                        "source_location": best_epoch_file_path,
+                        "destination_env": "local",
+                        "destination_location": destination_location,
+                        "option_recursive": "on",
+                        "option_u": "on",
+                    },
+                    status=models.JobStatus.queued,
+                ),
+            )
 
     def _run(self, *args: Any, **kwargs: Any) -> Any:
         """Run the script to select and process the best epoch for a Lora model.
@@ -202,7 +221,7 @@ class ScriptChooseBestEpoch(scripts.Script):
         )
 
         # Create a Job in LOCAL to download the epoch from the cloud hub to local hub (placeholder)
-        job_id = self._create_local_job_to_dl_epoch_from_hub(best_epoch_file_path)
+        self._create_local_job_to_dl_epoch_from_hub(best_epoch_file_path)
 
         return scripts.ScriptOutput(
             success=True,

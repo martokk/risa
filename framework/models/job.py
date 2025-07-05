@@ -64,6 +64,15 @@ class JobBase(SQLModel):
         default="default", description="Queue this job belongs to (default or reserved)"
     )
 
+    def model_dump(self, **kwargs: Any) -> dict[str, Any]:
+        """Override model_dump to convert UUID to string."""
+        data = super().model_dump(**kwargs)
+        if "id" in data and isinstance(data["id"], UUID):
+            data["id"] = str(data["id"])
+        if "created_at" in data and isinstance(data["created_at"], datetime):
+            data["created_at"] = data["created_at"].isoformat()
+        return data
+
 
 class Job(JobBase, table=True):
     """The Job model for the database."""

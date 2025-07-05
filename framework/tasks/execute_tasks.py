@@ -58,7 +58,7 @@ def _trigger_next_queued_job(queue_name: str) -> None:
         _execute_job_task(job_id=str(next_job.id), priority=priority_order[next_job.priority])
 
 
-def _run_command_job(db: Session, db_job: models.Job) -> None:
+def _run_command_job(db: Session, db_job: models.Job, command: str | None = None) -> None:
     """
     Executes a command-line job using subprocess and logs output in real-time.
 
@@ -78,7 +78,7 @@ def _run_command_job(db: Session, db_job: models.Job) -> None:
         with open(log_path, "w") as log_file:
             # Execute the command and stream output in real-time
             process = subprocess.Popen(
-                db_job.command,
+                command or db_job.command,
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,  # Redirect stderr to stdout
@@ -108,7 +108,7 @@ def _run_command_job(db: Session, db_job: models.Job) -> None:
             else:
                 error_msg = f"Job {str(db_job.id)[:8]}: FAILED: exit code {return_code}"
                 logger.error(error_msg)
-                raise subprocess.CalledProcessError(return_code, db_job.command)
+                raise subprocess.CalledProcessError(return_code, command or db_job.command)
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Job {str(db_job.id)[:8]}: FAILED: {str(e)}")
@@ -145,6 +145,7 @@ def _run_script_job(db_job: models.Job) -> None:
         script_class = hook_get_script_class_from_class_name(script_class_name=script_class_name)
 
         try:
+            db_job.meta["job_id"] = str(db_job.id)
             script_output = script_class().run(**db_job.meta)
         except Exception as e:
             log_file.write(f"Error: {e}\n")

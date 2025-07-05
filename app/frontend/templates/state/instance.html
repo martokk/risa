@@ -46,6 +46,12 @@
                         <td>{{ instance_state.base_url }}</td>
                     </tr>
 
+                    <!-- PUBLIC_IP -->
+                    <tr>
+                        <td>PUBLIC_IP</td>
+                        <td>{{ instance_state.public_ip }}</td>
+                    </tr>
+
                     <!-- Last Updated -->
                     <tr>
                         <td>Last Updated</td>
@@ -103,6 +109,11 @@
                     <tr>
                         <td>Runpod Public IP</td>
                         <td>{{ instance_state.runpod_public_ip }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Runpod TCP Port 22</td>
+                        <td>{{ instance_state.runpod_tcp_port_22 }}</td>
                     </tr>
 
                     <tr>

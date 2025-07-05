@@ -8,6 +8,7 @@ class InstanceStateBase(SQLModel):
     last_updated: datetime | None = None
     project_name: str
     base_url: str
+    public_ip: str | None = Field(default=None)
 
     # Theme
     accent: str | None = None
@@ -25,6 +26,7 @@ class InstanceStateBase(SQLModel):
     runpod_gpu_name: str | None = None
     runpod_pod_id: str | None = None
     runpod_public_ip: str | None = None
+    runpod_tcp_port_22: int | None = None
 
     @property
     def is_running(self) -> bool:

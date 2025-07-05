@@ -15,6 +15,7 @@ from app.api.v1.endpoints.scripts import (
     choose_best_epoch,
     fix_civitai_download_filenames,
     generate_xy_for_lora_epochs,
+    rsync_files,
 )
 from framework.api.v1.endpoints import job_queue_ws, users
 from framework.api.v1.endpoints.job_queue import router as job_queue_router
@@ -40,3 +41,4 @@ api_router.include_router(app_manager_ws.router, tags=["App Manager WS"])
 api_router.include_router(generate_xy_for_lora_epochs.router, tags=["Scripts"])
 api_router.include_router(choose_best_epoch.router, tags=["Scripts"])
 api_router.include_router(fix_civitai_download_filenames.router, tags=["Scripts"])
+api_router.include_router(rsync_files.router, tags=["Scripts"])

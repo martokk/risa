@@ -32,12 +32,15 @@ async def fix_civitai_download_filenames(
             status_code=400,
         )
 
+    env_name = body.get("env_name", settings.ENV_NAME if settings.ENV_NAME else "dev")
+    queue_name = body.get("queue_name", "default")
+
     # Add to queue.
-    await crud.job.create(
+    db_job = await crud.job.create(
         db,
         obj_in=models.JobCreate(
-            env_name=settings.ENV_NAME if settings.ENV_NAME == "dev" else "playground",
-            queue_name="default",
+            env_name=env_name,
+            queue_name=queue_name,
             name=f"Fix Civitai Download Filenames: {hub_path}",
             type=models.JobType.script,
             command="ScriptFixCivitaiDownloadFilenames",
@@ -47,5 +50,10 @@ async def fix_civitai_download_filenames(
     )
 
     return JSONResponse(
-        content={"success": True, "message": "Job added to queue."}, status_code=200
+        content={
+            "success": True,
+            "message": f"Job added to r|{env_name.upper()}'s '{queue_name}' queue.",
+            "job": db_job.model_dump(mode="json"),
+        },
+        status_code=200,
     )
