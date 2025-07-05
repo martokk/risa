@@ -17,21 +17,14 @@ from framework.routes.restrict_to_env import restrict_to
 router = APIRouter()
 
 
-@router.post("/scripts/fix-civitai-download-filenames/add-to-queue")
-@restrict_to("playground")
-async def fix_civitai_download_filenames(
+@router.post("/scripts/rsync-files/add-to-queue")
+@restrict_to("dev")
+async def rsync_files(
     current_user: Annotated[models.User, Depends(get_current_active_user)],
     body: dict[str, Any] = Body(...),
     db: Session = Depends(get_db),
 ) -> JSONResponse:
-    hub_path = body["hub_path"]
-
-    if not hub_path:
-        return JSONResponse(
-            content={"success": False, "message": "Hub Path is required."},
-            status_code=400,
-        )
-
+    # Get from body
     env_name = body.get("env_name", settings.ENV_NAME if settings.ENV_NAME else "dev")
     queue_name = body.get("queue_name", "default")
 
@@ -41,9 +34,9 @@ async def fix_civitai_download_filenames(
         obj_in=models.JobCreate(
             env_name=env_name,
             queue_name=queue_name,
-            name=f"Fix Civitai Download Filenames: {hub_path}",
+            name="Rsync Files",
             type=models.JobType.script,
-            command="ScriptFixCivitaiDownloadFilenames",
+            command="ScriptRsyncFiles",
             meta=body,
             status=models.JobStatus.queued,
         ),
@@ -53,8 +46,7 @@ async def fix_civitai_download_filenames(
         content={
             "success": True,
             "message": f"Job added to r|{env_name.upper()}'s '{queue_name}' queue.",
-            "job_id": db_job.id,
-            "job": db_job.model_dump(),
+            "job": db_job.model_dump(mode="json"),
         },
         status_code=200,
     )

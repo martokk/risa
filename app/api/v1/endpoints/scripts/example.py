@@ -17,21 +17,14 @@ from framework.routes.restrict_to_env import restrict_to
 router = APIRouter()
 
 
-@router.post("/scripts/fix-civitai-download-filenames/add-to-queue")
-@restrict_to("playground")
-async def fix_civitai_download_filenames(
+@router.post("/scripts/example-script/add-to-queue")
+@restrict_to("dev")
+async def example_script(
     current_user: Annotated[models.User, Depends(get_current_active_user)],
     body: dict[str, Any] = Body(...),
     db: Session = Depends(get_db),
 ) -> JSONResponse:
-    hub_path = body["hub_path"]
-
-    if not hub_path:
-        return JSONResponse(
-            content={"success": False, "message": "Hub Path is required."},
-            status_code=400,
-        )
-
+    # Get from body
     env_name = body.get("env_name", settings.ENV_NAME if settings.ENV_NAME else "dev")
     queue_name = body.get("queue_name", "default")
 
@@ -41,9 +34,9 @@ async def fix_civitai_download_filenames(
         obj_in=models.JobCreate(
             env_name=env_name,
             queue_name=queue_name,
-            name=f"Fix Civitai Download Filenames: {hub_path}",
+            name="Example Script",
             type=models.JobType.script,
-            command="ScriptFixCivitaiDownloadFilenames",
+            command="ScriptExample",
             meta=body,
             status=models.JobStatus.queued,
         ),

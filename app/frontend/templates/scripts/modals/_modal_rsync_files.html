@@ -1,0 +1,191 @@
+{% extends "scripts/modals/_modal_script_base.html" %}
+
+{% block modal_title %}Rsync Files{% endblock %}
+
+
+{% block modal_input %}
+    <form id="rsyncJobForm">
+        <!-- Job Section -->
+        <div class="mb-4">
+            <h6 class="mb-2">Job</h6>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label for="jobEnv" class="form-label">Job Environment</label>
+                    <select class="form-select" id="jobEnv" name="job_env" required>
+                        <option value="dev">dev</option>
+                        <option value="local">local</option>
+                        <option value="host">host</option>
+                        <option value="playground">playground</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="queueName" class="form-label">Queue Name</label>
+                    <select class="form-select" id="queueName" name="queue_name" required>
+                        <option value="default">default</option>
+                        <option value="reserved">reserved</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- divider -->
+        <hr>
+
+        <!-- Source Section -->
+        <div class="mb-4">
+            <h6 class="mb-2">Source</h6>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="sourceEnv" class="form-label">Source Environment</label>
+                    <select class="form-select" id="sourceEnv" name="source_env" required>
+                        <option value="dev">dev</option>
+                        <option value="local">local</option>
+                        <option value="host">host</option>
+                        <option value="playground">playground</option>
+                    </select>
+                </div>
+                <div class="col-md-9">
+                    <label for="sourceLocation" class="form-label">Source Location</label>
+                    <input type="text" class="form-control" id="sourceLocation" name="source_location" placeholder="/path/to/source" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Destination Section -->
+        <div class="mb-4">
+            <h6 class="mb-2">Destination</h6>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="destEnv" class="form-label">Destination Environment</label>
+                    <select class="form-select" id="destEnv" name="destination_env" required>
+                        <option value="dev">dev</option>
+                        <option value="local">local</option>
+                        <option value="host">host</option>
+                        <option value="playground">playground</option>
+                    </select>
+                </div>
+                <div class="col-md-9">
+                    <label for="destLocation" class="form-label">Destination Location</label>
+                    <input type="text" class="form-control" id="destLocation" name="destination_location" placeholder="/path/to/destination" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- divider -->
+        <hr>
+
+        <!-- Options Section -->
+        <div class="mb-4">
+            <h6 class="mb-2">Options</h6>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="optionRecursive" name="option_recursive" checked>
+                <label class="form-check-label" for="optionRecursive">
+                    -r <span class="text-muted">(Recursive copy directories)</span>
+                </label>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="optionU" name="option_u" checked>
+                <label class="form-check-label" for="optionU">
+                    -u <span class="text-muted">(Skip destination files that are newer)</span>
+                </label>
+            </div>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="optionIgnoreExisting" name="option_ignore_existing">
+                <label class="form-check-label" for="optionIgnoreExisting">
+                    --ignore-existing <span class="text-muted">(Skip destination files that already exist)</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Info Alert Section -->
+        <div id="rsyncInfoAlert" class="alert d-none" role="alert"></div>
+
+        <button type="submit" class="btn btn-primary float-end">Create Job</button>
+    </form>
+{% endblock %}
+
+
+{% block modal_output %}
+        <!-- Output/result will be rendered here by JS -->
+{% endblock %}
+
+
+{% block modal_footer %}
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+{% endblock %}
+
+
+{% block modal_scripts %}
+    {{ super() }}
+    <script type="module">
+        // Example: Post-process output if needed
+        // You can add custom JS here if your script needs to further process the output
+
+        function updateRsyncInfoAlert() {
+            const jobEnv = document.getElementById('jobEnv').value;
+            const sourceEnv = document.getElementById('sourceEnv').value;
+            const destEnv = document.getElementById('destEnv').value;
+            const sourceLoc = document.getElementById('sourceLocation').value.trim();
+            const destLoc = document.getElementById('destLocation').value.trim();
+            const alertDiv = document.getElementById('rsyncInfoAlert');
+
+            // Only show if all fields are filled
+            if (!jobEnv || !sourceEnv || !destEnv || !sourceLoc || !destLoc) {
+                alertDiv.className = 'alert d-none';
+                alertDiv.innerHTML = '';
+                return;
+            }
+
+            // Validation: job_env must be source or dest
+            if (jobEnv !== sourceEnv && jobEnv !== destEnv) {
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.innerHTML =
+                    `Job must be created on either the <strong>source</strong> or <strong>destination</strong> environment.`;
+                return;
+            }
+
+            // Validation: source and dest must be different
+            if (sourceEnv === destEnv) {
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.innerHTML =
+                    `Source and destination locations cannot be the same.`;
+                return;
+            }
+
+            // Determine action
+            const action = (jobEnv === sourceEnv) ? 'push' : 'pull';
+
+            // Validation: You can not push to local.
+            if (destEnv === "local" && action === "push") {
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.innerHTML =
+                    `You can not push to local. Note: a remote server can not connect to 'http://localhost' to push to.`;
+                return;
+            }
+
+            // Validation: You can not pull from local.
+            if (sourceEnv === "local" && action === "pull") {
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.innerHTML =
+                    `You can not pull from local. Note: a remote server can not connect to 'http://localhost' to pull from.`;
+                return;
+            }
+
+
+            alertDiv.className = 'alert alert-info';
+            alertDiv.innerHTML =
+                `Create a job on <strong><code>r|${jobEnv.toUpperCase()}</code></strong> to: <br><br>\tACTION: <strong><code>${action.toUpperCase()}</code></strong><br><br>\tFROM: <br>\t\t<em><code>${sourceEnv}</code></em><br>\t\t<em><code>${sourceLoc}</code></em><br><br>\tTO: <br>\t\t<em><code>${destEnv}</code></em><br>\t\t<em><code>${destLoc}</code></em>`;
+        }
+
+        // Attach listeners
+        [
+            'jobEnv', 'sourceEnv', 'destEnv', 'sourceLocation', 'destLocation'
+        ].forEach(id => {
+            document.getElementById(id).addEventListener('change', updateRsyncInfoAlert);
+            document.getElementById(id).addEventListener('input', updateRsyncInfoAlert);
+        });
+
+        // Initial call in case of prefilled values
+        updateRsyncInfoAlert();
+    </script>
+{% endblock %} 
