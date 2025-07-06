@@ -21,9 +21,9 @@ from framework.services.job_queue_ws_manager import job_queue_ws_manager
 
 class HueyConsumerWorker(BaseModel):
     name: str
-    db_path: str
-    log_path: str
-    pid_file: str
+    db_path: Path
+    log_path: Path
+    pid_file: Path
     huey_module: str
 
 
