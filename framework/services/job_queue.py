@@ -14,7 +14,8 @@ from typing import Any
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from app import logger, paths, settings
+from app import logger, paths
+from app.logic.config import get_config
 from framework import crud, models
 from framework.services.job_queue_ws_manager import job_queue_ws_manager
 
@@ -80,7 +81,8 @@ def is_consumer_running(queue_name: str) -> bool:
 
 async def start_huey_consumers_on_start() -> None:
     """Start Huey consumers on start."""
-    if not settings.START_HUEY_CONSUMERS_ON_START:
+    config = get_config()
+    if not config.jobs.start_huey_consumers_on_start:
         return
     for consumer in CONSUMERS:
         if not is_consumer_running(queue_name=consumer.name):

@@ -6,11 +6,7 @@ from framework.paths import *
 from framework.paths import ENV_FILE, PROJECT_PATH
 
 
-# Load ENV File - Needed for Settings
-settings = get_settings(env_file_path=str(ENV_FILE))
-
-
-def convert_relative_path_to_absolute(path: str) -> Path:
+def convert_relative_path_to_absolute(path: str) -> Path:  # TODO: Move to framework.paths
     if str(path).startswith("/app/"):
         joined_path = f"{PROJECT_PATH}{path}"
         return Path(joined_path)
@@ -20,9 +16,12 @@ def convert_relative_path_to_absolute(path: str) -> Path:
     return Path(path)
 
 
-HUEY_DB_PATH = convert_relative_path_to_absolute(settings.HUEY_SQLITE_PATH)
+# Load ENV File - Needed for Settings
+settings = get_settings(env_file_path=str(ENV_FILE))
 
-DASHBOARD_CONFIG_FILE = convert_relative_path_to_absolute(settings.DASHBOARD_CONFIG_PATH)
+# LOAD CONFIG
+RISA_CONFIG_FILE = convert_relative_path_to_absolute(settings.RISA_CONFIG_PATH)
+
 DATASET_TAGGER_WALKTHROUGH_PATH = convert_relative_path_to_absolute(
     settings.DATASET_TAGGER_WALKTHROUGH_PATH
 )

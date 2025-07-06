@@ -11,7 +11,7 @@ class Settings(PythonFastAPIBaseSettings):
     HUB_PATH: str = ""
     EXPORT_API_KEY: str = ""
     WORKSPACE_PATH: str = "/workspace"
-    DASHBOARD_CONFIG_PATH: str = "app/data/config_dashboard.yaml"
+    RISA_CONFIG_PATH: str = "app/data/config_dashboard.yaml"
     DATASET_TAGGER_WALKTHROUGH_PATH: str = "app/data/dataset_tagger_walkthrough.yaml"
     IDLE_TIMEOUT_MINUTES: int = 30
 

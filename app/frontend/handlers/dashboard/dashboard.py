@@ -6,7 +6,7 @@ from sqlmodel import Session
 
 from app import crud, logger, models
 from app.logic import state
-from app.logic.dashboard import get_config
+from app.logic.config import get_config
 from app.logic.file_management import get_trained_lora_safetensors
 from framework.core.db import get_db
 from framework.frontend.deps import get_current_active_user
@@ -26,7 +26,7 @@ async def dashboard_page(
 ) -> HTMLResponse:
     """Dashboard page."""
     config = get_config()
-    apps = config["apps"]
+    apps = config.app_manager.apps
 
     try:
         characters = await crud.character.get_all(db=db)
