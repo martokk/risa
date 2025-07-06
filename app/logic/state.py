@@ -117,10 +117,10 @@ async def update_instance_state() -> InstanceState:
 
 
 def get_network_state(db: Session) -> NetworkState:
-    dev = crud.sync.instance_state.get(db, id="dev")
-    local = crud.sync.instance_state.get(db, id="local")
-    playground = crud.sync.instance_state.get(db, id="playground")
-    host = crud.sync.instance_state.get(db, id="host")
+    dev = crud.instance_state.sync.get(db, id="dev")
+    local = crud.instance_state.sync.get(db, id="local")
+    playground = crud.instance_state.sync.get(db, id="playground")
+    host = crud.instance_state.sync.get(db, id="host")
     return NetworkState(
         last_updated=datetime.now(tz=timezone.utc),
         dev=dev,

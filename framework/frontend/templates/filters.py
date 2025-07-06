@@ -10,7 +10,7 @@ def filter_nl2br(value: str) -> str:
     return value.replace("\n", "<br>")
 
 
-def filter_humanize(dt: datetime | str | None) -> str:
+def filter_humanize(dt: datetime | str | int | None) -> str:
     """
     Jinja Filter to convert datetime to human readable string.
 
@@ -34,6 +34,11 @@ def filter_humanize(dt: datetime | str | None) -> str:
                 dt = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
             except (ValueError, TypeError):
                 return ""  # Silently fail on unparsable strings
+    elif isinstance(dt, int):
+        try:
+            dt = datetime.fromtimestamp(dt, tz=timezone.utc)
+        except (ValueError, TypeError):
+            return ""
 
     if not isinstance(dt, datetime):
         return ""

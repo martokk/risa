@@ -289,9 +289,15 @@ class BaseCRUDSync(BaseCrudMixin[ModelType, ModelCreateType, ModelUpdateType]):
 class BaseCRUD(BaseCrudMixin[ModelType, ModelCreateType, ModelUpdateType]):
     """Asynchronous CRUD operations with sync access."""
 
-    def __init__(self, model: type[ModelType]) -> None:
+    def __init__(
+        self,
+        model: type[ModelType],
+        model_crud_sync: BaseCRUDSync[ModelType, ModelCreateType, ModelUpdateType] | None = None,
+    ) -> None:
         super().__init__(model=model)
-        self._sync: BaseCRUDSync[ModelType, ModelCreateType, ModelUpdateType] | None = None
+        self._sync: BaseCRUDSync[ModelType, ModelCreateType, ModelUpdateType] | None = (
+            model_crud_sync if model_crud_sync else None
+        )
 
     @property
     def sync(self) -> BaseCRUDSync[ModelType, ModelCreateType, ModelUpdateType]:
