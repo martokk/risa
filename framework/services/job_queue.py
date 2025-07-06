@@ -11,28 +11,37 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel
 from sqlmodel import Session
 
-from app import logger, paths
+from app import logger, paths, settings
 from framework import crud, models
 from framework.services.job_queue_ws_manager import job_queue_ws_manager
 
 
-CONSUMERS = [
-    {
-        "name": "default",
-        "db_path": paths.HUEY_DEFAULT_DB_PATH,
-        "log_path": paths.HUEY_DEFAULT_LOG_PATH,
-        "pid_file": paths.HUEY_DEFAULT_PID_FILE,
-        "huey_module": "app.tasks.huey_default",
-    },
-    {
-        "name": "reserved",
-        "db_path": paths.HUEY_RESERVED_DB_PATH,
-        "log_path": paths.HUEY_RESERVED_LOG_PATH,
-        "pid_file": paths.HUEY_RESERVED_PID_FILE,
-        "huey_module": "app.tasks.huey_reserved",
-    },
+class HueyConsumerWorker(BaseModel):
+    name: str
+    db_path: str
+    log_path: str
+    pid_file: str
+    huey_module: str
+
+
+CONSUMERS: list[HueyConsumerWorker] = [
+    HueyConsumerWorker(
+        name="default",
+        db_path=paths.HUEY_DEFAULT_DB_PATH,
+        log_path=paths.HUEY_DEFAULT_LOG_PATH,
+        pid_file=paths.HUEY_DEFAULT_PID_FILE,
+        huey_module="app.tasks.huey_default",
+    ),
+    HueyConsumerWorker(
+        name="reserved",
+        db_path=paths.HUEY_RESERVED_DB_PATH,
+        log_path=paths.HUEY_RESERVED_LOG_PATH,
+        pid_file=paths.HUEY_RESERVED_PID_FILE,
+        huey_module="app.tasks.huey_reserved",
+    ),
 ]
 
 
@@ -48,8 +57,10 @@ async def broadcast_consumer_status(status: str) -> None:
 
 
 def is_consumer_running(queue_name: str) -> bool:
-    consumer = next((c for c in CONSUMERS if c["name"] == queue_name), None)
-    pid_file = Path(consumer["pid_file"])
+    consumer = next((c for c in CONSUMERS if c.name == queue_name), None)
+    if not consumer:
+        return False
+    pid_file = Path(consumer.pid_file)
 
     if pid_file.exists():
         try:
@@ -62,16 +73,18 @@ def is_consumer_running(queue_name: str) -> bool:
             os.remove(pid_file)
             return False
         except Exception as e:
-            logger.error(f"Error checking consumer process {consumer['name']}: {e}")
+            logger.error(f"Error checking consumer process {consumer.name}: {e}")
             return False
     return False
 
 
 async def start_huey_consumers_on_start() -> None:
     """Start Huey consumers on start."""
+    if not settings.START_HUEY_CONSUMERS_ON_START:
+        return
     for consumer in CONSUMERS:
-        if not is_consumer_running(queue_name=consumer["name"]):
-            await start_consumer_process(queue_name=consumer["name"])
+        if not is_consumer_running(queue_name=consumer.name):
+            await start_consumer_process(queue_name=consumer.name)
 
 
 async def start_consumer_process(queue_name: str | None = None) -> dict[str, Any]:
@@ -84,23 +97,25 @@ async def start_consumer_process(queue_name: str | None = None) -> dict[str, Any
         Dict with 'results' (list of per-queue results).
     """
     results = []
-    consumers = [c for c in CONSUMERS if queue_name is None or c["name"] == queue_name]
+    consumers = [c for c in CONSUMERS if queue_name is None or c.name == queue_name]
+    if not consumers:
+        raise ValueError(f"No consumers found for queue_name: {queue_name}")
     for consumer in consumers:
-        log_path = Path(consumer["log_path"])
-        pid_file = Path(consumer["pid_file"])
-        huey_module = consumer["huey_module"]
+        log_path = Path(consumer.log_path)
+        pid_file = Path(consumer.pid_file)
+        huey_module = consumer.huey_module
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        if is_consumer_running(queue_name=consumer["name"]):
+        if is_consumer_running(queue_name=consumer.name):
             results.append(
-                {"success": False, "message": f"{consumer['name']} consumer already running."}
+                {"success": False, "message": f"{consumer.name} consumer already running."}
             )
             continue
         try:
             cwd = os.getcwd()
             which_poetry = shutil.which("poetry")
-            cmd = f"nohup {'poetry run ' if which_poetry else ''}huey_consumer {huey_module} --worker-type=process > {log_path} 2>&1 & echo $!"
+            cmd = f"nohup {'poetry run ' if which_poetry else ''}huey_consumer {huey_module} --worker-type=process > {log_path} 2>&1 & echo $!"  # noqa: E501
             with open(log_path, "a") as f:
-                f.write(f"\n Starting {consumer['name']} consumer...")
+                f.write(f"\n Starting {consumer.name} consumer...")
             proc = subprocess.Popen(
                 cmd,
                 shell=True,
@@ -115,11 +130,11 @@ async def start_consumer_process(queue_name: str | None = None) -> dict[str, Any
             with open(pid_file, "w") as f:
                 f.write(pid)
             results.append(
-                {"success": True, "message": f"{consumer['name']} consumer started with PID {pid}."}
+                {"success": True, "message": f"{consumer.name} consumer started with PID {pid}."}
             )
         except Exception as e:
             results.append(
-                {"success": False, "message": f"Failed to start {consumer['name']} consumer: {e}"}
+                {"success": False, "message": f"Failed to start {consumer.name} consumer: {e}"}
             )
     await broadcast_consumer_status_for_all()
     return {"results": results}
@@ -135,15 +150,17 @@ async def stop_consumer_process(queue_name: str | None = None) -> dict[str, Any]
         Dict with 'results' (list of per-queue results).
     """
     results = []
-    consumers = [c for c in CONSUMERS if queue_name is None or c["name"] == queue_name]
+    consumers = [c for c in CONSUMERS if queue_name is None or c.name == queue_name]
+    if not consumers:
+        raise ValueError(f"No consumers found for queue_name: {queue_name}")
     for consumer in consumers:
-        pid_file = Path(consumer["pid_file"])
-        log_path = Path(consumer["log_path"])
+        pid_file = Path(consumer.pid_file)
+        log_path = Path(consumer.log_path)
         if not pid_file.exists():
             with open(log_path, "a") as f:
-                f.write(f"\n Stopping {consumer['name']} consumer...")
+                f.write(f"\n Stopping {consumer.name} consumer...")
             results.append(
-                {"success": False, "message": f"{consumer['name']} consumer is not running."}
+                {"success": False, "message": f"{consumer.name} consumer is not running."}
             )
             continue
         try:
@@ -151,25 +168,25 @@ async def stop_consumer_process(queue_name: str | None = None) -> dict[str, Any]
                 pid = int(f.read().strip())
             os.kill(pid, signal.SIGTERM)
             os.system(
-                f"ps aux | grep 'huey_{consumer['name']}' | grep -v grep | awk '{{print $2}}' | xargs kill -9"
+                f"ps aux | grep 'huey_{consumer.name}' | grep -v grep | awk '{{print $2}}' | xargs kill -9"  # noqa: E501
             )
             os.remove(pid_file)
             with open(log_path, "a") as f:
-                f.write(f"\n Stopping {consumer['name']} consumer...")
+                f.write(f"\n Stopping {consumer.name} consumer...")
             results.append(
-                {"success": True, "message": f"{consumer['name']} consumer with PID {pid} stopped."}
+                {"success": True, "message": f"{consumer.name} consumer with PID {pid} stopped."}
             )
         except ProcessLookupError:
             os.remove(pid_file)
             results.append(
                 {
                     "success": True,
-                    "message": f"{consumer['name']} consumer with PID {pid} not found.",
+                    "message": f"{consumer.name} consumer with PID {pid} not found.",
                 }
             )
         except Exception as e:
             results.append(
-                {"success": False, "message": f"Failed to stop {consumer['name']} consumer: {e}"}
+                {"success": False, "message": f"Failed to stop {consumer.name} consumer: {e}"}
             )
     await broadcast_consumer_status_for_all()
     return {"results": results}
@@ -179,17 +196,17 @@ def get_consumer_status_map() -> dict[str, str]:
     """Return a mapping of queue_name to status ('running' or 'stopped')."""
     status_map = {}
     for consumer in CONSUMERS:
-        pid_file = Path(consumer["pid_file"])
+        pid_file = Path(consumer.pid_file)
         if pid_file.exists():
             try:
                 with open(pid_file) as f:
                     pid = int(f.read().strip())
                 os.kill(pid, 0)
-                status_map[consumer["name"]] = "running"
+                status_map[consumer.name] = "running"
             except Exception:
-                status_map[consumer["name"]] = "stopped"
+                status_map[consumer.name] = "stopped"
         else:
-            status_map[consumer["name"]] = "stopped"
+            status_map[consumer.name] = "stopped"
     return status_map
 
 

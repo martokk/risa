@@ -19,6 +19,13 @@ class PythonFastAPIBaseSettings(BaseSettings):
     DB_URL: str = "sqlite:///"
     DATABASE_ECHO: bool = False
 
+    # Huey Job Queue
+    HUEY_DEFAULT_SQLITE_PATH: str = "app/data/huey_consumer__default.db"
+    HUEY_RESERVED_SQLITE_PATH: str = "app/data/huey_consumer__reserved.db"
+
+    HUEY_DEFAULT_LOG_PATH: str = "app/data/logs/huey_consumer__default.log"
+    HUEY_RESERVED_LOG_PATH: str = "app/data/logs/huey_consumer__reserved.log"
+
     # Server
     SERVER_HOST: str = "0.0.0.0"
     SERVER_PORT: int = 5000
