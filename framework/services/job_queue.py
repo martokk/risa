@@ -67,6 +67,13 @@ def is_consumer_running(queue_name: str) -> bool:
     return False
 
 
+async def start_huey_consumers_on_start() -> None:
+    """Start Huey consumers on start."""
+    for consumer in CONSUMERS:
+        if not is_consumer_running(queue_name=consumer["name"]):
+            await start_consumer_process(queue_name=consumer["name"])
+
+
 async def start_consumer_process(queue_name: str | None = None) -> dict[str, Any]:
     """Start Huey consumer process for the specified queue or all if not specified.
 
