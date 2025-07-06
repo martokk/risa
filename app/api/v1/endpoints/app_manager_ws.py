@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlmodel import Session
 
-from app.logic.dashboard import get_config
+from app.logic.config import get_config
 from app.services.app_manager_ws_manager import app_manager_ws_manager
 from framework.core.db import get_db
 
@@ -133,7 +133,7 @@ async def stream_app_log(websocket: WebSocket, topic: str) -> None:
     """Stream the main application log file to the websocket client."""
 
     config = get_config()
-    app = next((app for app in config["apps"] if app.id == topic), None)
+    app = next((app for app in config.app_manager.apps if app.id == topic), None)
     if not app:
         raise ValueError(f"App with id `{topic}` not found")
 

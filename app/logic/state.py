@@ -79,7 +79,7 @@ async def _get_instance_state() -> InstanceState:
 #     try:
 #         async with httpx.AsyncClient() as client:
 #             await client.post(
-#                 f"{settings.RISA_HOST_BASE_URL}/api/v1/state/recieve-state",
+#                 f"{RISA_HOST_BASE_URL}/api/v1/state/recieve-state",
 #                 headers={"X-API-Key": settings.EXPORT_API_KEY},
 #                 json=models.InstanceStateRead.model_validate(instance_state).model_dump(
 #                     mode="json"
@@ -117,10 +117,10 @@ async def update_instance_state() -> InstanceState:
 
 
 def get_network_state(db: Session) -> NetworkState:
-    dev = crud.sync.instance_state.get(db, id="dev")
-    local = crud.sync.instance_state.get(db, id="local")
-    playground = crud.sync.instance_state.get(db, id="playground")
-    host = crud.sync.instance_state.get(db, id="host")
+    dev = crud.instance_state.sync.get(db, id="dev")
+    local = crud.instance_state.sync.get(db, id="local")
+    playground = crud.instance_state.sync.get(db, id="playground")
+    host = crud.instance_state.sync.get(db, id="host")
     return NetworkState(
         last_updated=datetime.now(tz=timezone.utc),
         dev=dev,
@@ -134,7 +134,7 @@ def get_network_state(db: Session) -> NetworkState:
 #     try:
 #         async with httpx.AsyncClient() as client:
 #             response = await client.get(
-#                 f"{settings.RISA_HOST_BASE_URL}/api/v1/state/network",
+#                 f"{RISA_HOST_BASE_URL}/api/v1/state/network",
 #                 headers={"X-API-Key": settings.EXPORT_API_KEY},
 #             )
 #         return NetworkState.model_validate(response.json())

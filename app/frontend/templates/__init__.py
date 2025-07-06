@@ -17,6 +17,8 @@ def hook_get_templates(templates: Jinja2Templates) -> Jinja2Templates:
     templates.env.filters["humanize_network_text_color"] = filter_humanize_network_text_color
 
     # Add global variables to templates
+    templates.env.globals["ENV_NAMES"] = ["dev", "local", "playground", "host"]
+
     templates.env.globals["RISA_HOST_ACCENT"] = network_state.host.accent
     templates.env.globals["RISA_HOST_BASE_URL"] = network_state.host.base_url
 

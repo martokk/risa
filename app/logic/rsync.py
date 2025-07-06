@@ -49,6 +49,9 @@ def generate_rsync_command_job(
 
     rsync -e "ssh -i ~/.ssh/id_risa_dev -p 40196  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" -tvzP -r -u root@213.192.2.73:/workspace/__OUTPUTS__/risa/ /media/martokk/FILES/AI/__INBOX__/risa/
 
+    ---
+    Generate keys: `ssh-keygen -t ed25519 -f ~/.ssh/id_risa_dev -C "risa@dev"`
+
     """  # noqa: E501
 
     action = "push" if source_env == job_env else "pull"

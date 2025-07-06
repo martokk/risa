@@ -8,8 +8,9 @@
           <li class="header">r | {{ ENV_NAME | upper }}</li>
 
           <!-- Quick Links -->
-          <li><a href="/"><i class="fa fa-gauge"></i> <span>Dashboard</span></a></li>
-          <li><a href="/jobs"><i class="fa fa-tasks"></i> <span>Jobs</span></a></li>
+          <li><a href="/"><i class="fa fa-gauge fa-accent"></i> <span>Dashboard</span></a></li>
+          <li><a href="/jobs"><i class="fa fa-tasks fa-accent"></i> <span>Jobs</span></a></li>
+          <li><a href="/job-schedulers"><i class="fa fa-clock fa-accent"></i> <span>Job Schedulers</span></a></li>
 
           <!-- Divider -->
           <li class="divider"></li>
@@ -88,18 +89,6 @@
               <!-- Settings -->
               <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> Settings</a></li>
 
-              <!-- Jobs -->
-
-              <li class="treeview">
-                <a href="#"><i class="fa fa-circle-o"></i> Jobs <i class="fa fa-angle-right pull-right"></i></a>
-                <ul class="treeview-menu">
-                  <li class="disabled"><a href="#"><i class="fa fa-circle-o"></i> All Jobs</a></li>
-                  <li><a href="{{ RISA_LOCAL_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> rLOCAL Jobs</a></li>
-                  <li><a href="{{ RISA_HOST_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> rHOST Jobs</a></li>
-                  <li><a href="{{ RISA_PLAYGROUND_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> rPLAYGROUND Jobs</a></li>
-                  <li><a href="{{ RISA_DEV_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> rDev Jobs</a></li>
-                </ul>
-              </li>
             </ul>
           </li>
 
@@ -141,9 +130,38 @@
           <!-- Spacer -->
           <li class="sidebar-flex-spacer"></li>
 
-          <!-- Stats --> 
+          <!-- Jobs -->
+          <li class="treeview">
+            <a href="#"><i class="fa fa-cogs"></i> <span>Jobs</span> <i class="fa fa-angle-right pull-right"></i></a>
+            <ul class="treeview-menu">
+
+              <!-- Jobs -->
+              <li><a href="/jobs/all"><i class="fa fa-circle-o"></i> Jobs (All)</a></li>
+              <li><a href="{{ RISA_LOCAL_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs (r|LOCAL)</a></li>
+              <li><a href="{{ RISA_HOST_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs (r|HOST)</a></li>
+              <li><a href="{{ RISA_PLAYGROUND_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs (r|PLAYGROUND)</a></li>
+
+            </ul>
+          </li>
+
+          <!-- Jobs Schedulers -->
+          <li class="treeview">
+            <a href="#"><i class="fa fa-clock"></i> <span>Jobs Schedulers</span> <i class="fa fa-angle-right pull-right"></i></a>
+            <ul class="treeview-menu">
+
+              <!-- Job Schedulers -->
+              <li><a href="/job-schedulers/all">Job Schedulers (All)</a></li>
+              <li><a href="{{ RISA_LOCAL_BASE_URL }}/job-schedulers">Job Schedulers (r|LOCAL)</a></li>
+              <li><a href="{{ RISA_HOST_BASE_URL }}/job-schedulers">Job Schedulers (r|HOST)</a></li>
+              <li><a href="{{ RISA_PLAYGROUND_BASE_URL }}/job-schedulers">Job Schedulers (r|PLAYGROUND)</a></li>
+
+            </ul>
+          </li>
+
+          <!-- Stats -->
           <li class="treeview disabled">
-            <a href="#"><i class="fa fa-tachometer"></i> <span>Stats</span></a></li>
+            <a href="#"><i class="fa fa-tachometer"></i> <span>Stats</span></a>
+          </li>
 
           <!-- Network -->
           <li class="treeview">
@@ -151,7 +169,7 @@
             <ul class="treeview-menu">
 
               <!-- Network Dashboard -->
-              <li class=""><a href="/state/network"><i class="fa fa-circle-o"></i> Network Dashboard</a></li>
+              <li class=""><a href="/state/network"><i class="fa fa-circle-o"></i> Network State</a></li>
 
               <!-- Instances -->
               <li class="treeview">
@@ -162,6 +180,8 @@
                     <ul class="treeview-menu">
                       <li><a href="{{ RISA_LOCAL_BASE_URL }}/dashboard"><i class="fa fa-circle-o"></i> Dashboard</a></li>
                       <li><a href="{{ RISA_LOCAL_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs</a></li>
+                      <li><a href="{{ RISA_LOCAL_BASE_URL }}/job-schedulers"><i class="fa fa-circle-o"></i> Job Schedulers</a>
+                      </li>
                     </ul>
                   </li>
                   <li class="treeview">
@@ -169,6 +189,7 @@
                     <ul class="treeview-menu">
                       <li><a href="{{ RISA_HOST_BASE_URL }}/dashboard"><i class="fa fa-circle-o"></i> Dashboard</a></li>
                       <li><a href="{{ RISA_HOST_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs</a></li>
+                      <li><a href="{{ RISA_HOST_BASE_URL }}/job-schedulers"><i class="fa fa-circle-o"></i> Job Schedulers</a></li>
                     </ul>
                   </li>
                   <li class="treeview">
@@ -176,6 +197,8 @@
                     <ul class="treeview-menu">
                       <li><a href="{{ RISA_PLAYGROUND_BASE_URL }}/dashboard"><i class="fa fa-circle-o"></i> Dashboard</a></li>
                       <li><a href="{{ RISA_PLAYGROUND_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs</a></li>
+                      <li><a href="{{ RISA_PLAYGROUND_BASE_URL }}/job-schedulers"><i class="fa fa-circle-o"></i> Job
+                          Schedulers</a></li>
                     </ul>
                   </li>
                   <li class="treeview">
@@ -183,6 +206,7 @@
                     <ul class="treeview-menu">
                       <li><a href="{{ RISA_DEV_BASE_URL }}/dashboard"><i class="fa fa-circle-o"></i> Dashboard</a></li>
                       <li><a href="{{ RISA_DEV_BASE_URL }}/jobs"><i class="fa fa-circle-o"></i> Jobs</a></li>
+                      <li><a href="{{ RISA_DEV_BASE_URL }}/job-schedulers"><i class="fa fa-circle-o"></i> Job Schedulers</a></li>
                     </ul>
                   </li>
                 </ul>
@@ -203,6 +227,7 @@
               <li><a href="https://github.com/martokk/risa/issues/new"><i class="fa fa-circle-o"></i> Create Github Issue</a></li>
             </ul>
           </li>
+
         </ul>
 
         <!-- Sidebar Footer Icons-->

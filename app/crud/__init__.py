@@ -1,6 +1,5 @@
 from framework.crud import *
 
-from . import sync
 from .character import *
 from .instance_state import *
 from .sd_base_model import *

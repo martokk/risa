@@ -8,19 +8,11 @@ from framework.models.settings import PythonFastAPIBaseSettings
 
 
 class Settings(PythonFastAPIBaseSettings):
-    RISA_HOST_BASE_URL: str = "http://localhost:5000"
     HUB_PATH: str = ""
     EXPORT_API_KEY: str = ""
     WORKSPACE_PATH: str = "/workspace"
-    DASHBOARD_CONFIG_PATH: str = "app/data/config_dashboard.yaml"
+    RISA_CONFIG_PATH: str = "app/data/config_dashboard.yaml"
     DATASET_TAGGER_WALKTHROUGH_PATH: str = "app/data/dataset_tagger_walkthrough.yaml"
-
-    # Job Queue
-    HUEY_SQLITE_PATH: str = "app/data/huey_jobs.db"
-    HUEY_DEFAULT_SQLITE_PATH: str = "app/data/huey_consumer__default.db"
-    HUEY_RESERVED_SQLITE_PATH: str = "app/data/huey_consumer__reserved.db"
-    HUEY_DEFAULT_LOG_PATH: str = "app/data/logs/huey_consumer__default.log"
-    HUEY_RESERVED_LOG_PATH: str = "app/data/logs/huey_consumer__reserved.log"
     IDLE_TIMEOUT_MINUTES: int = 30
 
     @validator("EXPORT_API_KEY")

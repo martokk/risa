@@ -3,7 +3,7 @@ import subprocess
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app import models
-from app.logic.dashboard import get_config
+from app.logic.config import get_config
 from framework.api.deps import get_current_active_user
 
 
@@ -17,7 +17,7 @@ async def start_app(
 ) -> dict[str, str]:
     """Start an application."""
     config = get_config()
-    app = next((app for app in config["apps"] if app.id == app_id), None)
+    app = next((app for app in config.app_manager.apps if app.id == app_id), None)
 
     if not app:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
@@ -37,7 +37,7 @@ async def restart_app(
 ) -> dict[str, str]:
     """Restart an application."""
     config = get_config()
-    app = next((app for app in config["apps"] if app.id == app_id), None)
+    app = next((app for app in config.app_manager.apps if app.id == app_id), None)
 
     if not app:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")
@@ -57,7 +57,7 @@ async def stop_app(
 ) -> dict[str, str]:
     """Stop an application."""
     config = get_config()
-    app = next((app for app in config["apps"] if app.id == app_id), None)
+    app = next((app for app in config.app_manager.apps if app.id == app_id), None)
 
     if not app:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="App not found")

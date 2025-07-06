@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.frontend.handlers.character import character
 from app.frontend.handlers.dashboard import dashboard
+from framework.frontend.handlers.jobs import job_scheduler
 from app.frontend.handlers.root import root
 from app.frontend.handlers.sd_base_model import sd_base_model
 from app.frontend.handlers.sd_checkpoint import sd_checkpoint
@@ -23,6 +24,7 @@ root_router.include_router(root.router, tags=["Root"])
 root_router.include_router(login.router, tags=["Logins"])
 root_router.include_router(user.router, tags=["Users"])
 root_router.include_router(jobs.router, tags=["Jobs"])
+root_router.include_router(job_scheduler.router, tags=["Job Schedulers"])
 
 # SD specific routes
 root_router.include_router(sd_base_model.router, tags=["SD Base Models"])

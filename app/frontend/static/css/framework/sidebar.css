@@ -1,3 +1,27 @@
+:root {
+    --v-font-size-base: 14px;
+
+    --v-font-size-sm-1: calc(var(--v-font-size-base) - 1px);
+    --v-font-size-sm-2: calc(var(--v-font-size-base) - 2px);
+    --v-font-size-sm-3: calc(var(--v-font-size-base) - 3px);
+    --v-font-size-sm-4: calc(var(--v-font-size-base) - 4px);
+    --v-font-size-sm-5: calc(var(--v-font-size-base) - 5px);
+    --v-font-size-sm-6: calc(var(--v-font-size-base) - 6px);
+    --v-font-size-sm-7: calc(var(--v-font-size-base) - 7px);
+    --v-font-size-sm-8: calc(var(--v-font-size-base) - 8px);
+    --v-font-size-sm-9: calc(var(--v-font-size-base) - 9px);
+
+    --v-font-size-lg-1: calc(var(--v-font-size-base) + 1px);
+    --v-font-size-lg-2: calc(var(--v-font-size-base) + 2px);
+    --v-font-size-lg-3: calc(var(--v-font-size-base) + 3px);
+    --v-font-size-lg-4: calc(var(--v-font-size-base) + 4px);
+    --v-font-size-lg-5: calc(var(--v-font-size-base) + 5px);
+    --v-font-size-lg-6: calc(var(--v-font-size-base) + 6px);
+    --v-font-size-lg-7: calc(var(--v-font-size-base) + 7px);
+    --v-font-size-lg-8: calc(var(--v-font-size-base) + 8px);
+    --v-font-size-lg-9: calc(var(--v-font-size-base) + 9px);
+}
+
 .main-sidebar {
     position: fixed;
     top: 0;
@@ -8,7 +32,7 @@
     /* Bootstrap dark bg */
     color: #dee2e6;
     /* Bootstrap text-light */
-    font-size: 15px;
+    font-size: var(--v-font-size-base);
     font-family: system-ui, sans-serif;
     z-index: 1000;
 }
@@ -35,7 +59,7 @@
 
 .sidebar-menu li.header {
     padding: 12px 23px;
-    font-size: 16px;
+    font-size: var(--v-font-size-lg-1);
     font-weight: 600;
     color: #fff;
     /* Bootstrap secondary text */
@@ -66,9 +90,14 @@
     width: 20px !important;
     margin-right: 10px !important;
     text-align: center !important;
-    color: var(--accent) !important;
+    color: var(--v-base-light-80) !important;
     /* Accent used in icon */
 }
+
+.sidebar-menu>li>a>.fa.fa-accent {
+    color: var(--accent) !important;
+}
+
 
 /* Hover and active top-level */
 .sidebar-menu>li.active>a {
@@ -115,7 +144,7 @@
 .sidebar-menu .treeview-menu>li>a {
     padding: 5px 5px 5px 20px !important;
     display: block !important;
-    font-size: 14px !important;
+    font-size: var(--v-font-size-sm-1) !important;
     color: #ffffff !important;
     transition: color 0.2s ease !important;
 }
@@ -150,7 +179,7 @@
 .sidebar-menu li .label,
 .sidebar-menu li .badge {
     margin-left: auto !important;
-    font-size: 10px !important;
+    font-size: var(--v-font-size-sm-5) !important;
     background: var(--accent) !important;
     color: #000 !important;
     padding: 2px 6px !important;
@@ -179,7 +208,7 @@
 .sidebar-icon {
     position: relative !important;
     color: var(--accent) !important;
-    font-size: 18px !important;
+    font-size: var(--v-font-size-lg-8) !important;
     padding: 5px !important;
     transition: color 0.2s !important;
 }
@@ -194,7 +223,7 @@
     right: -9px !important;
     background-color: var(--accent) !important;
     color: #000 !important;
-    font-size: 14px !important;
+    font-size: var(--v-font-size-sm-1) !important;
     font-weight: bold !important;
     border-radius: 50% !important;
     padding: 2px 5px !important;
@@ -206,7 +235,7 @@
     color: #fff;
     padding: 0.25em 0.5em;
     border-radius: 1em;
-    font-size: 0.75em;
+    font-size: var(--v-font-size-sm-5);
     vertical-align: top;
 }
 

@@ -1,0 +1,324 @@
+{% extends "base/sidebar_right.html" %}
+
+{% block title %}Job Schedulers{% endblock %}
+
+{% block content %}
+<div class="">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <h5>Job Schedulers ({{ env_name }})</h5>
+        <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#schedulerModal">
+                <i class="fas fa-plus"></i> Add Scheduler
+            </button>
+        </div>
+    </div>
+
+    <!-- On Start Schedulers -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="mb-0">On Start Schedulers</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Env Name</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Enabled</th>
+                        <th>Last Run</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scheduler in on_start_schedulers %}
+                        <tr>
+                            <td>{{ scheduler.env_name }}</td>
+                            <td>{{ scheduler.name }}</td>
+                            <td>{{ scheduler.description }}</td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input scheduler-toggle" type="checkbox" id="toggle-{{ scheduler.id }}" data-id="{{ scheduler.id }}" {% if scheduler.enabled %}checked{% endif %}>
+                                    <label class="form-check-label visually-hidden" for="toggle-{{ scheduler.id }}">Enabled</label>
+                                </div>
+                            </td>
+                            <td>{{ scheduler.last_run | humanize or "Never" }}</td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editScheduler('{{ scheduler.id }}')"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteScheduler('{{ scheduler.id }}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">No on-start schedulers configured.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Repeat Schedulers -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">Repeat Schedulers</h6>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Env Name</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Interval (s)</th>
+                        <th>Enabled</th>
+                        <th>Last Run</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scheduler in repeat_schedulers %}
+                        <tr>
+                            <td>{{ scheduler.env_name }}</td>
+                            <td>{{ scheduler.name }}</td>
+                            <td>{{ scheduler.description }}</td>
+                            <td>{{ scheduler.repeat_every_seconds or "-" }}</td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input scheduler-toggle" type="checkbox" id="toggle-{{ scheduler.id }}" data-id="{{ scheduler.id }}" {% if scheduler.enabled %}checked{% endif %}>
+                                    <label class="form-check-label visually-hidden" for="toggle-{{ scheduler.id }}">Enabled</label>
+                                </div>
+                            </td>
+                            <td>{{ scheduler.last_run | humanize or "Never" }}</td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editScheduler('{{ scheduler.id }}')"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteScheduler('{{ scheduler.id }}')"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No repeat schedulers configured.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Scheduler Modal -->
+<div class="modal fade" id="schedulerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="schedulerModalLabel">Add Job Scheduler</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="schedulerForm">
+                    <input type="hidden" id="schedulerId" name="id">
+
+                    <div class="mb-3">
+                        <label for="schedulerEnvName" class="form-label">Env Name</label>
+                        <select class="form-select" id="schedulerEnvName" name="env_name" required>
+                            {% for _env_name in ENV_NAMES %}
+                                <option value="{{ _env_name }}" {{ "selected" if _env_name == ENV_NAME }}>{{ _env_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedulerName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="schedulerName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="schedulerDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="schedulerDescription" name="description" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Trigger Type</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="trigger_type" id="triggerOnStart" value="on_start" checked>
+                            <label class="form-check-label" for="triggerOnStart">On Start</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="trigger_type" id="triggerRepeat" value="repeat">
+                            <label class="form-check-label" for="triggerRepeat">Repeat</label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="repeatIntervalGroup" style="display: none;">
+                        <label for="repeatEverySeconds" class="form-label">Repeat Every (seconds)</label>
+                        <input type="number" class="form-control" id="repeatEverySeconds" name="repeat_every_seconds" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="jobTemplate" class="form-label">Job Template (JSON)</label>
+                        <textarea class="form-control" id="jobTemplate" name="job_template" rows="10" required>
+{
+    "env_name": "{{ ENV_NAME }}",
+    "queue_name": "default",
+    "name": "",
+    "type": "command",
+    "command": "",
+    "meta": {},
+    "status": "queued"
+}
+                        </textarea>
+                        <div class="form-text">Enter a valid JSON object that matches the Job model structure.</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="schedulerEnabled" name="enabled" checked>
+                            <label class="form-check-label" for="schedulerEnabled">Enabled</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveSchedulerBtn">Save Scheduler</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="module">
+    import { apiCrud, uiHelpers } from '/static/js/api_utils.js';
+    import { toast } from '/static/js/toast.js';
+
+    // Trigger type radio button handling
+    document.querySelectorAll('input[name="trigger_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const repeatGroup = document.getElementById('repeatIntervalGroup');
+            if (this.value === 'repeat') {
+                repeatGroup.style.display = 'block';
+            } else {
+                repeatGroup.style.display = 'none';
+            }
+        });
+    });
+
+    // Form handling
+    document.getElementById('saveSchedulerBtn').addEventListener('click', async () => {
+        try {
+            const formData = new FormData(document.getElementById('schedulerForm'));
+            const data = Object.fromEntries(formData.entries());
+            data.job_template = JSON.parse(data.job_template);
+            if (data.trigger_type === 'on_start') {
+                delete data.repeat_every_seconds;
+            } else {
+                data.repeat_every_seconds = parseInt(data.repeat_every_seconds);
+            }
+            const schedulerId = data.id;
+            delete data.id;
+            if (schedulerId) {
+                await apiCrud.update('job-schedulers', schedulerId, data);
+                toast.show('Scheduler updated successfully!', 'success');
+            } else {
+                await apiCrud.create('job-schedulers', data);
+                toast.show('Scheduler created successfully!', 'success');
+            }
+            uiHelpers.refreshPage();
+        } catch (error) {
+            toast.show(error.message || 'An error occurred', 'danger');
+        }
+    });
+
+    // Toggle scheduler
+    window.toggleScheduler = async function(schedulerId) {
+        try {
+            await apiCrud.postText(`job-schedulers/${schedulerId}/toggle`, {});
+            uiHelpers.refreshPage();
+        } catch (error) {
+            toast.show(error.message || 'Failed to toggle scheduler', 'danger');
+        }
+    };
+
+    // Edit scheduler
+    window.editScheduler = async function(schedulerId) {
+        try {
+            const scheduler = await apiCrud.getById('job-schedulers', schedulerId);
+            document.getElementById('schedulerId').value = scheduler.id;
+            document.getElementById('schedulerName').value = scheduler.name;
+            document.getElementById('schedulerDescription').value = scheduler.description;
+            document.getElementById('jobTemplate').value = JSON.stringify(scheduler.job_template, null, 2);
+            document.getElementById('schedulerEnabled').checked = scheduler.enabled;
+            document.getElementById('schedulerEnvName').value = scheduler.env_name;
+            document.querySelector(`input[name="trigger_type"][value="${scheduler.trigger_type}"]`).checked = true;
+            if (scheduler.trigger_type === 'repeat') {
+                document.getElementById('repeatEverySeconds').value = scheduler.repeat_every_seconds;
+                document.getElementById('repeatIntervalGroup').style.display = 'block';
+            } else {
+                document.getElementById('repeatIntervalGroup').style.display = 'none';
+            }
+            document.getElementById('schedulerModalLabel').textContent = 'Edit Job Scheduler';
+            new bootstrap.Modal(document.getElementById('schedulerModal')).show();
+        } catch (error) {
+            toast.show(error.message || 'Failed to load scheduler', 'danger');
+        }
+    };
+
+    // Delete scheduler
+    window.deleteScheduler = function(schedulerId) {
+        if (uiHelpers.confirm('Are you sure you want to delete this scheduler?')) {
+            apiCrud.delete('job-schedulers', schedulerId)
+                .then(() => {
+                    toast.show('Scheduler deleted successfully!', 'success');
+                    uiHelpers.refreshPage();
+                })
+                .catch(error => {
+                    toast.show(error.message || 'Failed to delete scheduler', 'danger');
+                });
+        }
+    };
+
+    // Scheduler enabled toggle handler
+    document.querySelectorAll('.scheduler-toggle').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const schedulerId = this.dataset.id;
+            toggleScheduler(schedulerId);
+        });
+    });
+
+    // Add Scheduler button handler
+    // This ensures the form is reset when adding a new scheduler, but not when editing
+    const addSchedulerBtn = document.querySelector('button[data-bs-target="#schedulerModal"]');
+    if (addSchedulerBtn) {
+        addSchedulerBtn.addEventListener('click', function() {
+            const form = document.getElementById('schedulerForm');
+            form.reset();
+
+            // Set modal title
+            document.getElementById('schedulerModalLabel').textContent = 'Add Job Scheduler';
+
+            // Clear hidden id field
+            document.getElementById('schedulerId').value = '';
+
+            // Set default env_name (from context)
+            document.getElementById('schedulerEnvName').value = "{{ ENV_NAME }}";
+
+            // Set default trigger type to "on_start"
+            document.getElementById('triggerOnStart').checked = true;
+            document.getElementById('repeatIntervalGroup').style.display = 'none';
+
+            // Set default job template
+            document.getElementById('jobTemplate').value = `{
+    "env_name": "{{ ENV_NAME }}",
+    "queue_name": "default",
+    "name": "",
+    "type": "command",
+    "command": "",
+    "meta": {},
+    "status": "queued"
+}`;
+
+            // Set enabled checkbox to checked
+            document.getElementById('schedulerEnabled').checked = true;
+        });
+    }
+</script>
+{% endblock %} 
