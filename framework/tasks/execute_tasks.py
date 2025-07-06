@@ -17,6 +17,7 @@ from framework import crud, models
 from framework.core.db import get_db_context
 from framework.core.huey import huey_default, huey_reserved
 from framework.logic.jobs import push_jobs_to_websocket
+from framework.tasks.execute_scheduler import check_repeat_schedulers
 
 
 def _trigger_next_queued_job(queue_name: str) -> None:
@@ -415,12 +416,17 @@ def execute_job_task_reserved(job_id: str, priority: int = 100) -> None:
     _execute_job_task(job_id=job_id, priority=priority)
 
 
-@huey_default.periodic_task(crontab(minute="*/1"))  # Check every minute
+@huey_default.periodic_task(crontab(minute="*/1"))  # Check every 1 minute
 def check_and_process_queued_jobs_default() -> None:
     _check_and_process_queued_jobs(queue_name="default")
 
 
-@huey_reserved.periodic_task(crontab(minute="*/1"))
+@huey_default.periodic_task(crontab(minute="*/1"))  # Check every 1 minute
+def check_and_process_job_schedulers() -> None:
+    check_repeat_schedulers()
+
+
+@huey_reserved.periodic_task(crontab(minute="*/1"))  # Check every 1 minute
 def check_and_process_queued_jobs_reserved() -> None:
     _check_and_process_queued_jobs(queue_name="reserved")
 

@@ -17,7 +17,7 @@ from app.api.v1.endpoints.scripts import (
     generate_xy_for_lora_epochs,
     rsync_files,
 )
-from framework.api.v1.endpoints import job_queue_ws, users
+from framework.api.v1.endpoints import job_queue_ws, job_scheduler, users
 from framework.api.v1.endpoints.job_queue import router as job_queue_router
 
 
@@ -35,6 +35,7 @@ api_router.include_router(sd_checkpoint.router, tags=["SD Checkpoints"])
 api_router.include_router(sd_extra_network.router, tags=["SD Extra Networks"])
 api_router.include_router(app_manager.router, tags=["App Manager"])
 api_router.include_router(job_queue_ws.router, tags=["Job Queue WS"])
+api_router.include_router(job_scheduler.router, tags=["Job Schedulers"])
 api_router.include_router(app_manager_ws.router, tags=["App Manager WS"])
 
 # Scripts

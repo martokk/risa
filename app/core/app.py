@@ -14,6 +14,7 @@ from app.routes.views import views_router
 from app.services.idle_watcher import start_idle_watcher, stop_idle_watcher
 from framework.core.db import get_db_context, initialize_tables_and_initial_data
 from framework.services import notify
+from framework.tasks.execute_scheduler import run_on_start_schedulers
 
 
 # def run_playground_app():
@@ -60,8 +61,8 @@ async def startup_event(db: Session | None = None) -> None:
     else:
         await initialize_tables_and_initial_data(db=db)
 
-    # Start the playground app in a separate thread
-    # threading.Thread(target=run_playground_app).start()
+    # Run on_start job schedulers
+    run_on_start_schedulers()
 
 
 @asynccontextmanager
