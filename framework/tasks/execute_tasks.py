@@ -4,6 +4,7 @@ This module defines the Huey tasks for background job processing.
 
 import json
 import subprocess
+import traceback
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -149,7 +150,7 @@ def _run_script_job(db_job: models.Job) -> None:
             db_job.meta["job_id"] = str(db_job.id)
             script_output = script_class().run(**db_job.meta)
         except Exception as e:
-            log_file.write(f"Error: {e}\n")
+            log_file.write(f"Error: {e}\n Traceback: {traceback.format_exc()}\n")
             raise e
 
         log_file.write(
