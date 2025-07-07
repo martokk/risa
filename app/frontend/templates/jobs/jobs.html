@@ -231,6 +231,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="exportJobBtn">Export Job</button>
                 <button type="button" class="btn btn-primary" id="saveJobBtn">Save Job</button>
             </div>
         </div>
@@ -258,6 +259,23 @@
         </div>
     </div>
 </div>
+
+<!-- Display Text Area Modal -->
+<div class="modal modal-xl fade" id="displayTextAreaModal" tabindex="-1" aria-labelledby="displayTextAreaModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h5 class="modal-title" id="displayTextAreaModalLabel"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-content">
+            <div class="modal-body">
+                <textarea class="form-control" id="displayTextArea" name="text" rows="40"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block js_scripts %}
@@ -272,6 +290,13 @@
     const jobModalLabel = document.getElementById('jobModalLabel');
     const saveJobBtn = document.getElementById('saveJobBtn');
 
+    // --- Export Job Modal references ---
+    const displayTextAreaModalEl = document.getElementById('displayTextAreaModal');
+    const displayTextAreaModal = new bootstrap.Modal(displayTextAreaModalEl);
+    const displayTextArea = document.getElementById('displayTextArea');
+    const exportJobBtn = document.getElementById('exportJobBtn');
+    let currentJobData = null;
+
     let logSocket = null;
     let logStreamer = null;
 
@@ -282,7 +307,10 @@
     }
 
     // Reset form when modal is hidden
-    jobModalEl.addEventListener('hidden.bs.modal', resetForm);
+    jobModalEl.addEventListener('hidden.bs.modal', () => {
+        resetForm();
+        displayTextAreaModal.hide(); // Hide the JSON display modal if main modal closes
+    });
 
     // Handle "Add Job" button click
     document.querySelector('button[data-bs-target="#jobModal"]').addEventListener('click', () => {
@@ -294,16 +322,13 @@
             const formData = new FormData(jobForm);
             const data = Object.fromEntries(formData.entries());
             const jobId = data.id;
-            
             // Do not send the id in the body for updates
             delete data.id;
-
             // Handle meta and recurrence
             data.meta = data.meta ? JSON.parse(data.meta) : {};
             if (data.recurrence === "") {
                 delete data.recurrence;
             }
-
             if (jobId) {
                 // Update existing job
                 await apiCrud.update('jobs', jobId, data);
@@ -313,7 +338,6 @@
                 await apiCrud.create('jobs', data);
                 toast.show('Job added successfully!', 'success');
             }
-            
             jobModal.hide();
             // setTimeout(() => uiHelpers.refreshPage(), 500);
         } catch (error) {
@@ -325,8 +349,8 @@
         resetForm();
         try {
             const job = await apiCrud.getById('jobs', jobId);
+            currentJobData = job; // Store the fetched job data
             jobModalLabel.textContent = 'Edit Job';
-            
             // Populate form
             document.getElementById('jobId').value = job.id;
             document.getElementById('jobName').value = job.name;
@@ -343,6 +367,16 @@
         }
     };
 
+    exportJobBtn.addEventListener('click', () => {
+        if (currentJobData) {
+            const jobToExport = { ...currentJobData };
+            const jsonString = JSON.stringify(jobToExport, null, 2);
+            displayTextArea.value = jsonString;
+            displayTextAreaModal.show();
+        } else {
+            toast.show('No job data available to export. Please open a job first.', 'info');
+        }
+    });
 
     window.viewLog = function (event, jobId) {
         event.stopPropagation();
