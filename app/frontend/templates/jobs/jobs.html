@@ -147,7 +147,7 @@
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="historyJobsTbody">
                     {% set ns = namespace(has_history_jobs=false) %}
                     {% for job in jobs | sort(attribute='created_at', reverse=True) %}
                         {% if job.status == 'done' or job.status == 'failed' %}
@@ -537,7 +537,7 @@
 
         // History jobs (sorted by created_at descending)
         const historyJobs = envJobs.filter(j => ['done', 'failed'].includes(j.status)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        const historyTbody = document.querySelector('.card.mt-4 .card-body table tbody');
+        const historyTbody = document.getElementById('historyJobsTbody'); // Use the new ID
         console.log('History jobs:', historyJobs);
         console.log('History tbody:', historyTbody);
         historyTbody.innerHTML = historyJobs.length
@@ -581,8 +581,8 @@
                 clearHistoryBtn.disabled = true;
                 try {
                     // Find all job rows in history with status 'done' or 'failed'
-                    const historyTbody = document.querySelector('.card.mt-4 .card-body table tbody');
-                    const rows = historyTbody.querySelectorAll('tr[id^="job-row-"]');
+                    const historyTbody = document.getElementById('historyJobsTbody');
+                    const rows = historyTbody ? historyTbody.querySelectorAll('tr[id^="job-row-"]') : [];
                     const jobsToArchive = [];
                     for (const row of rows) {
                         // Get job id from row id
