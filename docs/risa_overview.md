@@ -2,7 +2,7 @@
 llm_doc: true
 audience: LLM
 maintainer: LLM
-last_updated: 2024-06-09
+last_updated: 2025-07-08
 project: risa
 purpose: High-level, living documentation for LLM understanding and maintenance
 ---
@@ -22,15 +22,17 @@ purpose: High-level, living documentation for LLM understanding and maintenance
 
 - 2024-06-09: Revamped to LLM-optimized format, added metadata, maintenance notes, changelog, explicit section boundaries, and codebase references.
 - 2024-06-08: Added Dataset Tagger tool section.
+- 2024-07-08: Added Technology Stack section.
 
 ## Table of Contents
 
 1. Overview
-2. Configuration
-3. Features & Usage
-4. API Reference
-5. Project Architecture
-6. Glossary
+2. Technology Stack
+3. Configuration
+4. Features & Usage
+5. API Reference
+6. Project Architecture
+7. Glossary
 
 <!-- SECTION: 1. Overview -->
 ## 1. Overview
@@ -52,8 +54,53 @@ The system is built on a modern Python stack, featuring a FastAPI backend for bo
 - **The Hub**: A centralized directory structure for storing and organizing AI models, including checkpoints and LoRAs (`SDExtraNetwork`), which Risa can discover and import into its database.
 <!-- ENDSECTION -->
 
-<!-- SECTION: 2. Configuration -->
-## 2. Configuration
+<!-- SECTION: 2. Technology Stack -->
+## 2. Technology Stack
+
+Risa is built on a modern, scalable technology stack designed for distributed AI workflows and real-time operations.
+
+### Backend
+
+- **FastAPI**: High-performance Python web framework providing both REST API and web UI
+- **SQLModel**: SQLAlchemy-based ORM for database operations with Pydantic integration
+- **SQLite**: Lightweight database for local storage and development
+- **Alembic**: Database migration management and version control
+
+### Authentication & Security
+
+- **JWT**: JSON Web Tokens for stateless authentication
+- **OAuth2**: Password flow implementation for secure API access
+- **bcrypt**: Password hashing and verification
+- **CORS**: Cross-origin resource sharing configuration
+
+### Job/Task Processing
+
+- **Huey**: Lightweight task queue for background job processing
+- **Redis**: Optional message broker for distributed job queues
+- **Priority Queues**: Job prioritization system (highest to lowest)
+
+### Frontend & UI
+
+- **Jinja2**: Server-side templating engine for dynamic HTML generation
+- **Bootstrap 5**: CSS framework for responsive, modern UI components
+- **JavaScript**: Client-side interactivity and real-time updates
+- **WebSockets**: Real-time communication for job status and app manager updates
+
+### Development & Deployment
+
+- **Poetry**: Dependency management and packaging
+- **Docker**: Containerization support for consistent deployments
+- **Uvicorn**: ASGI server for running FastAPI applications
+- **Loguru**: Advanced logging with structured output
+
+### External Integrations
+
+- **rsync**: File synchronization between environments
+
+<!-- ENDSECTION -->
+
+<!-- SECTION: 3. Configuration -->
+## 3. Configuration
 
 Application behavior is controlled by environment variables defined in `app/models/settings.py`. These can be set in an `.env` file.
 
@@ -76,12 +123,12 @@ Application behavior is controlled by environment variables defined in `app/mode
 | `IDLE_TIMEOUT_MINUTES` | In the `playground` environment, the number of minutes of GPU idle time before triggering a job. | `30` |
 <!-- ENDSECTION -->
 
-<!-- SECTION: 3. Features & Usage -->
-## 3. Features & Usage
+<!-- SECTION: 4. Features & Usage -->
+## 4. Features & Usage
 
 Risa provides a web interface for all its core functionalities.
 
-### 3.1 Dashboard
+### 4.1 Dashboard
 
 The main dashboard is the central hub for monitoring the entire Risa network.
 
@@ -91,7 +138,7 @@ The main dashboard is the central hub for monitoring the entire Risa network.
 - **Scripts**: A panel to launch predefined background scripts via the job queue.
 - **Network State**: An overview of all connected Risa instances (`dev`, `local`, `host`, `playground`), showing their last-updated time and status.
 
-### 3.2 Data Management
+### 4.2 Data Management
 
 Risa provides dedicated sections for managing the core data models of the application.
 
@@ -111,7 +158,7 @@ These sections allow for granular management of your Stable Diffusion assets.
 - **SD Checkpoints**: Manage specific `.safetensors` checkpoint files, linking them to a base model.
 - **SD Extra Networks**: Manage LoRA/LyCORIS files. Each is linked to a `Character` and a `SDBaseModel`. You can specify trigger words, weights, and usage rules (e.g., restrict to realistic models only).
 
-### 3.3 Tools
+### 4.3 Tools
 
 Risa includes several built-in tools to streamline AI workflows.
 
@@ -134,7 +181,7 @@ Risa includes several built-in tools to streamline AI workflows.
     - Fetches character-specific tags automatically.
     - Handles manual text input for custom tags.
 
-### 3.4 Scripts Runner
+### 4.4 Scripts Runner
 
 The application provides a UI to run predefined scripts as background jobs. Each script has a dedicated modal for inputs.
 
@@ -145,8 +192,8 @@ The application provides a UI to run predefined scripts as background jobs. Each
 
 <!-- ENDSECTION -->
 
-<!-- SECTION: 4. API Reference -->
-## 4. API Reference
+<!-- SECTION: 5. API Reference -->
+## 5. API Reference
 
 Risa exposes a RESTful API under the `/api/v1/` prefix.
 
@@ -180,8 +227,8 @@ Risa exposes a RESTful API under the `/api/v1/` prefix.
 
 <!-- ENDSECTION -->
 
-<!-- SECTION: 5. Project Architecture -->
-## 5. Project Architecture
+<!-- SECTION: 6. Project Architecture -->
+## 6. Project Architecture
 
 The application is logically divided into two main parts: `app` (the specific Risa project implementation) and `framework` (a reusable core for FastAPI applications).
 
@@ -210,8 +257,8 @@ The application is logically divided into two main parts: `app` (the specific Ri
 
 <!-- ENDSECTION -->
 
-<!-- SECTION: 6. Glossary -->
-## 6. Glossary
+<!-- SECTION: 7. Glossary -->
+## 7. Glossary
 
 | Term | Definition |
 | :--- | :--- |
