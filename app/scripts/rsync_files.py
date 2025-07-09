@@ -83,45 +83,28 @@ class ScriptRsyncFiles(scripts.Script):
         # Run command using subprocess save output to file
         try:
             process = subprocess.run(rsync_command, shell=True, capture_output=True, text=True)
-            print(process.stdout)
-            print(process.stderr)
-            print(process.returncode)
-        except Exception as e:
-            logger.error(f"Error running rsync command: {e}")
+
+            logger.debug(f"STDOUT:\n{process.stdout}")
+            logger.debug(f"STDERR:\n{process.stderr}")
+            logger.debug(f"Return code: {process.returncode}")
+
+            if process.returncode != 0:
+                stderr = process.stderr.lower()
+
+                if "connection refused" in stderr:
+                    message = "SSH connection refused by remote host."
+                elif "rsync error" in stderr or "unexpectedly closed" in stderr:
+                    message = "Rsync failed: connection closed or other issue."
+                else:
+                    message = "Rsync failed with unknown error."
+
+                logger.error(message)
+                return scripts.ScriptOutput(success=False, message=message, data={})
+
             return scripts.ScriptOutput(
-                success=False, message=f"Error running rsync command: {e}", data={}
+                success=True, message="Rsync completed.", data={"rsync_command": rsync_command}
             )
 
-        # # Add job to queue
-        # with get_db_context() as db:
-        #     db_job = crud.job.sync.create(
-        #         db,
-        #         obj_in=models.JobCreate(
-        #             env_name=kwargs["job_env"],
-        #             queue_name=kwargs["queue_name"],
-        #             name=f"Rsync Files: {kwargs['source_location']} to {kwargs['destination_location']}",
-        #             type=models.JobType.command,
-        #             command=rsync_command,
-        #             meta=kwargs,
-        #             status=models.JobStatus.queued,
-        #         ),
-        #     )
-
-        # job_on_text = convert_risa_rsync_options_to_text(
-        #     env_name=kwargs["job_env"],
-        #     queue_name=kwargs["queue_name"],
-        #     source_env=kwargs["source_env"],
-        #     source_location=kwargs["source_location"],
-        #     destination_env=kwargs["destination_env"],
-        #     destination_location=kwargs["destination_location"],
-        #     option_u=kwargs["option_u"],
-        #     option_ignore_existing=kwargs["option_ignore_existing"],
-        # )
-
-        return scripts.ScriptOutput(
-            success=True,
-            message="Rsync completed.",
-            data={
-                "rsync_command": rsync_command,
-            },
-        )
+        except Exception as e:
+            logger.error(f"Exception while running rsync: {e}")
+            return scripts.ScriptOutput(success=False, message=str(e), data={})

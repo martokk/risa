@@ -147,7 +147,7 @@
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="historyJobsTbody">
                     {% set ns = namespace(has_history_jobs=false) %}
                     {% for job in jobs | sort(attribute='created_at', reverse=True) %}
                         {% if job.status == 'done' or job.status == 'failed' %}
@@ -231,6 +231,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="exportJobBtn">Export Job</button>
                 <button type="button" class="btn btn-primary" id="saveJobBtn">Save Job</button>
             </div>
         </div>
@@ -258,6 +259,23 @@
         </div>
     </div>
 </div>
+
+<!-- Display Text Area Modal -->
+<div class="modal modal-xl fade" id="displayTextAreaModal" tabindex="-1" aria-labelledby="displayTextAreaModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h5 class="modal-title" id="displayTextAreaModalLabel"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-content">
+            <div class="modal-body">
+                <textarea class="form-control" id="displayTextArea" name="text" rows="40"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block js_scripts %}
@@ -272,6 +290,13 @@
     const jobModalLabel = document.getElementById('jobModalLabel');
     const saveJobBtn = document.getElementById('saveJobBtn');
 
+    // --- Export Job Modal references ---
+    const displayTextAreaModalEl = document.getElementById('displayTextAreaModal');
+    const displayTextAreaModal = new bootstrap.Modal(displayTextAreaModalEl);
+    const displayTextArea = document.getElementById('displayTextArea');
+    const exportJobBtn = document.getElementById('exportJobBtn');
+    let currentJobData = null;
+
     let logSocket = null;
     let logStreamer = null;
 
@@ -282,7 +307,10 @@
     }
 
     // Reset form when modal is hidden
-    jobModalEl.addEventListener('hidden.bs.modal', resetForm);
+    jobModalEl.addEventListener('hidden.bs.modal', () => {
+        resetForm();
+        displayTextAreaModal.hide(); // Hide the JSON display modal if main modal closes
+    });
 
     // Handle "Add Job" button click
     document.querySelector('button[data-bs-target="#jobModal"]').addEventListener('click', () => {
@@ -294,16 +322,13 @@
             const formData = new FormData(jobForm);
             const data = Object.fromEntries(formData.entries());
             const jobId = data.id;
-            
             // Do not send the id in the body for updates
             delete data.id;
-
             // Handle meta and recurrence
             data.meta = data.meta ? JSON.parse(data.meta) : {};
             if (data.recurrence === "") {
                 delete data.recurrence;
             }
-
             if (jobId) {
                 // Update existing job
                 await apiCrud.update('jobs', jobId, data);
@@ -313,7 +338,6 @@
                 await apiCrud.create('jobs', data);
                 toast.show('Job added successfully!', 'success');
             }
-            
             jobModal.hide();
             // setTimeout(() => uiHelpers.refreshPage(), 500);
         } catch (error) {
@@ -325,8 +349,8 @@
         resetForm();
         try {
             const job = await apiCrud.getById('jobs', jobId);
+            currentJobData = job; // Store the fetched job data
             jobModalLabel.textContent = 'Edit Job';
-            
             // Populate form
             document.getElementById('jobId').value = job.id;
             document.getElementById('jobName').value = job.name;
@@ -343,6 +367,16 @@
         }
     };
 
+    exportJobBtn.addEventListener('click', () => {
+        if (currentJobData) {
+            const jobToExport = { ...currentJobData };
+            const jsonString = JSON.stringify(jobToExport, null, 2);
+            displayTextArea.value = jsonString;
+            displayTextAreaModal.show();
+        } else {
+            toast.show('No job data available to export. Please open a job first.', 'info');
+        }
+    });
 
     window.viewLog = function (event, jobId) {
         event.stopPropagation();
@@ -503,7 +537,7 @@
 
         // History jobs (sorted by created_at descending)
         const historyJobs = envJobs.filter(j => ['done', 'failed'].includes(j.status)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        const historyTbody = document.querySelector('.card.mt-4 .card-body table tbody');
+        const historyTbody = document.getElementById('historyJobsTbody'); // Use the new ID
         console.log('History jobs:', historyJobs);
         console.log('History tbody:', historyTbody);
         historyTbody.innerHTML = historyJobs.length
@@ -511,6 +545,8 @@
             : '<tr><td colspan="8" class="text-center">No jobs in history.</td></tr>';
     }
 
+    let reconnectDelay = 2000; // ms
+    let reconnectAttempts = 0;
     function connectJobQueueWebSocket() {
         let protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         let wsUrl = `${protocol}://${window.location.host}/api/v1/ws/job-queue`;
@@ -519,7 +555,12 @@
         // Initialize the LogStreamer once the socket is created
         logStreamer = new LogStreamer('logModal', 'logContent', 'scrollToBottomBtn', logSocket);
 
+        logSocket.onopen = function() {
+            console.log('[WebSocket] Connection opened to job queue.');
+            reconnectAttempts = 0;
+        };
         logSocket.onmessage = function(event) {
+            console.log('[WebSocket] Message received:', event.data);
             try {
                 const data = JSON.parse(event.data);
                 // The log streamer now handles its own messages.
@@ -528,11 +569,16 @@
                     updateJobTables(data.jobs);
                 }
             } catch (e) {
-                console.error('Failed to parse WebSocket message:', e);
+                console.error('[WebSocket] Failed to parse message:', e);
             }
         };
-        logSocket.onclose = function() {
-            setTimeout(connectJobQueueWebSocket, 3000);
+        logSocket.onerror = function(event) {
+            console.error('[WebSocket] Error:', event);
+        };
+        logSocket.onclose = function(event) {
+            console.warn('[WebSocket] Connection closed. Attempting to reconnect...', event);
+            reconnectAttempts++;
+            setTimeout(connectJobQueueWebSocket, reconnectDelay * Math.min(reconnectAttempts, 10));
         };
     }
 
@@ -547,8 +593,8 @@
                 clearHistoryBtn.disabled = true;
                 try {
                     // Find all job rows in history with status 'done' or 'failed'
-                    const historyTbody = document.querySelector('.card.mt-4 .card-body table tbody');
-                    const rows = historyTbody.querySelectorAll('tr[id^="job-row-"]');
+                    const historyTbody = document.getElementById('historyJobsTbody');
+                    const rows = historyTbody ? historyTbody.querySelectorAll('tr[id^="job-row-"]') : [];
                     const jobsToArchive = [];
                     for (const row of rows) {
                         // Get job id from row id

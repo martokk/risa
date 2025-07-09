@@ -4,6 +4,7 @@ This module defines the Huey tasks for background job processing.
 
 import json
 import subprocess
+import traceback
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -149,7 +150,7 @@ def _run_script_job(db_job: models.Job) -> None:
             db_job.meta["job_id"] = str(db_job.id)
             script_output = script_class().run(**db_job.meta)
         except Exception as e:
-            log_file.write(f"Error: {e}\n")
+            log_file.write(f"Error: {e}\n Traceback: {traceback.format_exc()}\n")
             raise e
 
         log_file.write(
@@ -179,6 +180,14 @@ def _run_api_post_job(job: models.Job) -> None:  # TODO: Not implemented yet (du
         output = f"An unexpected error occurred: {str(e)}"
         logger.error(f"Unexpected error in API POST job {job.id}: {output}")
         raise
+
+
+def _safe_push_jobs_to_websocket(context_msg: str = "") -> None:
+    try:
+        push_jobs_to_websocket()
+        logger.info(f"[WebSocket] Successfully pushed jobs to websocket. {context_msg}")
+    except Exception as e:
+        logger.error(f"[WebSocket] Failed to push jobs to websocket. {context_msg} Error: {e}")
 
 
 def _execute_job_task(job_id: str, priority: int = 100) -> None:
@@ -213,7 +222,7 @@ def _execute_job_task(job_id: str, priority: int = 100) -> None:
         try:
             obj_in = models.JobUpdate(status=models.JobStatus.running)
             db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-            push_jobs_to_websocket()
+            _safe_push_jobs_to_websocket(f"Job {db_job.id}: status set to running")
             logger.debug(
                 f"Job {str(db_job.id)[:8]}: Status updated to 'running' - job claimed for execution"
             )
@@ -235,7 +244,9 @@ def _execute_job_task(job_id: str, priority: int = 100) -> None:
 
                         obj_in = models.JobUpdate(status=models.JobStatus.pending)
                         db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-                        push_jobs_to_websocket()
+                        _safe_push_jobs_to_websocket(
+                            f"Job {db_job.id}: status set to pending (SIGKILL)"
+                        )
 
                         job_succeeded = False
                     else:
@@ -253,7 +264,7 @@ def _execute_job_task(job_id: str, priority: int = 100) -> None:
             # Update Status to error
             obj_in = models.JobUpdate(status=models.JobStatus.error)
             db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-            push_jobs_to_websocket()
+            _safe_push_jobs_to_websocket(f"Job {db_job.id}: status set to error (timeout)")
 
         except Exception as e:
             logger.error(f"\nJob {db_job.id}: FAILED: {e}", exc_info=True)
@@ -261,14 +272,14 @@ def _execute_job_task(job_id: str, priority: int = 100) -> None:
             # Update Status to failed
             obj_in = models.JobUpdate(status=models.JobStatus.failed)
             db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-            push_jobs_to_websocket()
+            _safe_push_jobs_to_websocket(f"Job {db_job.id}: status set to failed (exception)")
 
         finally:
             if job_succeeded:
                 # Update Status to done
                 obj_in = models.JobUpdate(status=models.JobStatus.done)
                 db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-                push_jobs_to_websocket()
+                _safe_push_jobs_to_websocket(f"Job {db_job.id}: status set to done (success)")
 
                 logger.debug(f"Job {str(db_job.id)[:8]}: Updated status to 'done'.")
 

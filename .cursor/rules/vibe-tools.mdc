@@ -15,7 +15,7 @@ Use the following commands to get AI assistance:
 Note: in general you should not use the ask command because it does not include any context - other commands like `doc`, `repo`, or `plan` are usually better. If you are using it, make sure to include in your question all the information and context that the model might need to answer usefully.
 
 **Ask Command Options:**
---provider=<provider>: AI provider to use (openai, anthropic, perplexity, gemini, modelbox, or openrouter)
+--provider=<provider>: AI provider to use (openrouter)
 --model=<model>: Model to use (required for the ask command)
 --reasoning-effort=<low|medium|high>: Control the depth of reasoning for supported models (OpenAI o1/o3-mini models and Claude 3.7 Sonnet). Higher values produce more thorough responses for complex questions.
 
@@ -27,8 +27,8 @@ The plan command uses multiple AI models to:
 3. Generate a detailed implementation plan (using OpenAI o3-mini by default)
 
 **Plan Command Options:**
---fileProvider=<provider>: Provider for file identification (gemini, openai, anthropic, perplexity, modelbox, or openrouter)
---thinkingProvider=<provider>: Provider for plan generation (gemini, openai, anthropic, perplexity, modelbox, or openrouter)
+--fileProvider=<provider>: Provider for file identification (openrouter)
+--thinkingProvider=<provider>: Provider for plan generation (openrouter)
 --fileModel=<model>: Model to use for file identification
 --thinkingModel=<model>: Model to use for plan generation
 
@@ -38,7 +38,7 @@ Note: web is a smart autonomous agent with access to the internet and an extensi
 when using web for complex queries suggest writing the output to a file somewhere like local-research/<query summary>.md.
 
 **Web Command Options:**
---provider=<provider>: AI provider to use (perplexity, gemini, modelbox, or openrouter)
+--provider=<provider>: AI provider to use (openrouter)
 
 **Repository Context:**
 `vibe-tools repo "<your question>" [--subdir=<path>] [--from-github=<username/repo>]` - Get context-aware answers about this repository using Google Gemini (e.g., `vibe-tools repo "explain authentication flow"`). Use the optional `--subdir` parameter to analyze a specific subdirectory instead of the entire repository (e.g., `vibe-tools repo "explain the code structure" --subdir=src/components`). Use the optional `--from-github` parameter to analyze a remote GitHub repository without cloning it locally (e.g., `vibe-tools repo "explain the authentication system" --from-github=username/repo-name`).
