@@ -545,6 +545,8 @@
             : '<tr><td colspan="8" class="text-center">No jobs in history.</td></tr>';
     }
 
+    let reconnectDelay = 2000; // ms
+    let reconnectAttempts = 0;
     function connectJobQueueWebSocket() {
         let protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
         let wsUrl = `${protocol}://${window.location.host}/api/v1/ws/job-queue`;
@@ -553,7 +555,12 @@
         // Initialize the LogStreamer once the socket is created
         logStreamer = new LogStreamer('logModal', 'logContent', 'scrollToBottomBtn', logSocket);
 
+        logSocket.onopen = function() {
+            console.log('[WebSocket] Connection opened to job queue.');
+            reconnectAttempts = 0;
+        };
         logSocket.onmessage = function(event) {
+            console.log('[WebSocket] Message received:', event.data);
             try {
                 const data = JSON.parse(event.data);
                 // The log streamer now handles its own messages.
@@ -562,11 +569,16 @@
                     updateJobTables(data.jobs);
                 }
             } catch (e) {
-                console.error('Failed to parse WebSocket message:', e);
+                console.error('[WebSocket] Failed to parse message:', e);
             }
         };
-        logSocket.onclose = function() {
-            setTimeout(connectJobQueueWebSocket, 3000);
+        logSocket.onerror = function(event) {
+            console.error('[WebSocket] Error:', event);
+        };
+        logSocket.onclose = function(event) {
+            console.warn('[WebSocket] Connection closed. Attempting to reconnect...', event);
+            reconnectAttempts++;
+            setTimeout(connectJobQueueWebSocket, reconnectDelay * Math.min(reconnectAttempts, 10));
         };
     }
 

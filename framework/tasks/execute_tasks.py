@@ -182,6 +182,14 @@ def _run_api_post_job(job: models.Job) -> None:  # TODO: Not implemented yet (du
         raise
 
 
+def _safe_push_jobs_to_websocket(context_msg: str = "") -> None:
+    try:
+        push_jobs_to_websocket()
+        logger.info(f"[WebSocket] Successfully pushed jobs to websocket. {context_msg}")
+    except Exception as e:
+        logger.error(f"[WebSocket] Failed to push jobs to websocket. {context_msg} Error: {e}")
+
+
 def _execute_job_task(job_id: str, priority: int = 100) -> None:
     """
     Huey task to execute a job and update its status.
@@ -214,7 +222,7 @@ def _execute_job_task(job_id: str, priority: int = 100) -> None:
         try:
             obj_in = models.JobUpdate(status=models.JobStatus.running)
             db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-            push_jobs_to_websocket()
+            _safe_push_jobs_to_websocket(f"Job {db_job.id}: status set to running")
             logger.debug(
                 f"Job {str(db_job.id)[:8]}: Status updated to 'running' - job claimed for execution"
             )
@@ -236,7 +244,9 @@ def _execute_job_task(job_id: str, priority: int = 100) -> None:
 
                         obj_in = models.JobUpdate(status=models.JobStatus.pending)
                         db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-                        push_jobs_to_websocket()
+                        _safe_push_jobs_to_websocket(
+                            f"Job {db_job.id}: status set to pending (SIGKILL)"
+                        )
 
                         job_succeeded = False
                     else:
@@ -254,7 +264,7 @@ def _execute_job_task(job_id: str, priority: int = 100) -> None:
             # Update Status to error
             obj_in = models.JobUpdate(status=models.JobStatus.error)
             db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-            push_jobs_to_websocket()
+            _safe_push_jobs_to_websocket(f"Job {db_job.id}: status set to error (timeout)")
 
         except Exception as e:
             logger.error(f"\nJob {db_job.id}: FAILED: {e}", exc_info=True)
@@ -262,14 +272,14 @@ def _execute_job_task(job_id: str, priority: int = 100) -> None:
             # Update Status to failed
             obj_in = models.JobUpdate(status=models.JobStatus.failed)
             db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-            push_jobs_to_websocket()
+            _safe_push_jobs_to_websocket(f"Job {db_job.id}: status set to failed (exception)")
 
         finally:
             if job_succeeded:
                 # Update Status to done
                 obj_in = models.JobUpdate(status=models.JobStatus.done)
                 db_job = crud.job.sync.update(db, db_obj=db_job, obj_in=obj_in)
-                push_jobs_to_websocket()
+                _safe_push_jobs_to_websocket(f"Job {db_job.id}: status set to done (success)")
 
                 logger.debug(f"Job {str(db_job.id)[:8]}: Updated status to 'done'.")
 
