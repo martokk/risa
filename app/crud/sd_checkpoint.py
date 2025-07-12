@@ -1,7 +1,7 @@
 from sqlmodel import Session
 
 from app import models
-from framework.crud.base import BaseCRUD
+from vcore.backend.crud.base import BaseCRUD
 
 from .sd_extra_network import sd_extra_network as crud_sd_extra_network
 

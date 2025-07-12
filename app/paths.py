@@ -2,8 +2,8 @@
 from pathlib import Path
 
 from app.models.settings import get_settings
-from framework.paths import *
-from framework.paths import ENV_FILE, PROJECT_PATH
+from vcore.backend.paths import *
+from vcore.backend.paths import ENV_FILE, PROJECT_PATH
 
 
 def convert_relative_path_to_absolute(path: str) -> Path:  # TODO: Move to framework.paths

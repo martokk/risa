@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from app import crud, logger
 from app.models.sd_checkpoint import SDCheckpoint
-from framework.core.db import get_db_context
+from vcore.backend.core.db import get_db_context
 
 
 class Text2ImgSettings(BaseModel):

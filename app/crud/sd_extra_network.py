@@ -5,7 +5,7 @@ from sqlmodel import Session
 
 from app import models
 from app.paths import HUB_MODELS_PATH
-from framework.crud.base import BaseCRUD
+from vcore.backend.crud.base import BaseCRUD
 
 
 class SDExtraNetworkCRUD(

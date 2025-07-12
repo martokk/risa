@@ -2,7 +2,7 @@ from app.scripts.choose_best_epoch import ScriptChooseBestEpoch
 from app.scripts.fix_civitai_download_filenames import ScriptFixCivitaiDownloadFilenames
 from app.scripts.generate_xy_for_lora_epochs import ScriptGenerateXYForLoraEpochs
 from app.scripts.rsync_files import ScriptRsyncFiles
-from framework.services.scripts import Script
+from vcore.backend.services.scripts import Script
 
 
 def hook_get_script_class_from_class_name(script_class_name: str) -> type[Script]:

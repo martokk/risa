@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 from app import logger
-from framework.services import scripts
+from vcore.backend.services import scripts
 
 
 class ScriptFixCivitaiDownloadFilenames(scripts.Script):

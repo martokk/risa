@@ -1,5 +1,5 @@
 from app import logger
-from framework.core.server import start_server
+from vcore.backend.core.server import start_server
 
 
 def main() -> None:

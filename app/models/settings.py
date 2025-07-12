@@ -3,8 +3,8 @@ from pathlib import Path
 
 from pydantic import root_validator, validator
 
-from framework.core.env import load_env
-from framework.models.settings import PythonFastAPIBaseSettings
+from vcore.backend.core.env import load_env
+from vcore.backend.models.settings import PythonFastAPIBaseSettings
 
 
 class Settings(PythonFastAPIBaseSettings):

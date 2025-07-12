@@ -4,7 +4,7 @@ from typing import Any
 
 from app import logger
 from app.logic.rsync import generate_rsync_command_job
-from framework.services import scripts
+from vcore.backend.services import scripts
 
 
 class ScriptRsyncFiles(scripts.Script):

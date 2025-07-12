@@ -10,8 +10,8 @@ from app.logic.runpod import (
     get_runpod_tcp_port_22,
 )
 from app.models.core.state import InstanceState, NetworkState
-from framework.core.db import get_db_context
-from framework.utils.system_status import get_cpu_stats, get_disk_stats, get_gpu_stats
+from vcore.backend.core.db import get_db_context
+from vcore.backend.utils.system_status import get_cpu_stats, get_disk_stats, get_gpu_stats
 
 
 async def _get_instance_state() -> InstanceState:

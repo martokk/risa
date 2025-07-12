@@ -8,8 +8,8 @@ import threading
 import time
 
 from app import logger, settings
-from framework.core.db import get_db_context
-from framework.services import job_queue
+from vcore.backend.core.db import get_db_context
+from vcore.backend.services import job_queue
 
 
 class IdleWatcher(threading.Thread):

@@ -1,4 +1,4 @@
-from framework.models import *
+from vcore.backend.models import *
 
 from .character import *
 from .core.state import *

@@ -4,11 +4,12 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from framework import models
+
 from app import crud, logger, paths
 from app.paths import OUTPUTS_KOHYA_SS_PATH
-from framework import models
-from framework.core.db import get_db_context
-from framework.services import scripts
+from vcore.backend.core.db import get_db_context
+from vcore.backend.services import scripts
 
 
 class ScriptChooseBestEpoch(scripts.Script):

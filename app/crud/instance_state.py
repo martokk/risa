@@ -1,5 +1,5 @@
 from app import models
-from framework.crud.base import BaseCRUD
+from vcore.backend.crud.base import BaseCRUD
 
 
 class InstanceStateCRUD(

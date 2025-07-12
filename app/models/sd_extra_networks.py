@@ -6,7 +6,7 @@ from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
 from app.logic.hub import Safetensor
 from app.models.settings import get_settings
-from framework.paths import ENV_FILE
+from vcore.backend.paths import ENV_FILE
 
 
 if TYPE_CHECKING:

@@ -1,4 +1,4 @@
-from framework.core.websocket import WebSocketManager
+from vcore.backend.core.websocket import WebSocketManager
 
 
 class AppManagerConnectionManager(WebSocketManager):

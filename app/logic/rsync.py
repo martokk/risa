@@ -1,5 +1,5 @@
 from app import crud, logger
-from framework.core.db import get_db_context
+from vcore.backend.core.db import get_db_context
 
 
 def convert_risa_rsync_options_to_text(

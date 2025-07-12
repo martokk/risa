@@ -5,7 +5,7 @@ from typing import Any
 
 from app import logger, paths
 from app.services.a1111_wrapper import RisaA1111Wrapper, Text2ImgSettings
-from framework.services import scripts
+from vcore.backend.services import scripts
 
 
 class ScriptGenerateXYForLoraEpochs(scripts.Script):

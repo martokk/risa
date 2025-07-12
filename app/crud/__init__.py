@@ -1,4 +1,4 @@
-from framework.crud import *
+from vcore.backend.crud import *
 
 from .character import *
 from .instance_state import *

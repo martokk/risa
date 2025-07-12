@@ -2,7 +2,7 @@ import toml
 
 from app.models.settings import get_settings
 from app.paths import ENV_FILE as _ENV_FILE, PYPROJECT_FILE
-from framework.core.logger import setup_logger
+from vcore.backend.core.logger import setup_logger
 
 
 def get_app_version() -> str:
