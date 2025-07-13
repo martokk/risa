@@ -1,0 +1,3 @@
+[submodule "vcore"]
+	path = vcore
+	url = https://github.com/martokk/vcore
