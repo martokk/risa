@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
 from app import crud, logger, models
-from vcore.backend.api.deps import get_current_active_user
 from vcore.backend.core.db import get_db
+from vcore.backend.templating.deps import get_current_active_user
 
 
 router = APIRouter(prefix="/api/v1/sd-extra-networks", tags=["SD Extra Networks"])

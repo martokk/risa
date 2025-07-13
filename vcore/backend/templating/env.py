@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 from fastapi.templating import Jinja2Templates
 
 from app import settings
-from app.frontend.templates import hook_inject_app_templating_env
-from vcore.backend.frontend.templates.filters import (
+from app.templating.env import hook_inject_app_templating_env
+from vcore.backend.templating.filters import (
     filter_humanize,
     filter_markdown,
     filter_nl2br,

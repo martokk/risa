@@ -11,8 +11,8 @@ from app import crud
 from app.logic.hub import get_hub
 from app.paths import HUB_MODELS_PATH
 from vcore.backend.core.db import get_db
-from vcore.backend.frontend.templates import templates
-from vcore.backend.frontend.templates.context import get_template_context
+from vcore.backend.templating import templates
+from vcore.backend.templating.context import get_template_context
 
 
 router = APIRouter()

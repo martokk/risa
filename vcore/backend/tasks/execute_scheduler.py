@@ -1,7 +1,7 @@
-from framework import crud, models
 from sqlmodel import Session
 
 from app import logger, settings
+from vcore.backend import crud, models
 from vcore.backend.core.db import get_db_context
 
 

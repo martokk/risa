@@ -11,7 +11,7 @@ from app import logger, settings
 from app.logic.init_db import (
     initialize_project_specific_data as _initialize_project_specific_data,
 )
-from framework import crud, models
+from vcore.backend import crud, models
 
 
 engine = create_engine(

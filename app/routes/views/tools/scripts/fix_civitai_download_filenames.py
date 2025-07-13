@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
 from app.models import settings
-from vcore.backend.frontend.templates import templates
-from vcore.backend.frontend.templates.context import get_template_context
+from vcore.backend.templating import templates
+from vcore.backend.templating.context import get_template_context
 
 
 router = APIRouter()

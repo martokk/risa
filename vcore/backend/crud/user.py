@@ -1,6 +1,6 @@
-from framework import models
 from sqlmodel import Session, select
 
+from vcore.backend import models
 from vcore.backend.core import security
 
 from .base import BaseCRUD

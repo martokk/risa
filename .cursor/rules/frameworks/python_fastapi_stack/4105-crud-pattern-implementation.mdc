@@ -155,7 +155,7 @@ api_router.include_router(entity.router, tags=["[Entity_plural]"])
 
 # Good: Route Registration (app/routes/views.py)
 
-from app.frontend.handlers.root import entity
+from app.routes.views.root import entity
 
 root_router.include_router(entity.router, tags=["[Entity_plural]"])
 </example>

@@ -3,11 +3,11 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar, cast
 
-from framework import models
 from sqlalchemy import BinaryExpression
 from sqlmodel import Session
 
 from app import logger, settings
+from vcore.backend import models
 from vcore.backend.services.job_queue_ws_manager import job_queue_ws_manager
 
 from .base import BaseCRUD, BaseCRUDSync

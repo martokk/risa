@@ -10,9 +10,9 @@ from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
 from app import crud, models, settings
-from vcore.backend.api.deps import get_current_active_user
 from vcore.backend.core.db import get_db
 from vcore.backend.routes.restrict_to_env import restrict_to
+from vcore.backend.templating.deps import get_current_active_user
 
 
 router = APIRouter()

@@ -230,10 +230,10 @@ Risa exposes a RESTful API under the `/api/v1/` prefix.
 <!-- SECTION: 6. Project Architecture -->
 ## 6. Project Architecture
 
-The application is logically divided into two main parts: `app` (the specific Risa project implementation) and `framework` (a reusable core for FastAPI applications).
+The application is logically divided into two main parts: `app` (the specific Risa project implementation) and `vcore` (a reusable core for FastAPI applications).
 
 - **`app`**: Contains project-specific models, business logic (`logic`), API endpoints, frontend handlers, and scripts.
-- **`framework`**: Provides the base components for a modern web application, including:
+- **`vcore`**: Provides the base components for a modern web application, including:
     - Core services for the database (`db.py`), server (`server.py`), security (`security.py`), and logging (`logger.py`).
     - Generic CRUD base classes (`crud/base.py`).
     - Base models for users, jobs, etc.

@@ -2,11 +2,11 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
-from framework import models
 
 from app.models import settings
-from vcore.backend.frontend.deps import get_current_active_user, get_current_user
-from vcore.backend.frontend.templates.context import get_template_context
+from vcore.backend import models
+from vcore.backend.templating.context import get_template_context
+from vcore.backend.templating.deps import get_current_active_user, get_current_user
 
 
 router = APIRouter()

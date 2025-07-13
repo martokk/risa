@@ -6,8 +6,8 @@ from sqlmodel import Session
 
 from app import crud
 from vcore.backend.core.db import get_db
-from vcore.backend.frontend.templates import templates
-from vcore.backend.frontend.templates.context import get_template_context
+from vcore.backend.templating import templates
+from vcore.backend.templating.context import get_template_context
 
 
 router = APIRouter(tags=["Characters"])

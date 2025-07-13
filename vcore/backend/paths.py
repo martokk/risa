@@ -4,15 +4,15 @@ from pathlib import Path
 
 
 # Project Path
-PROJECT_PATH = Path(os.path.dirname(os.path.abspath(__file__))).parent
+PROJECT_PATH = Path(os.path.dirname(os.path.abspath(__file__))).parent.parent
 
 # MAIN PATHS
 APP_PATH = PROJECT_PATH / "app"
-FRAMEWORK_PATH = PROJECT_PATH / "framework"
+VCORE_PATH = PROJECT_PATH / "vcore"
 
 # Folders
-DATA_PATH = APP_PATH / "data"
-FRONTEND_PATH = APP_PATH / "frontend"
+DATA_PATH = PROJECT_PATH / "data"
+FRONTEND_PATH = PROJECT_PATH / "frontend"
 
 # Frontend Folder
 STATIC_PATH = FRONTEND_PATH / "static"
@@ -38,7 +38,7 @@ ENV_FILES_PATHS = [
 ENV_FILE = None
 
 if not ENV_FILE:
-    ENV_FILE = FRAMEWORK_PATH / "data" / ".env"
+    ENV_FILE = VCORE_PATH / "data" / ".env"
 
 for env_file_path in ENV_FILES_PATHS:
     if env_file_path and env_file_path.exists():

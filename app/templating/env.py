@@ -1,10 +1,10 @@
 from fastapi.templating import Jinja2Templates
 
-from app.frontend.templates.filters import (
+from app.logic.state import get_network_state
+from app.templating.filters import (
     filter_humanize_network,
     filter_humanize_network_text_color,
 )
-from app.logic.state import get_network_state
 from vcore.backend.core.db import get_db_context
 
 

@@ -9,12 +9,12 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 import requests
-from framework import crud, models
 from huey import crontab
 from sqlmodel import Session
 
 from app import logger, paths, settings
 from app.tasks.execute_tasks import hook_get_script_class_from_class_name
+from vcore.backend import crud, models
 from vcore.backend.core.db import get_db_context
 from vcore.backend.core.huey import huey_default, huey_reserved
 from vcore.backend.logic.jobs import push_jobs_to_websocket

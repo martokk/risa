@@ -2,15 +2,15 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
-from framework import crud
 from sqlmodel import Session
 
 from app import crud as app_crud, logger
 from app.logic.file_management import get_trained_lora_safetensors
 from app.models import settings
+from vcore.backend import crud
 from vcore.backend.core.db import get_db
-from vcore.backend.frontend.templates import templates
-from vcore.backend.frontend.templates.context import get_template_context
+from vcore.backend.templating import templates
+from vcore.backend.templating.context import get_template_context
 
 
 router = APIRouter(tags=["jobs"])

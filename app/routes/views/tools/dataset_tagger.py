@@ -16,9 +16,9 @@ from starlette.templating import _TemplateResponse
 
 from app import crud, logger, paths
 from vcore.backend.core.db import get_db
-from vcore.backend.frontend.templates import templates
-from vcore.backend.frontend.templates.context import get_template_context
 from vcore.backend.routes.restrict_to_env import restrict_to
+from vcore.backend.templating import templates
+from vcore.backend.templating.context import get_template_context
 
 
 # Define thumbnail constants

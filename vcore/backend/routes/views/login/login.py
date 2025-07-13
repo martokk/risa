@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.security import OAuth2PasswordRequestForm
-from framework import models
 from sqlmodel import Session
 
+from vcore.backend import models
 from vcore.backend.core import security
 from vcore.backend.core.db import get_db
-from vcore.backend.frontend.deps import get_current_tokens
-from vcore.backend.frontend.templates import templates
+from vcore.backend.templating import templates
+from vcore.backend.templating.deps import get_current_tokens
 
 
 router = APIRouter()

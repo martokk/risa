@@ -20,11 +20,11 @@ class PythonFastAPIBaseSettings(BaseSettings):
     DATABASE_ECHO: bool = False
 
     # Huey Job Queue
-    HUEY_DEFAULT_SQLITE_PATH: str = "app/data/huey_consumer__default.db"
-    HUEY_RESERVED_SQLITE_PATH: str = "app/data/huey_consumer__reserved.db"
+    HUEY_DEFAULT_SQLITE_PATH: str = "data/huey_consumer__default.db"
+    HUEY_RESERVED_SQLITE_PATH: str = "data/huey_consumer__reserved.db"
 
-    HUEY_DEFAULT_LOG_PATH: str = "app/data/logs/huey_consumer__default.log"
-    HUEY_RESERVED_LOG_PATH: str = "app/data/logs/huey_consumer__reserved.log"
+    HUEY_DEFAULT_LOG_PATH: str = "data/logs/huey_consumer__default.log"
+    HUEY_RESERVED_LOG_PATH: str = "data/logs/huey_consumer__reserved.log"
 
     # Server
     SERVER_HOST: str = "0.0.0.0"
@@ -33,7 +33,7 @@ class PythonFastAPIBaseSettings(BaseSettings):
     BASE_URL: str = "http://localhost:5000"
     PROXY_HOST: str = "127.0.0.1"
     UVICORN_RELOAD: bool = True
-    UVICORN_ENTRYPOINT: str = "app.core.app:app"
+    UVICORN_ENTRYPOINT: str = "app.app:app"
     UVICORN_WORKERS: int = 1
 
     # API

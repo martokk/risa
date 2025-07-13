@@ -7,10 +7,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse
-from framework import crud, models
 from sqlmodel import Session
 
 from app import paths, settings
+from vcore.backend import crud, models
 from vcore.backend.core.db import get_db
 from vcore.backend.services.job_queue import (
     kill_job_process,

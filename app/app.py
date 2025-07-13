@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 
-from app.backend import logger, settings
+from app import logger, settings
 from app.logic.state import update_instance_state
 from app.paths import STATIC_PATH
 from app.routes.api import api_router

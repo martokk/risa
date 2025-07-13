@@ -1,10 +1,10 @@
 import asyncio
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
-from framework import crud
 from sqlmodel import Session
 
 from app import logger, paths, settings
+from vcore.backend import crud
 from vcore.backend.core.db import get_db
 from vcore.backend.services.job_queue import get_consumer_status_map
 from vcore.backend.services.job_queue_ws_manager import job_queue_ws_manager

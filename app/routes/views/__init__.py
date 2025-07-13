@@ -1,20 +1,20 @@
 from fastapi import APIRouter
 
-from app.frontend.handlers.character import character
-from app.frontend.handlers.dashboard import dashboard
-from app.frontend.handlers.root import root
-from app.frontend.handlers.sd_base_model import sd_base_model
-from app.frontend.handlers.sd_checkpoint import sd_checkpoint
-from app.frontend.handlers.sd_extra_network import sd_extra_network
-from app.frontend.handlers.state import state
-from app.frontend.handlers.tools import (
+from app.routes.views.character import character
+from app.routes.views.dashboard import dashboard
+from app.routes.views.root import root
+from app.routes.views.sd_base_model import sd_base_model
+from app.routes.views.sd_checkpoint import sd_checkpoint
+from app.routes.views.sd_extra_network import sd_extra_network
+from app.routes.views.state import state
+from app.routes.views.tools import (
     dataset_tagger,
     safetensors_import_helper,
 )
-from app.frontend.handlers.tools.scripts import fix_civitai_download_filenames
-from vcore.backend.frontend.handlers.jobs import job_scheduler, jobs
-from vcore.backend.frontend.handlers.login import login
-from vcore.backend.frontend.handlers.user import user
+from app.routes.views.tools.scripts import fix_civitai_download_filenames
+from vcore.backend.routes.views.jobs import job_scheduler, jobs
+from vcore.backend.routes.views.login import login
+from vcore.backend.routes.views.user import user
 
 
 # Root routes

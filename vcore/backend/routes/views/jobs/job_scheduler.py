@@ -2,13 +2,13 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
-from framework import crud, models
 from sqlmodel import Session
 
 from app import settings
+from vcore.backend import crud, models
 from vcore.backend.core.db import get_db
-from vcore.backend.frontend.templates import templates
-from vcore.backend.frontend.templates.context import get_template_context
+from vcore.backend.templating import templates
+from vcore.backend.templating.context import get_template_context
 
 
 router = APIRouter()

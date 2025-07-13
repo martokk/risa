@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import (
+from app.routes.api.v1.endpoints import (
     app_manager,
     app_manager_ws,
     character,
@@ -11,14 +11,14 @@ from app.api.v1.endpoints import (
     sd_extra_network,
     state,
 )
-from app.api.v1.endpoints.scripts import (
+from app.routes.api.v1.endpoints.scripts import (
     choose_best_epoch,
     fix_civitai_download_filenames,
     generate_xy_for_lora_epochs,
     rsync_files,
 )
-from vcore.backend.api.v1.endpoints import job_queue_ws, job_scheduler, users
-from vcore.backend.api.v1.endpoints.job_queue import router as job_queue_router
+from vcore.backend.routes.api.v1.endpoints import job_queue_ws, job_scheduler, users
+from vcore.backend.routes.api.v1.endpoints.job_queue import router as job_queue_router
 
 
 api_router = APIRouter()

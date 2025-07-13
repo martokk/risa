@@ -1,8 +1,8 @@
 from fastapi import Cookie, Depends, HTTPException
-from framework import crud, models
 from sqlmodel import Session
 
 from app import settings
+from vcore.backend import crud, models
 from vcore.backend.core import security
 from vcore.backend.core.db import get_db
 

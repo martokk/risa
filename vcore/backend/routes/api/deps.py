@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from framework import crud, models
 from sqlmodel import Session
 
 from app import settings
+from vcore.backend import crud, models
 from vcore.backend.core import security
 from vcore.backend.core.db import get_db
 from vcore.backend.crud.exceptions import RecordNotFoundError

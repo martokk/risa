@@ -11,12 +11,12 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from framework import crud, models
 from pydantic import BaseModel
 from sqlmodel import Session
 
 from app import logger, paths
 from app.logic.config import get_config
+from vcore.backend import crud, models
 from vcore.backend.services.job_queue_ws_manager import job_queue_ws_manager
 
 

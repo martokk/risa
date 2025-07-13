@@ -6,7 +6,7 @@ from vcore.backend.paths import *
 from vcore.backend.paths import ENV_FILE, PROJECT_PATH
 
 
-def convert_relative_path_to_absolute(path: str) -> Path:  # TODO: Move to framework.paths
+def convert_relative_path_to_absolute(path: str) -> Path:  # TODO: Move to vcore.backend.paths
     if str(path).startswith("/app/"):
         joined_path = f"{PROJECT_PATH}{path}"
         return Path(joined_path)

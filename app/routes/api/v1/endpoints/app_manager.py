@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app import models
 from app.logic.config import get_config
-from vcore.backend.api.deps import get_current_active_user
+from vcore.backend.templating.deps import get_current_active_user
 
 
 router = APIRouter(prefix="/app_manager", tags=["App Manager"])

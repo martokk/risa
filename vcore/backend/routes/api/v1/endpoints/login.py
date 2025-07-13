@@ -3,13 +3,13 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from framework import crud, models
 from pydantic.networks import EmailStr
 from sqlmodel import Session
 
 from app import settings
-from vcore.backend.api import deps
+from vcore.backend import crud, models
 from vcore.backend.core import security
+from vcore.backend.routes.api import deps
 from vcore.backend.services import notify
 
 

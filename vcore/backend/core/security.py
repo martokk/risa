@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from sqlmodel import Session
 
 from app import settings
-from framework import crud, models
+from vcore.backend import crud, models
 
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

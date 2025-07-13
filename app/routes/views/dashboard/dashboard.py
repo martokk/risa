@@ -9,9 +9,9 @@ from app.logic import state
 from app.logic.config import get_config
 from app.logic.file_management import get_trained_lora_safetensors
 from vcore.backend.core.db import get_db
-from vcore.backend.frontend.deps import get_current_active_user
-from vcore.backend.frontend.templates import templates
-from vcore.backend.frontend.templates.context import get_template_context
+from vcore.backend.templating import templates
+from vcore.backend.templating.context import get_template_context
+from vcore.backend.templating.deps import get_current_active_user
 
 
 router = APIRouter()
